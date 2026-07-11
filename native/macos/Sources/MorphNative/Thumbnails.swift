@@ -25,7 +25,7 @@ enum Thumbnails {
             fileAt: URL(fileURLWithPath: path),
             size: NSSize(width: max(1, width), height: max(1, height)),
             scale: max(1, scale),
-            representationTypes: .all
+            representationTypes: .thumbnail
         )
         let semaphore = DispatchSemaphore(value: 0)
         let result = ThumbnailResultBox()
