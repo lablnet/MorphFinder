@@ -1,0 +1,63 @@
+{
+  "name": "morphfinder",
+  "version": "0.1.0",
+  "description": "Multi-platform file manager with a runtime-switchable Finder/Explorer/Dolphin Tri-UI shell.",
+  "main": "./out/main/index.js",
+  "type": "module",
+  "author": "lablnet",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "pnpm typecheck && electron-vite build",
+    "typecheck": "tsc --build tsconfig.node.json tsconfig.web.json --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:native": "node tests/native/smoke.mjs",
+    "test:e2e": "pnpm build && playwright test",
+    "preview": "electron-vite preview",
+    "build:mac": "pnpm native:build && pnpm build && electron-builder --mac",
+    "build:win": "pnpm build && electron-builder --win",
+    "build:linux": "pnpm build && electron-builder --linux",
+    "native:build": "node native/macos/build.mjs",
+    "release": "pnpm build && electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lablnet/MorphFinder.git"
+  },
+  "dependencies": {
+    "@lablnet/ui": "file:../ui",
+    "@parcel/watcher": "^2.5.1",
+    "electron-updater": "^6.8.9",
+    "lucide-react": "^0.475.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-window": "^1.8.11",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^22.13.4",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-window": "^1.8.8",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "eslint": "^9.20.1",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "node-swift": "1.5.1",
+    "postcss": "^8.5.2",
+    "prettier": "^3.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "vite": "^5.4.14",
+    "vitest": "^3.0.5"
+  }
+}

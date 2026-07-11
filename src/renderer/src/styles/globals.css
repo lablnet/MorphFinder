@@ -1,0 +1,77 @@
+@import '@lablnet/ui/styles.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--shell-surface);
+  color-scheme: light dark;
+}
+
+/* Default token values; each ShellDefinition overrides these on its root region. */
+:root {
+  --shell-accent: #2563eb;
+  --shell-surface: #ffffff;
+  --shell-sidebar: #f5f5f7;
+  --shell-border: #e5e5ea;
+  --shell-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --shell-radius: 8px;
+  --shell-row-height: 28px;
+}
+
+:root.dark {
+  --shell-surface: #1e1e1e;
+  --shell-sidebar: #252526;
+  --shell-border: #3a3a3c;
+}
+
+[data-shell='explorer'] {
+  --shell-accent: #0067c0;
+  --shell-surface: #f9f9f9;
+  --shell-sidebar: #f3f3f3;
+  --shell-border: #e5e5e5;
+  --shell-radius: 4px;
+  --shell-row-height: 30px;
+}
+
+:root.dark [data-shell='explorer'] {
+  --shell-accent: #4cc2ff;
+  --shell-surface: #202020;
+  --shell-sidebar: #282828;
+  --shell-border: #3a3a3a;
+}
+
+[data-shell='finder'] {
+  --shell-surface: #ffffff;
+  --shell-sidebar: #f5f5f7;
+  --shell-border: #e5e5ea;
+}
+
+:root.dark [data-shell='finder'] {
+  --shell-surface: #1e1e1e;
+  --shell-sidebar: #252526;
+  --shell-border: #3a3a3c;
+}
+
+[data-shell='dolphin'] {
+  --shell-accent: #3daee9;
+  --shell-surface: #fcfcfc;
+  --shell-sidebar: #f0f2f4;
+  --shell-border: #d8dde3;
+}
+
+:root.dark [data-shell='dolphin'] {
+  --shell-accent: #3daee9;
+  --shell-surface: #1b1f23;
+  --shell-sidebar: #23282e;
+  --shell-border: #3b434c;
+}

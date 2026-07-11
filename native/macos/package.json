@@ -1,0 +1,9 @@
+{
+  "name": "morph-native",
+  "private": true,
+  "swift": {
+    "product": "MorphNative",
+    "packagePath": ".",
+    "napi": 8
+  }
+}
