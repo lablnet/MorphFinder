@@ -10,7 +10,7 @@ export interface UseSpaceAnalyzerResult {
   scanResult: SpaceAnalyzerNode | null;
   currentSubTree: SpaceAnalyzerNode | null;
   history: string[];
-  viewMode: 'treemap' | 'list';
+  viewMode: 'treemap' | 'donut' | 'list';
   hoveredPath: string | null;
   scanError: string | null;
   setHoveredPath: (path: string | null) => void;
@@ -19,6 +19,7 @@ export interface UseSpaceAnalyzerResult {
   drillDown: (node: SpaceAnalyzerNode) => void;
   navigateUp: () => void;
   toggleViewMode: () => void;
+  setViewMode: (mode: 'treemap' | 'donut' | 'list') => void;
   setCurrentPathInput: (path: string) => void;
   currentPathInput: string;
   browseFolder: () => Promise<void>;
@@ -29,6 +30,8 @@ export interface UseSpaceAnalyzerResult {
   };
   diskTotal: number;
   diskFree: number;
+  selectedPath: string | null;
+  setSelectedPath: (path: string | null) => void;
 }
 
 export function formatBytes(bytes: number): string {
@@ -60,9 +63,10 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanResult, setScanResult] = useState<SpaceAnalyzerNode | null>(null);
   const [history, setHistory] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'treemap' | 'list'>('treemap');
+  const [viewMode, setViewMode] = useState<'treemap' | 'donut' | 'list'>('treemap');
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
 
   // Disk capacity states
   const [diskTotal, setDiskTotal] = useState<number>(0);
@@ -100,6 +104,7 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
     setScanError(null);
     setScanResult(null);
     setHistory([]);
+    setSelectedPath(null);
     setProgressFileCount(0);
     setProgressSize(0);
     setProgressScannedPath(pathToScan);
@@ -116,7 +121,6 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
       setViewedPath(pathToScan);
     } catch (err) {
       console.error('Space Analyzer scan failed:', err);
-      // Abort is also handled as an error catch
       setScanError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsScanning(false);
@@ -149,6 +153,7 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
     setHistory((prev) => [...prev, viewedPath]);
     setViewedPath(node.path);
     setHoveredPath(null);
+    setSelectedPath(null);
   }, [viewedPath]);
 
   const navigateUp = useCallback(() => {
@@ -157,10 +162,15 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
     setHistory((prev) => prev.slice(0, -1));
     setViewedPath(previousPath);
     setHoveredPath(null);
+    setSelectedPath(null);
   }, [history]);
 
   const toggleViewMode = useCallback(() => {
-    setViewMode((prev) => (prev === 'treemap' ? 'list' : 'treemap'));
+    setViewMode((prev) => {
+      if (prev === 'treemap') return 'donut';
+      if (prev === 'donut') return 'list';
+      return 'treemap';
+    });
   }, []);
 
   const currentSubTree = useMemo(() => {
@@ -184,6 +194,7 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
     drillDown,
     navigateUp,
     toggleViewMode,
+    setViewMode,
     setCurrentPathInput,
     currentPathInput,
     browseFolder,
@@ -194,5 +205,7 @@ export function useSpaceAnalyzer(): UseSpaceAnalyzerResult {
     },
     diskTotal,
     diskFree,
+    selectedPath,
+    setSelectedPath,
   };
 }

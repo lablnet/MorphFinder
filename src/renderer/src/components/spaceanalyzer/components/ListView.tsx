@@ -10,6 +10,8 @@ interface ListViewProps {
   onDrillDown: (node: SpaceAnalyzerNode) => void;
   hoveredPath: string | null;
   setHoveredPath: (path: string | null) => void;
+  selectedPath: string | null;
+  onSelectNode: (path: string | null) => void;
 }
 
 export function ListView({
@@ -18,6 +20,8 @@ export function ListView({
   onDrillDown,
   hoveredPath,
   setHoveredPath,
+  selectedPath,
+  onSelectNode,
 }: ListViewProps): React.JSX.Element {
   if (children.length === 0) {
     return (
@@ -28,25 +32,32 @@ export function ListView({
   }
 
   // Pre-sort children by size descending
-  const sorted = [...children].sort((a, b) => b.size - a.size);
+  const sortedItems = [...children].sort((a, b) => b.size - a.size);
 
   return (
-    <div className="w-full overflow-x-auto select-none">
-      <table className="w-full text-left border-collapse">
+    <div className="w-full h-full overflow-y-auto border border-shell-border/40 rounded-lg select-none bg-shell-sidebar/10">
+      <table className="w-full text-left border-collapse" onClick={() => onSelectNode(null)}>
         <thead>
-          <tr className="border-b border-shell-border text-[11px] font-semibold text-current/45 uppercase tracking-wider">
-            <th className="py-2.5 px-4">Name</th>
-            <th className="py-2.5 px-4 text-right">Size</th>
-            <th className="py-2.5 px-4 text-right">Percentage</th>
-            <th className="py-2.5 px-4 min-w-[120px]">Allocation</th>
+          <tr className="border-b border-shell-border text-[10px] font-bold uppercase tracking-wider text-current/50 select-none bg-shell-sidebar/35">
+            <th className="py-2.5 px-4 font-semibold">Name</th>
+            <th className="py-2.5 px-4 font-semibold text-right w-24">Size</th>
+            <th className="py-2.5 px-4 font-semibold text-right w-24">Percentage</th>
+            <th className="py-2.5 px-4 font-semibold w-32 sm:w-48">Allocation</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-shell-border/40 text-xs">
-          {sorted.map((item) => {
+        <tbody>
+          {sortedItems.map((item) => {
             const percentage = totalSize > 0 ? (item.size / totalSize) * 100 : 0;
             const isHovered = hoveredPath === item.path;
+            const isSelected = selectedPath === item.path;
 
-            const handleRowClick = () => {
+            const handleRowClick = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              onSelectNode(item.path === '__other__' ? null : item.path);
+            };
+
+            const handleRowDoubleClick = (e: React.MouseEvent) => {
+              e.stopPropagation();
               if (item.isDirectory && item.name !== '[Other Files & Folders]') {
                 onDrillDown(item);
               }
@@ -56,12 +67,17 @@ export function ListView({
               <tr
                 key={item.path}
                 className={cn(
-                  'transition-colors duration-75 cursor-pointer',
-                  isHovered ? 'bg-shell-accent/10' : 'hover:bg-shell-sidebar/30'
+                  'transition-colors duration-75 cursor-pointer relative',
+                  isSelected
+                    ? 'bg-shell-accent/15 border-l-2 border-shell-accent'
+                    : isHovered
+                    ? 'bg-shell-accent/10'
+                    : 'hover:bg-shell-sidebar/30'
                 )}
                 onMouseEnter={() => setHoveredPath(item.path)}
                 onMouseLeave={() => setHoveredPath(null)}
                 onClick={handleRowClick}
+                onDoubleClick={handleRowDoubleClick}
               >
                 {/* Name */}
                 <td className="py-3 px-4 font-medium flex items-center gap-2 max-w-sm sm:max-w-md truncate">
@@ -94,7 +110,7 @@ export function ListView({
                         style={{ width: `${percentage}%` }}
                         className={cn(
                           'h-full rounded-full transition-all duration-300',
-                          item.isDirectory ? 'bg-shell-accent' : 'bg-current/40'
+                          item.isDirectory ? 'bg-shell-accent' : 'bg-shell-accent opacity-65'
                         )}
                       />
                     </div>
@@ -108,3 +124,4 @@ export function ListView({
     </div>
   );
 }
+export default ListView;

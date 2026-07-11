@@ -10,6 +10,8 @@ interface TreemapViewProps {
   onDrillDown: (node: SpaceAnalyzerNode) => void;
   hoveredPath: string | null;
   setHoveredPath: (path: string | null) => void;
+  selectedPath: string | null;
+  onSelectNode: (path: string | null) => void;
 }
 
 export function TreemapView({
@@ -18,31 +20,29 @@ export function TreemapView({
   onDrillDown,
   hoveredPath,
   setHoveredPath,
+  selectedPath,
+  onSelectNode,
 }: TreemapViewProps): React.JSX.Element {
-  const [containerRef, { width, height }] = useElementSize<HTMLDivElement>();
+  const [ref, { width, height }] = useElementSize<HTMLDivElement>();
 
-  // Compute absolute layout positions for children in the container dimensions
   const rects = React.useMemo(() => {
     return computeTreemapLayout(children, totalSize, width, height);
   }, [children, totalSize, width, height]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden min-h-[300px]">
-      {rects.length === 0 ? (
-        <div className="flex h-full items-center justify-center text-xs text-current/40">
-          No displayable children elements inside this folder.
-        </div>
-      ) : (
-        rects.map((rect) => (
-          <TreemapNode
-            key={rect.id}
-            rect={rect}
-            onDrillDown={onDrillDown}
-            onHover={setHoveredPath}
-            isHovered={hoveredPath === rect.path}
-          />
-        ))
-      )}
+    <div ref={ref} className="w-full h-full relative overflow-hidden select-none" onClick={() => onSelectNode(null)}>
+      {rects.map((rect) => (
+        <TreemapNode
+          key={rect.id}
+          rect={rect}
+          onDrillDown={onDrillDown}
+          onHover={setHoveredPath}
+          isHovered={hoveredPath === rect.path}
+          isSelected={selectedPath === rect.path}
+          onSelectNode={onSelectNode}
+        />
+      ))}
     </div>
   );
 }
+export default TreemapView;

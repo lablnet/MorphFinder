@@ -9,21 +9,26 @@ import {
   FileText,
   FolderOpen,
   Square,
+  PieChart,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
+import { cn } from '@lablnet/ui';
 
 interface HeaderProps {
   currentPathInput: string;
   setCurrentPathInput: (path: string) => void;
   viewedPath: string;
   isScanning: boolean;
-  viewMode: 'treemap' | 'list';
+  viewMode: 'treemap' | 'donut' | 'list';
   onTriggerScan: (path?: string) => Promise<void>;
   onCancelScan: () => Promise<void>;
-  onToggleViewMode: () => void;
+  onChangeViewMode: (mode: 'treemap' | 'donut' | 'list') => void;
   wellKnownDirs: { home: string; desktop: string; documents: string; downloads: string } | null;
   browseFolder: () => Promise<void>;
+  history: string[];
+  onNavigateUp: () => void;
 }
 
 export function Header({
@@ -34,9 +39,11 @@ export function Header({
   viewMode,
   onTriggerScan,
   onCancelScan,
-  onToggleViewMode,
+  onChangeViewMode,
   wellKnownDirs,
   browseFolder,
+  history,
+  onNavigateUp,
 }: HeaderProps): React.JSX.Element {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !isScanning) {
@@ -59,19 +66,47 @@ export function Header({
           </div>
         </div>
 
-        {/* View mode toggle & reload */}
-        <div className="flex items-center gap-1.5">
-          <Button
-            onClick={onToggleViewMode}
-            variant="outline"
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs"
-            title={viewMode === 'treemap' ? 'Switch to List view' : 'Switch to Treemap view'}
-          >
-            {viewMode === 'treemap' ? <List size={13} /> : <LayoutGrid size={13} />}
-            <span className="hidden sm:inline select-none">
-              {viewMode === 'treemap' ? 'List View' : 'Treemap View'}
-            </span>
-          </Button>
+        {/* View mode toggle group & reload */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center border border-shell-border/60 rounded-lg p-0.5 bg-shell-sidebar/30">
+            <Button
+              onClick={() => onChangeViewMode('treemap')}
+              variant="ghost"
+              className={cn(
+                'h-7 px-2.5 py-1 text-xs rounded-md flex items-center gap-1.5 bg-transparent border-0',
+                viewMode === 'treemap' ? 'bg-shell-accent/15 text-shell-accent font-bold' : 'text-current/60 hover:text-current'
+              )}
+              title="Treemap view"
+            >
+              <LayoutGrid size={12} />
+              <span className="hidden md:inline select-none">Treemap</span>
+            </Button>
+            <Button
+              onClick={() => onChangeViewMode('donut')}
+              variant="ghost"
+              className={cn(
+                'h-7 px-2.5 py-1 text-xs rounded-md flex items-center gap-1.5 bg-transparent border-0',
+                viewMode === 'donut' ? 'bg-shell-accent/15 text-shell-accent font-bold' : 'text-current/60 hover:text-current'
+              )}
+              title="Donut Chart view"
+            >
+              <PieChart size={12} />
+              <span className="hidden md:inline select-none">Donut View</span>
+            </Button>
+            <Button
+              onClick={() => onChangeViewMode('list')}
+              variant="ghost"
+              className={cn(
+                'h-7 px-2.5 py-1 text-xs rounded-md flex items-center gap-1.5 bg-transparent border-0',
+                viewMode === 'list' ? 'bg-shell-accent/15 text-shell-accent font-bold' : 'text-current/60 hover:text-current'
+              )}
+              title="List view"
+            >
+              <List size={12} />
+              <span className="hidden md:inline select-none">List View</span>
+            </Button>
+          </div>
+
           <Button
             onClick={() => void onTriggerScan()}
             disabled={isScanning}
@@ -178,8 +213,20 @@ export function Header({
       </div>
 
       {/* Path Breadcrumb Display */}
-      <div className="text-[11px] font-semibold text-current/60 bg-shell-sidebar/30 py-1.5 px-2.5 border border-shell-border/40 rounded-shell select-none flex items-center gap-1.5 min-w-0">
-        <span className="text-current/35 select-none shrink-0">Viewing:</span>
+      <div className="text-[11px] font-semibold text-current/60 bg-shell-sidebar/30 py-1.5 px-2.5 border border-shell-border/40 rounded-shell select-none flex items-center min-w-0">
+        {history.length > 0 ? (
+          <Button
+            onClick={onNavigateUp}
+            variant="outline"
+            size="icon"
+            className="h-5 w-5 text-current/80 hover:bg-shell-accent/15 rounded mr-2 shrink-0 p-0 flex items-center justify-center border border-shell-border/60"
+            title="Go back to parent directory"
+          >
+            <ArrowLeft size={11} />
+          </Button>
+        ) : (
+          <span className="text-current/35 select-none shrink-0 mr-1.5">Viewing:</span>
+        )}
         <span className="truncate font-mono text-current/80">{viewedPath}</span>
       </div>
     </div>

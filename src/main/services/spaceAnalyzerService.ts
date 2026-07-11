@@ -192,20 +192,21 @@ async function scanDirectorySizeRecursive(
     let finalChildren: SpaceAnalyzerNode[] | undefined;
 
     if (currentDepth < maxDepth) {
-      if (activeChildren.length > 15) {
-        const top15 = activeChildren.slice(0, 15);
-        const rest = activeChildren.slice(15);
+      if (activeChildren.length > 100) {
+        const top100 = activeChildren.slice(0, 100);
+        const rest = activeChildren.slice(100);
         const restSize = rest.reduce((sum, c) => sum + c.size, 0);
         const restFiles = rest.reduce((sum, c) => sum + (c.isDirectory ? c.fileCount : 1), 0);
 
-        top15.push({
+        top100.push({
           name: '[Other Files & Folders]',
           path: join(dirPath, '__other__'),
           size: restSize,
-          isDirectory: false,
+          isDirectory: true,
           fileCount: restFiles,
+          children: rest,
         });
-        finalChildren = top15;
+        finalChildren = top100;
       } else {
         finalChildren = activeChildren;
       }
