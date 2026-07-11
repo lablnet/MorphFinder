@@ -4,10 +4,11 @@ import { useMemo, useState } from 'react';
 import { useElementSize } from '@renderer/hooks/useElementSize';
 import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { iconForNode } from './fileIcons';
-import { marqueeSelectionForList, nextSelectionForEvent, normalizedSelectionRect, type SelectionRect } from './selection';
+import { FileIcon } from '../fileicons/FileIcon';
+import { marqueeSelectionForList, normalizedSelectionRect, type SelectionRect } from './selection';
 import type { FileViewProps } from './types';
-import { pathsForDrag, readDraggedPaths, writeDraggedPaths } from './dragDrop';
+import { useFileItem } from '@renderer/hooks/useFileItem';
+import { readDraggedPaths } from './dragDrop';
 
 type SortKey = 'name' | 'kind' | 'size' | 'modified';
 type SortDirection = 'asc' | 'desc';
@@ -28,81 +29,45 @@ function compareNodes(a: FileSystemNode, b: FileSystemNode, key: SortKey, direct
   return a[key].localeCompare(b[key], undefined, { numeric: true, sensitivity: 'base' }) * multiplier;
 }
 
-function ListRow({ index, style, data }: ListChildComponentProps<RowData>): React.JSX.Element | null {
-  const node = data.nodes[index];
-  if (node === undefined) return null;
+interface ListFileItemProps {
+  node: FileSystemNode;
+  data: RowData;
+  style: React.CSSProperties;
+}
 
-  const Icon = iconForNode(node);
-  const selected = data.selectedPaths.has(node.path);
-  const isRenaming = data.renamingPath === node.path;
+function ListFileItem({ node, data, style }: ListFileItemProps): React.JSX.Element {
+  const { selected, isRenaming, dragProps, mouseProps, renameInputProps } = useFileItem({
+    node,
+    nodes: data.nodes,
+    selectedPaths: data.selectedPaths,
+    renamingPath: data.renamingPath,
+    renamingValue: data.renamingValue,
+    onOpen: data.onOpen,
+    onSelectionChange: data.onSelectionChange,
+    onContextMenu: data.onContextMenu,
+    onCommitRename: data.onCommitRename,
+    onCancelRename: data.onCancelRename,
+    onRenameValueChange: data.onRenameValueChange,
+    onMove: data.onMove,
+    onExternalDrag: data.onExternalDrag,
+  });
 
   return (
     <div
       data-file-item="true"
       style={style}
-      draggable
-      onDragStart={(event) => {
-        const paths = pathsForDrag(node.path, data.selectedPaths);
-        writeDraggedPaths(event.dataTransfer, paths);
-        data.onExternalDrag(paths);
-      }}
-      onDragOver={(event) => {
-        if (node.kind === 'directory') event.preventDefault();
-      }}
-      onDrop={(event) => {
-        if (node.kind !== 'directory') return;
-        event.preventDefault();
-        event.stopPropagation();
-        const paths = readDraggedPaths(event.dataTransfer).filter((path) => path !== node.path);
-        if (paths.length > 0) data.onMove(paths, node.path);
-      }}
-      onMouseDown={(event) => {
-        if (event.button === 0 && event.ctrlKey) event.preventDefault();
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-        data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
-      }}
-      onDoubleClick={() => {
-        if (!isRenaming) data.onOpen(node);
-      }}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (event.ctrlKey) {
-          data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
-          return;
-        }
-        if (!data.selectedPaths.has(node.path)) data.onSelectionChange([node.path], node.path);
-        data.onContextMenu(node, event);
-      }}
+      {...dragProps}
+      {...mouseProps}
       className={cn(
         'grid cursor-default grid-cols-[minmax(180px,1fr)_120px_120px_180px] items-center text-sm',
         selected ? 'bg-[color:var(--shell-accent)]/15' : 'hover:bg-shell-sidebar',
       )}
     >
       <span className="flex min-w-0 items-center gap-2 truncate px-3">
-        <Icon size={16} className={node.kind === 'directory' ? 'shrink-0 text-[color:var(--shell-accent)]' : 'shrink-0 text-current/70'} />
+        <FileIcon node={node} size={16} className={node.kind === 'directory' ? 'shrink-0 text-[color:var(--shell-accent)]' : 'shrink-0 text-current/70'} />
         {isRenaming ? (
           <input
-            autoFocus
-            value={data.renamingValue}
-            onClick={(event) => event.stopPropagation()}
-            onChange={(event) => data.onRenameValueChange(event.target.value)}
-            onFocus={(event) => event.currentTarget.select()}
-            onBlur={data.onCommitRename}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                event.stopPropagation();
-                data.onCommitRename();
-              }
-              if (event.key === 'Escape') {
-                event.preventDefault();
-                event.stopPropagation();
-                data.onCancelRename();
-              }
-            }}
+            {...renameInputProps}
             aria-invalid={data.renamingError !== null}
             title={data.renamingError ?? undefined}
             className={cn(
@@ -119,6 +84,13 @@ function ListRow({ index, style, data }: ListChildComponentProps<RowData>): Reac
       <span className="truncate px-3 text-current/70">{formatModifiedDate(node.modifiedAt)}</span>
     </div>
   );
+}
+
+function ListRow({ index, style, data }: ListChildComponentProps<RowData>): React.JSX.Element | null {
+  const node = data.nodes[index];
+  if (node === undefined) return null;
+
+  return <ListFileItem node={node} data={data} style={style} />;
 }
 
 export function FileListTable({

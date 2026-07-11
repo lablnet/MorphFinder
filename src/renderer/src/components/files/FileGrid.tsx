@@ -2,10 +2,12 @@ import { cn } from '@lablnet/ui';
 import { FixedSizeGrid, type GridChildComponentProps } from 'react-window';
 import { useState } from 'react';
 import { useElementSize } from '@renderer/hooks/useElementSize';
-import { iconForNode } from './fileIcons';
-import { marqueeSelectionForGrid, nextSelectionForEvent, normalizedSelectionRect, type SelectionRect } from './selection';
+import { FileIcon } from '../fileicons/FileIcon';
+import { marqueeSelectionForGrid, normalizedSelectionRect, type SelectionRect } from './selection';
 import type { FileViewProps } from './types';
-import { pathsForDrag, readDraggedPaths, writeDraggedPaths } from './dragDrop';
+import { useFileItem } from '@renderer/hooks/useFileItem';
+import { readDraggedPaths } from './dragDrop';
+import type { FileSystemNode } from '@shared/types/fileSystem';
 
 interface GridItemData extends FileViewProps {
   columnCount: number;
@@ -17,14 +19,28 @@ interface MarqueeState {
   current: { x: number; y: number };
 }
 
-function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProps<GridItemData>): React.JSX.Element | null {
-  const index = rowIndex * data.columnCount + columnIndex;
-  const node = data.nodes[index];
-  if (node === undefined) return null;
+interface GridFileItemProps {
+  node: FileSystemNode;
+  data: GridItemData;
+  style: React.CSSProperties;
+}
 
-  const Icon = iconForNode(node);
-  const selected = data.selectedPaths.has(node.path);
-  const isRenaming = data.renamingPath === node.path;
+function GridFileItem({ node, data, style }: GridFileItemProps): React.JSX.Element {
+  const { selected, isRenaming, dragProps, mouseProps, renameInputProps } = useFileItem({
+    node,
+    nodes: data.nodes,
+    selectedPaths: data.selectedPaths,
+    renamingPath: data.renamingPath,
+    renamingValue: data.renamingValue,
+    onOpen: data.onOpen,
+    onSelectionChange: data.onSelectionChange,
+    onContextMenu: data.onContextMenu,
+    onCommitRename: data.onCommitRename,
+    onCancelRename: data.onCancelRename,
+    onRenameValueChange: data.onRenameValueChange,
+    onMove: data.onMove,
+    onExternalDrag: data.onExternalDrag,
+  });
 
   return (
     <div style={style} className="p-1.5">
@@ -32,68 +48,17 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
         data-file-item="true"
         type="button"
         title={node.name}
-        draggable
-        onDragStart={(event) => {
-          const paths = pathsForDrag(node.path, data.selectedPaths);
-          writeDraggedPaths(event.dataTransfer, paths);
-          data.onExternalDrag(paths);
-        }}
-        onDragOver={(event) => {
-          if (node.kind === 'directory') event.preventDefault();
-        }}
-        onDrop={(event) => {
-          if (node.kind !== 'directory') return;
-          event.preventDefault();
-          event.stopPropagation();
-          const paths = readDraggedPaths(event.dataTransfer).filter((path) => path !== node.path);
-          if (paths.length > 0) data.onMove(paths, node.path);
-        }}
-        onMouseDown={(event) => {
-          if (event.button === 0 && event.ctrlKey) event.preventDefault();
-        }}
-        onClick={(event) => {
-          event.stopPropagation();
-          data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
-        }}
-        onDoubleClick={() => {
-          if (!isRenaming) data.onOpen(node);
-        }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.ctrlKey) {
-            data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
-            return;
-          }
-          if (!data.selectedPaths.has(node.path)) data.onSelectionChange([node.path], node.path);
-          data.onContextMenu(node, event);
-        }}
+        {...dragProps}
+        {...mouseProps}
         className={cn(
           'flex h-full w-full flex-col items-center justify-start gap-2 rounded-shell p-2 text-center text-xs outline-none',
           selected ? 'bg-[color:var(--shell-accent)]/15 ring-1 ring-[color:var(--shell-accent)]' : 'hover:bg-shell-sidebar',
         )}
       >
-        <Icon size={data.iconSize} className={node.kind === 'directory' ? 'text-[color:var(--shell-accent)]' : 'text-current/75'} />
+        <FileIcon node={node} size={data.iconSize} className={node.kind === 'directory' ? 'text-[color:var(--shell-accent)]' : 'text-current/75'} />
         {isRenaming ? (
           <input
-            autoFocus
-            value={data.renamingValue}
-            onClick={(event) => event.stopPropagation()}
-            onChange={(event) => data.onRenameValueChange(event.target.value)}
-            onFocus={(event) => event.currentTarget.select()}
-            onBlur={data.onCommitRename}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                event.stopPropagation();
-                data.onCommitRename();
-              }
-              if (event.key === 'Escape') {
-                event.preventDefault();
-                event.stopPropagation();
-                data.onCancelRename();
-              }
-            }}
+            {...renameInputProps}
             aria-invalid={data.renamingError !== null}
             title={data.renamingError ?? undefined}
             className={cn(
@@ -107,6 +72,14 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
       </button>
     </div>
   );
+}
+
+function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProps<GridItemData>): React.JSX.Element | null {
+  const index = rowIndex * data.columnCount + columnIndex;
+  const node = data.nodes[index];
+  if (node === undefined) return null;
+
+  return <GridFileItem node={node} data={data} style={style} />;
 }
 
 export function FileGrid({
