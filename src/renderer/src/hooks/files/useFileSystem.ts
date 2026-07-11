@@ -9,6 +9,7 @@ import {
   SPACE_ANALYZER_PATH,
   DEV_PANEL_PATH,
   DUPLICATE_FINDER_PATH,
+  FILE_TIMELINE_PATH,
   SMART_COLLECTIONS_PATH,
   smartCollectionPath,
 } from '@shared/constants';
@@ -164,6 +165,12 @@ export function useFileSystem(): UseFileSystemResult {
         setHasPartialResults(false);
         return;
       }
+      if (path === FILE_TIMELINE_PATH) {
+        if (!isCurrentRequest()) return;
+        setNodes([]);
+        setHasPartialResults(false);
+        return;
+      }
       if (path === SMART_COLLECTIONS_PATH) {
         if (!isCurrentRequest()) return;
         setNodes(createSmartCollectionNodes());
@@ -215,6 +222,7 @@ export function useFileSystem(): UseFileSystemResult {
       path === SPACE_ANALYZER_PATH ||
       path === DEV_PANEL_PATH ||
       path === DUPLICATE_FINDER_PATH ||
+      path === FILE_TIMELINE_PATH ||
       isSmartCollectionPath(path)
     ) return;
     void ipc.invoke('fs:watch', { path });

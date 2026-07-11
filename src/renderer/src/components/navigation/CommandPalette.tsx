@@ -25,6 +25,7 @@ import {
   Code2,
   Sparkles,
   Copy,
+  Clock3,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -48,6 +49,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Code2,
   Sparkles,
   Copy,
+  Clock3,
 };
 
 interface CommandPaletteProps {

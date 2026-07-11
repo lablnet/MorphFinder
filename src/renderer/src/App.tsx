@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { AlertCircle, HardDrive, Loader2, LockKeyhole, FolderPlus, Terminal as TerminalIcon } from 'lucide-react';
 import { FileContextMenu } from '@renderer/components/files/FileContextMenu';
 import { FileView } from '@renderer/components/files/FileView';
@@ -8,11 +9,12 @@ import { ipc } from '@renderer/services/ipc';
 import { FileToolbar } from '@renderer/components/navigation/FileToolbar';
 import { NamePromptDialog } from '@renderer/components/ui/NamePromptDialog';
 import { Button } from '@renderer/components/ui/Button';
-import { CACHE_CLEANER_PATH, DEV_PANEL_PATH, DUPLICATE_FINDER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, DEV_PANEL_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import { CacheCleaner } from '@renderer/components/cachecleaner/CacheCleaner';
 import { SpaceAnalyzer } from '@renderer/components/spaceanalyzer';
 import { DevPanel } from '@renderer/components/devpanel/DevPanel';
 import { DuplicateFinder } from '@renderer/components/duplicates/DuplicateFinder';
+import { FileTimeline } from '@renderer/components/filetimeline/FileTimeline';
 import { CommandPalette } from '@renderer/components/navigation/CommandPalette';
 import { useKeyboardShortcuts, useFileSystemController, useGitRadar, useProjectDetector } from '@renderer/hooks';
 import { DevPanelStatusButton } from '@renderer/components/devpanel/components/DevPanelStatusButton';
@@ -63,6 +65,13 @@ export function App(): React.JSX.Element {
 
   const gitRadar = useGitRadar(tabs.activePath);
   const projectDetector = useProjectDetector(isVirtualLocation ? null : tabs.activePath);
+  const lastRealPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (tabs.activePath !== null && !isVirtualLocation) {
+      lastRealPathRef.current = tabs.activePath;
+    }
+  }, [isVirtualLocation, tabs.activePath]);
 
   return (
     <>
@@ -123,6 +132,8 @@ export function App(): React.JSX.Element {
                 <DevPanel />
               ) : tabs.activePath === DUPLICATE_FINDER_PATH ? (
                 <DuplicateFinder />
+              ) : tabs.activePath === FILE_TIMELINE_PATH ? (
+                <FileTimeline initialRootPath={lastRealPathRef.current} onOpenPath={(path) => void ipc.invoke('shell:showInFolder', { path })} />
               ) : tabs.activePath === SPACE_ANALYZER_PATH ? (
                 <SpaceAnalyzer />
               ) : fs.error !== null ? (

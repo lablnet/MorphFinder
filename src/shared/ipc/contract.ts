@@ -9,6 +9,7 @@ import type { DirectoryAnnotation, DirectoryAnnotationUpdate } from '../types/di
 import type { FileSearchRequest, FileSearchResult } from '../types/fileSearch';
 import type { SmartCollectionRequest, SmartCollectionResult } from '../types/smartCollections';
 import type { DuplicateGroup, DuplicateScanRequest, DuplicateScanResult } from '../types/duplicates';
+import type { FileTimelineScanRequest, FileTimelineScanResult } from '../types/fileTimeline';
 
 
 /**
@@ -70,6 +71,10 @@ export interface IpcContract {
   'duplicates:cancel': {
     request: void;
     response: void;
+  };
+  'timeline:scan': {
+    request: FileTimelineScanRequest;
+    response: FileTimelineScanResult;
   };
   'shell:openWith': { request: { path: string; appBundleId?: string }; response: void };
   'cache:scan': {

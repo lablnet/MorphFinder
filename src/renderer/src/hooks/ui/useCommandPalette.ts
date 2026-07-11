@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH } from '@shared/constants';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { UIShell, UIThemeMode } from '@shared/types/layout';
@@ -223,6 +223,14 @@ export function useCommandPalette({
       description: DUPLICATE_FINDER_PATH,
       icon: 'Copy',
       action: () => openTab(DUPLICATE_FINDER_PATH),
+    });
+    list.push({
+      id: 'nav-file-timeline',
+      category: 'Navigation',
+      label: 'Open File Timeline',
+      description: FILE_TIMELINE_PATH,
+      icon: 'Clock3',
+      action: () => openTab(FILE_TIMELINE_PATH),
     });
 
     // --- ACTIONS ---

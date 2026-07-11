@@ -1,0 +1,36 @@
+import { FileTimelineControls } from './components/FileTimelineControls';
+import { FileTimelineEmptyState } from './components/FileTimelineEmptyState';
+import { FileTimelineHeader } from './components/FileTimelineHeader';
+import { FileTimelineList } from './components/FileTimelineList';
+import { FileTimelineStats } from './components/FileTimelineStats';
+import { useFileTimeline } from '@renderer/hooks/files/useFileTimeline';
+
+export function FileTimeline({
+  initialRootPath,
+  onOpenPath,
+}: {
+  initialRootPath: string | null;
+  onOpenPath: (path: string) => void;
+}): React.JSX.Element {
+  const timeline = useFileTimeline(initialRootPath);
+  const hasItems = timeline.groups.length > 0;
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden bg-shell-surface text-sm">
+      <FileTimelineHeader
+        rootPath={timeline.rootPath}
+        isLoading={timeline.isLoading}
+        onChooseFolder={() => void timeline.chooseFolder()}
+        onScan={() => void timeline.scan()}
+      />
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <FileTimelineControls days={timeline.days} disabled={timeline.isLoading} onDaysChange={timeline.setDays} />
+        {timeline.error !== null ? (
+          <div className="mb-4 rounded-shell border border-shell-border bg-shell-sidebar/40 p-3 text-xs text-current/70">{timeline.error}</div>
+        ) : null}
+        <FileTimelineStats result={timeline.result} />
+        {hasItems ? <FileTimelineList groups={timeline.groups} onOpen={onOpenPath} /> : <FileTimelineEmptyState isLoading={timeline.isLoading} />}
+      </div>
+    </div>
+  );
+}
