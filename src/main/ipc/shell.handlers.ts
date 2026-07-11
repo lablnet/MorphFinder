@@ -21,10 +21,13 @@ export function createShellHandlers(window: BrowserWindow): {
     'shell:trash': ({ paths }) => trashPaths(paths),
     'shell:open': ({ path }) => openPath(path),
     'shell:newWindow': ({ path }) => {
-      const newWin = createMainWindow(path);
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { registerHandlers } = require('./registerHandlers');
-      registerHandlers(newWin);
+      console.log('[main] shell:newWindow handler invoked for path:', path);
+      try {
+        createMainWindow(path);
+        console.log('[main] createMainWindow executed successfully');
+      } catch (error) {
+        console.error('[main] Failed to create new window:', error);
+      }
     },
     'shell:showInFolder': ({ path }) => Promise.resolve(showItemInFolder(path)),
     'shell:startDrag': async ({ paths }) => {

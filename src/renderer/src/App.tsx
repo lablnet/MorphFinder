@@ -86,11 +86,13 @@ export function App(): React.JSX.Element {
 
   const tabsOpenRef = useRef(tabs.open);
   tabsOpenRef.current = tabs.open;
+  const openedInitialPathRef = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const initialPath = params.get('initialPath');
-    if (initialPath) {
+    if (initialPath && !openedInitialPathRef.current) {
+      openedInitialPathRef.current = true;
       tabsOpenRef.current(initialPath);
     }
   }, []);

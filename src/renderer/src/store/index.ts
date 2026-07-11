@@ -12,6 +12,13 @@ export type AppStore = LayoutSlice & TabsSlice & SelectionSlice & FileSystemSlic
  * survive a restart — selection and the well-known-dirs cache are session-only,
  * so they're excluded in `partialize` below.
  */
+const getStorageKey = (): string => {
+  if (typeof window === 'undefined') return 'MorphFinder-store';
+  const params = new URLSearchParams(window.location.search);
+  const windowId = params.get('windowId') || 'main';
+  return `MorphFinder-store-${windowId}`;
+};
+
 export const useAppStore = create<AppStore>()(
   persist(
     (...args) => ({
@@ -21,7 +28,7 @@ export const useAppStore = create<AppStore>()(
       ...createFileSystemSlice(...args),
     }),
     {
-      name: 'MorphFinder-store',
+      name: getStorageKey(),
       partialize: (state) => ({
         activeShell: state.activeShell,
         themeMode: state.themeMode,

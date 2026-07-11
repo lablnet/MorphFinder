@@ -48,12 +48,17 @@ export function createMainWindow(initialPath?: string): BrowserWindow {
   });
 
   const devServerUrl = process.env.ELECTRON_RENDERER_URL;
-  const query = initialPath ? `?initialPath=${encodeURIComponent(initialPath)}` : '';
+  const windowId = initialPath ? `win-${Date.now()}-${Math.random().toString(36).substring(2, 9)}` : '';
+  
   if (devServerUrl !== undefined) {
-    void window.loadURL(devServerUrl + query);
+    const queryParams = new URLSearchParams();
+    if (windowId) queryParams.set('windowId', windowId);
+    if (initialPath) queryParams.set('initialPath', initialPath);
+    const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    void window.loadURL(devServerUrl + queryStr);
   } else {
     void window.loadFile(join(__dirname, '../renderer/index.html'), {
-      query: initialPath ? { initialPath } : {},
+      query: initialPath ? { initialPath, windowId } : {},
     });
   }
 

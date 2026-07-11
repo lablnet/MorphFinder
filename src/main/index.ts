@@ -53,14 +53,13 @@ app.whenReady().then(() => {
     }
   }
 
-  const window = createMainWindow();
-  registerHandlers(window);
+  createMainWindow();
+  registerHandlers();
   startAutoUpdater();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      const reactivatedWindow = createMainWindow();
-      registerHandlers(reactivatedWindow);
+      createMainWindow();
     }
   });
 });
