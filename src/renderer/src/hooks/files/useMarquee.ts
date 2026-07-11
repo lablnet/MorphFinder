@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import type React from 'react';
-import { normalizedSelectionRect, type SelectionRect } from '../components/files/selection';
+import { normalizedSelectionRect, type SelectionRect } from '../../components/files/selection';
 
 interface Point {
   x: number;

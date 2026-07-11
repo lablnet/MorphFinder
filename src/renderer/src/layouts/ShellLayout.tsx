@@ -1,6 +1,5 @@
 import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
-import { useLayoutShell } from '@renderer/hooks/useLayoutShell';
-import { useWellKnownDirs } from '@renderer/hooks/useWellKnownDirs';
+import { useLayoutShell, useWellKnownDirs } from '@renderer/hooks';
 import { useAppStore } from '@renderer/store';
 
 interface SlotProps {

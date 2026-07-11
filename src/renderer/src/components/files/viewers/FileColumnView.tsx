@@ -5,9 +5,8 @@ import { FileIcon } from '../../fileicons/FileIcon';
 import { marqueeSelectionForList, type SelectionRect } from '../selection';
 import type { FileViewProps } from '../types';
 import { readDraggedPaths } from '../dragDrop';
-import { useFileItem } from '@renderer/hooks/useFileItem';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { useMarquee } from '@renderer/hooks/useMarquee';
+import { useFileItem, useMarquee } from '@renderer/hooks';
 
 interface ColumnFileItemProps {
   node: FileSystemNode;

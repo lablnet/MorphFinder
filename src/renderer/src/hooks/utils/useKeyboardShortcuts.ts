@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@renderer/store';
-import { useTabs } from './useTabs';
+import { useTabs } from '../ui/useTabs';
 
 /** Detects the platform accelerator modifier once — Cmd on macOS, Ctrl everywhere else. */
 function isPrimaryModifier(event: KeyboardEvent): boolean {

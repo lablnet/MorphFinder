@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import type React from 'react';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { pathsForDrag, readDraggedPaths, writeDraggedPaths } from '../components/files/dragDrop';
-import { nextSelectionForEvent } from '../components/files/selection';
+import { pathsForDrag, readDraggedPaths, writeDraggedPaths } from '../../components/files/dragDrop';
+import { nextSelectionForEvent } from '../../components/files/selection';
 
 export interface UseFileItemOptions {
   node: FileSystemNode;

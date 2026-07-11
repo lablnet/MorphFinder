@@ -12,13 +12,15 @@ import { TabStrip } from '@renderer/components/navigation/TabStrip';
 import { ShellLayout } from '@renderer/layouts/ShellLayout';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { useFileSystem } from '@renderer/hooks/useFileSystem';
-import { useFileOperations } from '@renderer/hooks/useFileOperations';
-import { useKeyboardShortcuts } from '@renderer/hooks/useKeyboardShortcuts';
-import { useLayoutShell } from '@renderer/hooks/useLayoutShell';
-import { useSelection } from '@renderer/hooks/useSelection';
-import { useTabs } from '@renderer/hooks/useTabs';
-import { useTheme } from '@renderer/hooks/useTheme';
+import {
+  useFileSystem,
+  useFileOperations,
+  useKeyboardShortcuts,
+  useLayoutShell,
+  useSelection,
+  useTabs,
+  useTheme,
+} from '@renderer/hooks';
 import { useAppStore } from '@renderer/store';
 import { THIS_PC_PATH } from '@shared/constants';
 import type { ViewMode } from '@shared/types/layout';
