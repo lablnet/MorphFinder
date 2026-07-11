@@ -154,6 +154,8 @@ function classifyDotEntry(name: string): { category: 'Developer' | 'AI' | 'Syste
   };
 }
 
+let lastScannedTargets: CacheTarget[] = [];
+
 export async function scanCaches(): Promise<CacheScanResult> {
   // Only support macOS for cache scanning
   if (process.platform !== 'darwin') {
@@ -275,6 +277,7 @@ export async function scanCaches(): Promise<CacheScanResult> {
   // Sort targets by size descending
   targets.sort((a, b) => b.sizeInBytes - a.sizeInBytes);
 
+  lastScannedTargets = targets;
   return { isSupported: true, targets };
 }
 
@@ -286,8 +289,12 @@ export async function cleanCaches(targetIds: string[]): Promise<CacheCleanResult
     return { success: false, cleanedSizes, errors };
   }
 
-  // Get current state to know sizes before deletion
-  const { targets } = await scanCaches();
+  // Use in-memory cached targets from the last scan to perform deletions instantly
+  let targets = lastScannedTargets;
+  if (targets.length === 0) {
+    const scanRes = await scanCaches();
+    targets = scanRes.targets;
+  }
 
   for (const targetId of targetIds) {
     const target = targets.find((t) => t.id === targetId);
