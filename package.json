@@ -1,5 +1,6 @@
 {
   "name": "MorphFinder",
+  "productName": "MorphFinder",
   "version": "1.0.0",
   "description": "Multi-platform file manager with a runtime-switchable Finder/Explorer/Dolphin Tri-UI shell.",
   "main": "./out/main/index.js",

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import sharp from 'sharp';
 // @ts-ignore
 import png2icons from 'png2icons';
@@ -119,6 +120,34 @@ async function buildAssets() {
         if (fs.statSync(filePath).isFile()) {
           fs.unlinkSync(filePath);
           console.log(`Cleaned up old asset: assets/${file}`);
+        }
+      }
+    }
+
+    // 7. macOS Local Development Patch (force dev binary to display the correct name and icon)
+    if (process.platform === 'darwin') {
+      const devAppPath = path.join(projectRoot, 'node_modules', 'electron', 'dist', 'Electron.app');
+      const devIconPath = path.join(devAppPath, 'Contents', 'Resources', 'electron.icns');
+      const devPlistPath = path.join(devAppPath, 'Contents', 'Info.plist');
+      const buildIcnsPath = path.join(buildDir, 'icon.icns');
+
+      if (fs.existsSync(devAppPath)) {
+        console.log('Detected local macOS development Electron.app. Patching assets...');
+        
+        // Copy our brand new icns over the default electron.icns
+        if (fs.existsSync(buildIcnsPath)) {
+          fs.copyFileSync(buildIcnsPath, devIconPath);
+          console.log('Patched dev icon inside Electron.app');
+        }
+
+        // Patch Info.plist display name
+        try {
+          execSync(`plutil -replace CFBundleName -string "MorphFinder" "${devPlistPath}"`);
+          execSync(`plutil -replace CFBundleDisplayName -string "MorphFinder" "${devPlistPath}"`);
+          execSync(`touch "${devAppPath}"`);
+          console.log('Patched dev Info.plist & touched Electron.app bundle');
+        } catch (plistError) {
+          console.warn('Could not patch Electron.app Info.plist:', plistError);
         }
       }
     }
