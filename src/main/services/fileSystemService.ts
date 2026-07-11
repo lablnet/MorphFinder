@@ -1,8 +1,10 @@
 import { extname, join } from 'node:path';
 import { constants as fsConstants } from 'node:fs';
-import { access, mkdir, readdir, rename as fsRename, stat } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, rename as fsRename, stat } from 'node:fs/promises';
 import { app, shell } from 'electron';
 import type { DirectoryListing, FileSystemNode } from '@shared/types/fileSystem';
+import type { FileContentResponse } from '@shared/types/fileViewer';
+import { MAX_FILE_READ_BYTES } from '@shared/types/fileViewer';
 
 function isHiddenName(name: string): boolean {
   // Windows hidden attribute isn't exposed via node:fs without a native call;
@@ -96,4 +98,62 @@ export async function openPath(path: string): Promise<void> {
 
 export function showItemInFolder(path: string): void {
   shell.showItemInFolder(path);
+}
+
+/** Known text-like extensions where we skip the binary heuristic. */
+const KNOWN_TEXT_EXTENSIONS = new Set([
+  'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'mts', 'cts',
+  'json', 'jsonc', 'json5', 'yaml', 'yml', 'toml', 'ini', 'cfg',
+  'html', 'htm', 'css', 'scss', 'sass', 'less', 'xml', 'svg',
+  'md', 'mdx', 'markdown', 'txt', 'log', 'csv', 'tsv',
+  'py', 'rb', 'rs', 'go', 'java', 'kt', 'c', 'h', 'cpp', 'hpp', 'cs',
+  'swift', 'dart', 'lua', 'r', 'pl', 'php', 'sh', 'bash', 'zsh',
+  'sql', 'graphql', 'prisma', 'vue', 'svelte', 'astro',
+  'diff', 'patch', 'env', 'gitignore', 'editorconfig', 'prettierrc',
+  'dockerfile', 'makefile',
+]);
+
+function isBinaryBuffer(buffer: Buffer): boolean {
+  // Check first 8KB for null bytes — a simple but effective heuristic.
+  const checkLength = Math.min(buffer.length, 8192);
+  for (let i = 0; i < checkLength; i++) {
+    if (buffer[i] === 0) return true;
+  }
+  return false;
+}
+
+export async function readFileContent(
+  path: string,
+  maxBytes?: number,
+): Promise<FileContentResponse> {
+  const cap = maxBytes ?? MAX_FILE_READ_BYTES;
+  const stats = await stat(path);
+  const totalBytes = stats.size;
+  const truncated = totalBytes > cap;
+
+  const buffer = truncated
+    ? await readPartialFile(path, cap)
+    : await readFile(path);
+
+  const ext = extname(path).replace(/^\./, '').toLowerCase();
+  const isText = KNOWN_TEXT_EXTENSIONS.has(ext) || !isBinaryBuffer(buffer);
+
+  return {
+    content: isText ? buffer.toString('utf-8') : buffer.toString('base64'),
+    encoding: isText ? 'utf-8' : 'base64',
+    truncated,
+    totalBytes,
+  };
+}
+
+async function readPartialFile(path: string, bytes: number): Promise<Buffer> {
+  const { open } = await import('node:fs/promises');
+  const handle = await open(path, 'r');
+  try {
+    const buffer = Buffer.alloc(bytes);
+    await handle.read(buffer, 0, bytes, 0);
+    return buffer;
+  } finally {
+    await handle.close();
+  }
 }

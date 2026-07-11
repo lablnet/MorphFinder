@@ -14,6 +14,7 @@ import { Button } from '../ui/Button';
 
 export type FileContextAction =
   | 'open'
+  | 'open-with-system'
   | 'rename'
   | 'copy'
   | 'cut'
@@ -38,6 +39,7 @@ interface FileContextMenuProps {
 
 const TARGET_ACTIONS: Array<{ action: FileContextAction; label: string; Icon: typeof FolderOpen }> = [
   { action: 'open', label: 'Open', Icon: FolderOpen },
+  { action: 'open-with-system', label: 'Open with System App', Icon: ExternalLink },
   { action: 'rename', label: 'Rename', Icon: Pencil },
   { action: 'copy', label: 'Copy', Icon: Copy },
   { action: 'cut', label: 'Cut', Icon: Scissors },

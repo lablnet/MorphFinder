@@ -16,7 +16,17 @@ export function applyContentSecurityPolicy(): void {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ${connectSrc};`,
+          [
+            `default-src 'self'`,
+            `script-src ${scriptSrc}`,
+            `style-src 'self' 'unsafe-inline'`,
+            `img-src 'self' data: morph-file: blob:`,
+            `media-src 'self' morph-file: blob:`,
+            `frame-src 'self' morph-file: blob:`,
+            `object-src 'self' morph-file: blob:`,
+            `connect-src ${connectSrc}`,
+            `worker-src 'self' blob:`,
+          ].join('; ') + ';',
         ],
       },
     });

@@ -1,6 +1,7 @@
 import { AlertCircle, HardDrive, LockKeyhole, FolderPlus } from 'lucide-react';
 import { FileContextMenu } from '@renderer/components/files/FileContextMenu';
 import { FileView } from '@renderer/components/files/FileView';
+import { FileViewer } from '@renderer/components/fileviewer';
 import { TabStrip } from '@renderer/components/navigation/TabStrip';
 import { ShellLayout } from '@renderer/layouts/ShellLayout';
 import { ipc } from '@renderer/services/ipc';
@@ -128,6 +129,12 @@ export function App(): React.JSX.Element {
             onChange={onNamePromptChange}
             onConfirm={closeNamePrompt}
             onCancel={() => closeNamePrompt(null)}
+          />
+        ) : null}
+        {fs.fileViewerTarget !== null ? (
+          <FileViewer
+            node={fs.fileViewerTarget}
+            onClose={fs.closeFileViewer}
           />
         ) : null}
       </ShellLayout.Content>

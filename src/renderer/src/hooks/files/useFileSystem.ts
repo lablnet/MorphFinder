@@ -15,6 +15,9 @@ export interface UseFileSystemResult {
   navigate: (path: string) => void;
   openNode: (node: FileSystemNode) => void;
   refresh: () => void;
+  /** The file currently open in the in-app viewer, or null. */
+  fileViewerTarget: FileSystemNode | null;
+  closeFileViewer: () => void;
 }
 
 function virtualDirectory(name: string, path: string): FileSystemNode {
@@ -62,6 +65,7 @@ export function useFileSystem(): UseFileSystemResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPartialResults, setHasPartialResults] = useState(false);
+  const [fileViewerTarget, setFileViewerTarget] = useState<FileSystemNode | null>(null);
   const errorKind = error === null ? null : classifyFileSystemError(error);
 
   const load = useCallback(async () => {
@@ -108,10 +112,14 @@ export function useFileSystem(): UseFileSystemResult {
   const openNode = useCallback(
     (node: FileSystemNode) => {
       if (node.kind === 'directory') navigateActiveTab(node.path);
-      else void ipc.invoke('shell:open', { path: node.path });
+      else setFileViewerTarget(node);
     },
     [navigateActiveTab],
   );
+
+  const closeFileViewer = useCallback(() => {
+    setFileViewerTarget(null);
+  }, []);
 
   return {
     nodes,
@@ -122,5 +130,7 @@ export function useFileSystem(): UseFileSystemResult {
     navigate: navigateActiveTab,
     openNode,
     refresh: () => void load(),
+    fileViewerTarget,
+    closeFileViewer,
   };
 }

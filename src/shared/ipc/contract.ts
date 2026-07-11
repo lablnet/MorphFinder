@@ -1,4 +1,5 @@
 import type { DirectoryListing, FileOperationRequest, FileSystemNode } from '../types/fileSystem';
+import type { FileContentResponse } from '../types/fileViewer';
 import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '../types/native';
 
 /**
@@ -41,6 +42,11 @@ export interface IpcContract {
     response: NativeThumbnail | null;
   };
   'native:openWithApps': { request: { path: string }; response: OpenWithApp[] };
+  'fs:readFile': {
+    request: { path: string; maxBytes?: number };
+    response: FileContentResponse;
+  };
+  'shell:openWith': { request: { path: string; appBundleId?: string }; response: void };
 }
 
 export type IpcChannel = keyof IpcContract;

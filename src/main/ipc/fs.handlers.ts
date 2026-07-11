@@ -3,6 +3,7 @@ import type { IpcContract } from '@shared/ipc/contract';
 import {
   createFolder,
   readDirectory,
+  readFileContent,
   renameEntry,
   wellKnownDirectories,
 } from '../services/fileSystemService';
@@ -23,6 +24,7 @@ export function createFsHandlers(window: BrowserWindow): {
   'fs:wellKnownDirs': Handler<'fs:wellKnownDirs'>;
   'fs:watch': Handler<'fs:watch'>;
   'fs:unwatch': Handler<'fs:unwatch'>;
+  'fs:readFile': Handler<'fs:readFile'>;
 } {
   return {
     'fs:readDirectory': ({ path, includeHidden }) => readDirectory(path, includeHidden),
@@ -38,5 +40,6 @@ export function createFsHandlers(window: BrowserWindow): {
       activeUnwatchers.get(path)?.();
       activeUnwatchers.delete(path);
     },
+    'fs:readFile': ({ path, maxBytes }) => readFileContent(path, maxBytes),
   };
 }

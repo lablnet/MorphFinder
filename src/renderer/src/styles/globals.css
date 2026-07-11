@@ -75,3 +75,141 @@ body {
   --shell-sidebar: #23282e;
   --shell-border: #3b434c;
 }
+
+/* ------------------------------------------------------------------ */
+/* File Viewer                                                        */
+/* ------------------------------------------------------------------ */
+
+.file-viewer-overlay {
+  animation: file-viewer-enter 0.2s ease-out;
+}
+
+@keyframes file-viewer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Range input (video/audio seek bars) */
+.file-viewer-range {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+.file-viewer-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--shell-accent);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.file-viewer-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Markdown viewer prose */
+.markdown-viewer {
+  line-height: 1.7;
+  color: inherit;
+}
+
+.markdown-viewer h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.markdown-viewer h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.markdown-viewer h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.8em 0 0.4em;
+}
+
+.markdown-viewer h4,
+.markdown-viewer h5,
+.markdown-viewer h6 {
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+}
+
+.markdown-viewer p {
+  margin: 0.6em 0;
+}
+
+.markdown-viewer a {
+  color: var(--shell-accent);
+  text-decoration: underline;
+}
+
+.markdown-viewer blockquote {
+  border-left: 3px solid var(--shell-accent);
+  padding: 0.5em 1em;
+  margin: 0.8em 0;
+  background: var(--shell-sidebar);
+  border-radius: 0 var(--shell-radius) var(--shell-radius) 0;
+}
+
+.markdown-viewer ul,
+.markdown-viewer ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.markdown-viewer li {
+  margin: 0.2em 0;
+}
+
+.markdown-viewer hr {
+  border: none;
+  border-top: 1px solid var(--shell-border);
+  margin: 1.5em 0;
+}
+
+.markdown-viewer .md-code-block {
+  background: var(--shell-sidebar);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--shell-radius);
+  padding: 0.8em 1em;
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+  font-size: 0.875em;
+  margin: 0.8em 0;
+}
+
+.markdown-viewer .md-inline-code {
+  background: var(--shell-sidebar);
+  border: 1px solid var(--shell-border);
+  border-radius: 3px;
+  padding: 0.15em 0.4em;
+  font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+  font-size: 0.875em;
+}
+
+.markdown-viewer strong {
+  font-weight: 700;
+}
+
+.markdown-viewer em {
+  font-style: italic;
+}

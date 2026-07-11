@@ -5,6 +5,7 @@ describe('contextActionsForState', () => {
   it('shows file operations when a file or folder is targeted', () => {
     expect(contextActionsForState({ hasTarget: true })).toEqual([
       'open',
+      'open-with-system',
       'rename',
       'copy',
       'cut',

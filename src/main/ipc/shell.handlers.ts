@@ -11,6 +11,7 @@ export function createShellHandlers(window: BrowserWindow): {
   'shell:open': Handler<'shell:open'>;
   'shell:showInFolder': Handler<'shell:showInFolder'>;
   'shell:startDrag': Handler<'shell:startDrag'>;
+  'shell:openWith': Handler<'shell:openWith'>;
 } {
   return {
     'shell:trash': ({ paths }) => trashPaths(paths),
@@ -23,5 +24,6 @@ export function createShellHandlers(window: BrowserWindow): {
       if (window.isDestroyed()) return;
       window.webContents.startDrag(paths.length === 1 ? { file: path, icon } : { file: path, files: paths, icon });
     },
+    'shell:openWith': ({ path }) => openPath(path),
   };
 }

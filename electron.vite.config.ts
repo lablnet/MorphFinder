@@ -28,5 +28,10 @@ export default defineConfig({
     resolve: { alias: { ...sharedAlias, '@renderer': resolve('src/renderer/src') } },
     plugins: [react()],
     build: { outDir: 'out/renderer' },
+    // Monaco editor workers must be served from the same origin.
+    // Vite handles this automatically for dynamic imports.
+    optimizeDeps: {
+      include: ['monaco-editor'],
+    },
   },
 });
