@@ -8,6 +8,7 @@ export interface LayoutSlice {
   showHiddenFiles: boolean;
   terminalOpen: boolean;
   terminalHeight: number;
+  terminalQueuedCommand: { cwd: string; command: string; nonce: number } | null;
   setShell: (shell: UIShell) => void;
   /** Cmd/Ctrl+Shift+U — walks Finder → Explorer → Dolphin → Finder. */
   cycleShell: () => void;
@@ -18,6 +19,7 @@ export interface LayoutSlice {
   setTerminalOpen: (open: boolean) => void;
   toggleTerminal: () => void;
   setTerminalHeight: (height: number) => void;
+  queueTerminalCommand: (cwd: string, command: string) => void;
 }
 
 const SHELL_CYCLE_ORDER: UIShell[] = ['finder', 'explorer', 'dolphin'];
@@ -36,6 +38,7 @@ export const createLayoutSlice: StateCreator<AppStore, [], [], LayoutSlice> = (s
   showHiddenFiles: false,
   terminalOpen: false,
   terminalHeight: 300,
+  terminalQueuedCommand: null,
 
   setShell: (shell) =>
     set((state) => ({
@@ -69,5 +72,10 @@ export const createLayoutSlice: StateCreator<AppStore, [], [], LayoutSlice> = (s
   toggleTerminal: () => set((state) => ({ terminalOpen: !state.terminalOpen })),
 
   setTerminalHeight: (height) => set({ terminalHeight: Math.max(150, Math.min(height, window.innerHeight - 200)) }),
-});
 
+  queueTerminalCommand: (cwd, command) =>
+    set({
+      terminalOpen: true,
+      terminalQueuedCommand: { cwd, command, nonce: Date.now() },
+    }),
+});

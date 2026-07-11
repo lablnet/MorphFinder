@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@lablnet/ui';
+import { devPanelTabs, isDevPanelTabEnabled } from '@renderer/lib/devPanelDashboardUtils';
 import type { DevPanelTab } from '../../../hooks/files/useDevPanel';
 
 interface TabBarProps {
@@ -10,25 +11,11 @@ interface TabBarProps {
   hasEnv: boolean;
 }
 
-const TABS: { id: DevPanelTab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'scripts', label: 'Scripts' },
-  { id: 'dependencies', label: 'Dependencies' },
-  { id: 'env', label: 'Env Vars' },
-];
-
 export function TabBar({ activeTab, onTabChange, hasScripts, hasDeps, hasEnv }: TabBarProps): React.JSX.Element {
-  const isEnabled = (tab: DevPanelTab): boolean => {
-    if (tab === 'scripts') return hasScripts;
-    if (tab === 'dependencies') return hasDeps;
-    if (tab === 'env') return hasEnv;
-    return true;
-  };
-
   return (
     <div className="flex items-center gap-1 border-b border-shell-border px-4 bg-shell-sidebar/30">
-      {TABS.map(({ id, label }) => {
-        const enabled = isEnabled(id);
+      {devPanelTabs.map(({ id, label }) => {
+        const enabled = isDevPanelTabEnabled(id, hasScripts, hasDeps, hasEnv);
         const isActive = activeTab === id;
         return (
           <button

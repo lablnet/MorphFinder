@@ -16,6 +16,9 @@ import type {
   DevDependency,
   EnvVar,
   DevToolchain,
+  DependencyWarning,
+  EnvChecklistItem,
+  ProjectHealthCheck,
 } from '@shared/types/devPanel';
 import { getGitStatus } from './gitService';
 
@@ -65,6 +68,108 @@ async function parseEnvFile(dirPath: string): Promise<EnvVar[]> {
   } catch {
     return [];
   }
+}
+
+async function parseEnvChecklist(dirPath: string, envVars: EnvVar[]): Promise<EnvChecklistItem[]> {
+  const candidates = [
+    { fileName: '.env.example', source: '.env.example' as const },
+    { fileName: '.env.sample', source: '.env.sample' as const },
+    { fileName: '.env.template', source: '.env.template' as const },
+  ];
+  const presentKeys = new Set(envVars.map((item) => item.key));
+
+  for (const candidate of candidates) {
+    const templatePath = nodePath.join(dirPath, candidate.fileName);
+    if (!(await fileExists(templatePath))) continue;
+    try {
+      const raw = await fs.readFile(templatePath, 'utf8');
+      return raw
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0 && !line.startsWith('#'))
+        .map((line) => line.split('=')[0]?.trim() ?? '')
+        .filter((key) => key.length > 0)
+        .map((key) => ({ key, present: presentKeys.has(key), source: candidate.source }));
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+async function detectPackageManager(dirPath: string): Promise<string | null> {
+  const lockfiles: Array<[string, string]> = [
+    ['pnpm-lock.yaml', 'pnpm'],
+    ['yarn.lock', 'yarn'],
+    ['package-lock.json', 'npm'],
+    ['bun.lockb', 'bun'],
+    ['bun.lock', 'bun'],
+    ['Cargo.lock', 'cargo'],
+    ['poetry.lock', 'poetry'],
+    ['Pipfile.lock', 'pipenv'],
+    ['go.sum', 'go'],
+    ['composer.lock', 'composer'],
+    ['Gemfile.lock', 'bundler'],
+  ];
+  for (const [fileName, manager] of lockfiles) {
+    if (await fileExists(nodePath.join(dirPath, fileName))) return manager;
+  }
+  if (await fileExists(nodePath.join(dirPath, 'package.json'))) return 'npm';
+  if (await fileExists(nodePath.join(dirPath, 'Cargo.toml'))) return 'cargo';
+  if (await fileExists(nodePath.join(dirPath, 'requirements.txt'))) return 'pip';
+  return null;
+}
+
+function createDependencyWarnings(dependencies: DevDependency[]): DependencyWarning[] {
+  return dependencies.flatMap((dependency) => {
+    const warnings: DependencyWarning[] = [];
+    if (dependency.version === '*' || dependency.version === 'latest') {
+      warnings.push({
+        packageName: dependency.name,
+        severity: 'warn',
+        message: 'Version is not pinned.',
+      });
+    }
+    if (/file:|link:|workspace:/.test(dependency.version)) {
+      warnings.push({
+        packageName: dependency.name,
+        severity: 'info',
+        message: 'Uses a local/workspace reference.',
+      });
+    }
+    return warnings;
+  });
+}
+
+function createHealthChecks(info: DevPanelInfo, packageManager: string | null, envChecklist: EnvChecklistItem[]): ProjectHealthCheck[] {
+  const missingEnvCount = envChecklist.filter((item) => !item.present).length;
+  return [
+    {
+      id: 'scripts',
+      label: 'Runnable scripts',
+      status: info.scripts.length > 0 ? 'pass' : 'warn',
+      detail: info.scripts.length > 0 ? `${info.scripts.length} script${info.scripts.length === 1 ? '' : 's'} detected.` : 'No scripts detected.',
+    },
+    {
+      id: 'package-manager',
+      label: 'Package manager',
+      status: packageManager === null ? 'warn' : 'pass',
+      detail: packageManager === null ? 'No lockfile/package manager detected.' : `${packageManager} detected.`,
+    },
+    {
+      id: 'git',
+      label: 'Git workspace',
+      status: info.gitBranch === null ? 'warn' : info.gitIsDirty ? 'warn' : 'pass',
+      detail: info.gitBranch === null ? 'Not inside a Git repository.' : info.gitIsDirty ? `Branch ${info.gitBranch} has changes.` : `Branch ${info.gitBranch} is clean.`,
+    },
+    {
+      id: 'env',
+      label: '.env completeness',
+      status: envChecklist.length === 0 ? 'warn' : missingEnvCount === 0 ? 'pass' : 'fail',
+      detail: envChecklist.length === 0 ? 'No env template found.' : missingEnvCount === 0 ? 'All template keys are present.' : `${missingEnvCount} env key${missingEnvCount === 1 ? '' : 's'} missing.`,
+    },
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -695,9 +800,13 @@ const EMPTY_RESULT: DevPanelInfo = {
   description: null,
   license: null,
   toolchain: null,
+  packageManager: null,
   scripts: [],
   dependencies: [],
   envVars: [],
+  envChecklist: [],
+  healthChecks: [],
+  dependencyWarnings: [],
   gitBranch: null,
   gitIsDirty: false,
   hasProject: false,
@@ -721,6 +830,7 @@ export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
     cppResult,
     tsResult,
     envVars,
+    packageManager,
     gitInfo,
   ] = await Promise.all([
     scanNode(dirPath),
@@ -737,8 +847,11 @@ export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
     scanCpp(dirPath),
     scanTypeScript(dirPath),     // Last — only matches when package.json is absent
     parseEnvFile(dirPath),
+    detectPackageManager(dirPath),
     getGitInfo(dirPath),
   ]);
+
+  const envChecklist = await parseEnvChecklist(dirPath, envVars);
 
   // Priority: more-specific ecosystems before generic ones
   const detected: Partial<DevPanelInfo> | null =
@@ -761,20 +874,30 @@ export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
       ...EMPTY_RESULT,
       path: dirPath,
       envVars,
+      envChecklist,
+      packageManager,
       gitBranch: gitInfo.branch,
       gitIsDirty: gitInfo.isDirty,
+      healthChecks: createHealthChecks({ ...EMPTY_RESULT, path: dirPath, envVars, envChecklist, packageManager, gitBranch: gitInfo.branch, gitIsDirty: gitInfo.isDirty }, packageManager, envChecklist),
       hasProject: false,
     };
   }
 
-  return {
+  const result = {
     ...EMPTY_RESULT,
     ...detected,
     path: dirPath,
     envVars,
+    envChecklist,
+    packageManager,
     gitBranch: gitInfo.branch,
     gitIsDirty: gitInfo.isDirty,
     hasProject: true,
+  };
+  return {
+    ...result,
+    healthChecks: createHealthChecks(result, packageManager, envChecklist),
+    dependencyWarnings: createDependencyWarnings(result.dependencies),
   };
 }
 

@@ -1,15 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { readDevPanelFavorites, writeDevPanelFavorites } from '@renderer/lib/devPanelDashboardUtils';
 import { ipc } from '@renderer/services/ipc';
+import { useAppStore } from '@renderer/store';
 import type { DevPanelInfo } from '@shared/types/devPanel';
 
-export type DevPanelTab = 'overview' | 'scripts' | 'dependencies' | 'env';
+export type DevPanelTab = 'overview' | 'tasks' | 'scripts' | 'dependencies' | 'env';
+export type ScriptRunStatus = 'queued' | 'sent' | 'failed';
+
+export interface ScriptRunState {
+  status: ScriptRunStatus;
+  ranAt: number;
+}
 
 export function useDevPanel(scanPath: string) {
+  const queueTerminalCommand = useAppStore((state) => state.queueTerminalCommand);
   const [info, setInfo] = useState<DevPanelInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DevPanelTab>('overview');
   const [revealedEnvKeys, setRevealedEnvKeys] = useState<Set<string>>(new Set());
+  const [favoriteScripts, setFavoriteScripts] = useState<Set<string>>(() => readDevPanelFavorites(scanPath));
+  const [scriptRunState, setScriptRunState] = useState<Record<string, ScriptRunState>>({});
 
   // Track scan path with a ref to avoid stale-closure issues in the effect
   const scanPathRef = useRef(scanPath);
@@ -35,6 +46,7 @@ export function useDevPanel(scanPath: string) {
   // Re-scan whenever the path changes
   useEffect(() => {
     void scan(scanPath);
+    setFavoriteScripts(readDevPanelFavorites(scanPath));
   }, [scan, scanPath]);
 
   const refresh = useCallback((): void => {
@@ -55,7 +67,24 @@ export function useDevPanel(scanPath: string) {
 
   const runScript = useCallback(async (command: string): Promise<void> => {
     if (!scanPath) return;
-    await ipc.invoke('devpanel:runScript', { cwd: scanPath, command });
+    setScriptRunState((current) => ({ ...current, [command]: { status: 'queued', ranAt: Date.now() } }));
+    try {
+      queueTerminalCommand(scanPath, command);
+      setScriptRunState((current) => ({ ...current, [command]: { status: 'sent', ranAt: Date.now() } }));
+    } catch (cause) {
+      setScriptRunState((current) => ({ ...current, [command]: { status: 'failed', ranAt: Date.now() } }));
+      throw cause;
+    }
+  }, [queueTerminalCommand, scanPath]);
+
+  const toggleFavoriteScript = useCallback((scriptName: string): void => {
+    setFavoriteScripts((current) => {
+      const next = new Set(current);
+      if (next.has(scriptName)) next.delete(scriptName);
+      else next.add(scriptName);
+      writeDevPanelFavorites(scanPath, next);
+      return next;
+    });
   }, [scanPath]);
 
   return {
@@ -65,8 +94,11 @@ export function useDevPanel(scanPath: string) {
     activeTab,
     setActiveTab,
     revealedEnvKeys,
+    favoriteScripts,
+    scriptRunState,
     revealEnvKey,
     runScript,
+    toggleFavoriteScript,
     refresh,
     scanPath,
   };

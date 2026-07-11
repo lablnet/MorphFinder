@@ -1,9 +1,7 @@
-import React, { useState, useCallback } from 'react';
 import { Code2, FolderOpen } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { useDevPanel } from '../../hooks/files/useDevPanel';
-import { useAppStore } from '@renderer/store';
-import { ipc } from '@renderer/services/ipc';
+import { useDevPanelScanPath } from '@renderer/hooks/files/useDevPanelScanPath';
 
 // Sub-components
 import { DevPanelHeader } from './components/DevPanelHeader';
@@ -13,33 +11,10 @@ import { ScriptsPanel } from './components/ScriptsPanel';
 import { DependenciesPanel } from './components/DependenciesPanel';
 import { EnvVarsPanel } from './components/EnvVarsPanel';
 import { NoProjectFound } from './components/NoProjectFound';
-
-/** Resolves the directory path to scan.
- *  Strategy: use the last real (non-virtual) path from the active tab's back history.
- *  Falls back to home directory if no real path is available. */
-function useScanPath(): { scanPath: string; setScanPath: (p: string) => void } {
-  const activeTab = useAppStore((state) => state.activeTab());
-  const wellKnownDirs = useAppStore((state) => state.wellKnownDirs);
-
-  // Find the most recent non-virtual path from back history
-  const VIRTUAL_PREFIX = 'morph://';
-  const lastRealPath =
-    activeTab?.history.back
-      .slice()
-      .reverse()
-      .find((p) => !p.startsWith(VIRTUAL_PREFIX)) ?? null;
-
-  const defaultPath = lastRealPath ?? wellKnownDirs?.home ?? '/';
-  const [overridePath, setOverridePath] = useState<string | null>(null);
-
-  return {
-    scanPath: overridePath ?? defaultPath,
-    setScanPath: setOverridePath,
-  };
-}
+import { TaskDashboard } from './components/tasks/TaskDashboard';
 
 export function DevPanel(): React.JSX.Element {
-  const { scanPath, setScanPath } = useScanPath();
+  const { scanPath, isPickingFolder, pickFolder } = useDevPanelScanPath();
   const {
     info,
     loading,
@@ -47,22 +22,13 @@ export function DevPanel(): React.JSX.Element {
     activeTab,
     setActiveTab,
     revealedEnvKeys,
+    favoriteScripts,
+    scriptRunState,
     revealEnvKey,
     runScript,
+    toggleFavoriteScript,
     refresh,
   } = useDevPanel(scanPath);
-
-  const [isPickingFolder, setIsPickingFolder] = useState(false);
-
-  const handlePickFolder = useCallback(async (): Promise<void> => {
-    setIsPickingFolder(true);
-    try {
-      const selected = await ipc.invoke('shell:selectFolder', { defaultPath: scanPath });
-      if (selected !== null) setScanPath(selected);
-    } finally {
-      setIsPickingFolder(false);
-    }
-  }, [scanPath, setScanPath]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-shell-surface text-sm relative">
@@ -82,7 +48,7 @@ export function DevPanel(): React.JSX.Element {
         </div>
         <button
           type="button"
-          onClick={() => void handlePickFolder()}
+          onClick={() => void pickFolder()}
           disabled={isPickingFolder || loading}
           className={cn(
             'flex items-center gap-1.5 rounded-shell px-2.5 py-1.5 text-xs border border-shell-border',
@@ -166,6 +132,16 @@ export function DevPanel(): React.JSX.Element {
 
                 {activeTab === 'scripts' && (
                   <ScriptsPanel scripts={info.scripts} onRun={runScript} />
+                )}
+
+                {activeTab === 'tasks' && (
+                  <TaskDashboard
+                    info={info}
+                    favoriteScripts={favoriteScripts}
+                    scriptRunState={scriptRunState}
+                    onRunScript={runScript}
+                    onToggleFavorite={toggleFavoriteScript}
+                  />
                 )}
 
                 {activeTab === 'dependencies' && (

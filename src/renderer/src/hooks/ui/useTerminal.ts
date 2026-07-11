@@ -9,11 +9,13 @@ export function useTerminal() {
   const toggleTerminal = useAppStore((state) => state.toggleTerminal);
   const setTerminalOpen = useAppStore((state) => state.setTerminalOpen);
   const setTerminalHeight = useAppStore((state) => state.setTerminalHeight);
+  const terminalQueuedCommand = useAppStore((state) => state.terminalQueuedCommand);
   const activePath = useAppStore((state) => state.activeTab()?.path ?? null);
 
   const sessionIdRef = useRef<string | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const activePathRef = useRef<string | null>(null);
+  const handledCommandNonceRef = useRef<number | null>(null);
 
   // Sync active path to ref for use inside event handlers without re-binding
   useEffect(() => {
@@ -131,6 +133,19 @@ export function useTerminal() {
 
     return () => clearTimeout(timer);
   }, [activePath, terminalOpen, writeData]);
+
+  useEffect(() => {
+    if (!terminalOpen || terminalQueuedCommand === null) return;
+    if (handledCommandNonceRef.current === terminalQueuedCommand.nonce) return;
+
+    const timer = setTimeout(() => {
+      handledCommandNonceRef.current = terminalQueuedCommand.nonce;
+      const cleanPath = terminalQueuedCommand.cwd.replace(/"/g, '\\"');
+      writeData(`cd "${cleanPath}"\r${terminalQueuedCommand.command}\r`);
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [terminalOpen, terminalQueuedCommand, writeData]);
 
   // Kill terminal on window unload
   useEffect(() => {
