@@ -1,12 +1,18 @@
 name: Release Validation
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       ref:
         description: Version tag or commit to validate
         required: true
         type: string
+
+permissions:
+  contents: write
 
 jobs:
   quality:
@@ -19,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
@@ -50,15 +56,15 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            command: pnpm build:mac -- --publish never
+            command: pnpm build:mac
           - os: windows-latest
-            command: pnpm build:win -- --publish never
+            command: pnpm build:win
           - os: ubuntu-latest
-            command: pnpm build:linux -- --publish never
+            command: pnpm build:linux
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
@@ -67,8 +73,10 @@ jobs:
           node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: ${{ matrix.command }}
+      - run: ${{ matrix.command }} -- --publish ${{ github.event_name == 'push' && 'always' || 'never' }}
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EP_PRE_RELEASE: false
           CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CSC_LINK || runner.os == 'Windows' && secrets.WIN_CSC_LINK || '' }}
           CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CSC_KEY_PASSWORD || runner.os == 'Windows' && secrets.WIN_CSC_KEY_PASSWORD || '' }}
           APPLE_ID: ${{ secrets.APPLE_ID }}

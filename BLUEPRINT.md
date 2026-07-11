@@ -199,9 +199,9 @@ composition and tokens, never logic. Adding a fourth skin = one folder + one reg
 - [x] Empty states, permission-denied states, ejected-volume handling
 
 ### Phase 10 — Packaging & Release
-- [ ] electron-builder targets: dmg/zip (mac universal), nsis (win), AppImage/deb (linux)
-- [ ] macOS hardened runtime + notarization; Windows signing
-- [ ] Auto-update (electron-updater) + GitHub Releases pipeline
+- [x] electron-builder targets: dmg/zip (mac universal), nsis (win), AppImage/deb (linux)
+- [x] macOS hardened runtime + notarization; Windows signing
+- [x] Auto-update (electron-updater) + GitHub Releases pipeline
 - [x] Playwright smoke suite gating release CI
 
 ---
