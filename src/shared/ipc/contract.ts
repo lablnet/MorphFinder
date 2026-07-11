@@ -8,6 +8,7 @@ import type { GitStatus, GitCommit } from '../types/git';
 import type { DirectoryAnnotation, DirectoryAnnotationUpdate } from '../types/directoryAnnotations';
 import type { FileSearchRequest, FileSearchResult } from '../types/fileSearch';
 import type { SmartCollectionRequest, SmartCollectionResult } from '../types/smartCollections';
+import type { DuplicateGroup, DuplicateScanRequest, DuplicateScanResult } from '../types/duplicates';
 
 
 /**
@@ -61,6 +62,14 @@ export interface IpcContract {
   'smartCollections:scan': {
     request: SmartCollectionRequest;
     response: SmartCollectionResult;
+  };
+  'duplicates:scan': {
+    request: DuplicateScanRequest;
+    response: DuplicateScanResult;
+  };
+  'duplicates:cancel': {
+    request: void;
+    response: void;
   };
   'shell:openWith': { request: { path: string; appBundleId?: string }; response: void };
   'cache:scan': {
@@ -145,6 +154,14 @@ export interface IpcEvents {
     scannedPath: string;
     fileCount: number;
     size: number;
+  };
+  'duplicates:progress': {
+    phase: 'scanning' | 'hashing';
+    scannedCount: number;
+    hashedCount: number;
+    groupsFound: number;
+    currentPath: string;
+    groups: DuplicateGroup[];
   };
   'terminal:data': {
     id: string;

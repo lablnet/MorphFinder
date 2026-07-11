@@ -1,5 +1,5 @@
-import { Trash2, PieChart, Code2, Sparkles } from 'lucide-react';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH } from '@shared/constants';
+import { Trash2, PieChart, Code2, Sparkles, Copy } from 'lucide-react';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH } from '@shared/constants';
 
 export const SIDEBAR_TOOLS = [
   {
@@ -21,5 +21,10 @@ export const SIDEBAR_TOOLS = [
     label: 'Smart Collections',
     path: SMART_COLLECTIONS_PATH,
     icon: Sparkles,
+  },
+  {
+    label: 'Duplicate Finder',
+    path: DUPLICATE_FINDER_PATH,
+    icon: Copy,
   },
 ] as const;

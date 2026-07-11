@@ -24,6 +24,7 @@ import {
   PieChart,
   Code2,
   Sparkles,
+  Copy,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -46,6 +47,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   PieChart,
   Code2,
   Sparkles,
+  Copy,
 };
 
 interface CommandPaletteProps {

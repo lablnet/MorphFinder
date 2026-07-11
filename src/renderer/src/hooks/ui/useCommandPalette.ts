@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH } from '@shared/constants';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { UIShell, UIThemeMode } from '@shared/types/layout';
@@ -215,6 +215,14 @@ export function useCommandPalette({
       description: SMART_COLLECTIONS_PATH,
       icon: 'Sparkles',
       action: () => openTab(SMART_COLLECTIONS_PATH),
+    });
+    list.push({
+      id: 'nav-duplicate-finder',
+      category: 'Navigation',
+      label: 'Open Duplicate Finder',
+      description: DUPLICATE_FINDER_PATH,
+      icon: 'Copy',
+      action: () => openTab(DUPLICATE_FINDER_PATH),
     });
 
     // --- ACTIONS ---

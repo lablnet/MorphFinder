@@ -17,6 +17,7 @@
     "noUnusedParameters": true,
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["src/shared/*"],

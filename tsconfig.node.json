@@ -2,6 +2,7 @@
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
   "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "electron.vite.config.ts", "playwright.config.ts", "tests/e2e/**/*"],
   "compilerOptions": {
+    "lib": ["ES2022"],
     "composite": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,

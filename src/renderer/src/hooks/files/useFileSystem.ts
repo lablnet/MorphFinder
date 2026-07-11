@@ -8,6 +8,7 @@ import {
   CACHE_CLEANER_PATH,
   SPACE_ANALYZER_PATH,
   DEV_PANEL_PATH,
+  DUPLICATE_FINDER_PATH,
   SMART_COLLECTIONS_PATH,
   smartCollectionPath,
 } from '@shared/constants';
@@ -54,7 +55,10 @@ function createThisPcNodes(wellKnownDirs: { home: string; desktop: string; docum
 }
 
 function createSmartCollectionNodes(): FileSystemNode[] {
-  return SMART_COLLECTIONS.map((collection) => virtualDirectory(collection.label, smartCollectionPath(collection.id)));
+  return SMART_COLLECTIONS.map((collection) => virtualDirectory(
+    collection.label,
+    collection.id === 'duplicates' ? DUPLICATE_FINDER_PATH : smartCollectionPath(collection.id),
+  ));
 }
 
 function smartCollectionIdFromPath(path: string): SmartCollectionId | null {
@@ -154,6 +158,12 @@ export function useFileSystem(): UseFileSystemResult {
         setHasPartialResults(false);
         return;
       }
+      if (path === DUPLICATE_FINDER_PATH) {
+        if (!isCurrentRequest()) return;
+        setNodes([]);
+        setHasPartialResults(false);
+        return;
+      }
       if (path === SMART_COLLECTIONS_PATH) {
         if (!isCurrentRequest()) return;
         setNodes(createSmartCollectionNodes());
@@ -204,6 +214,7 @@ export function useFileSystem(): UseFileSystemResult {
       path === CACHE_CLEANER_PATH ||
       path === SPACE_ANALYZER_PATH ||
       path === DEV_PANEL_PATH ||
+      path === DUPLICATE_FINDER_PATH ||
       isSmartCollectionPath(path)
     ) return;
     void ipc.invoke('fs:watch', { path });

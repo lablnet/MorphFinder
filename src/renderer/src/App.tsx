@@ -8,10 +8,11 @@ import { ipc } from '@renderer/services/ipc';
 import { FileToolbar } from '@renderer/components/navigation/FileToolbar';
 import { NamePromptDialog } from '@renderer/components/ui/NamePromptDialog';
 import { Button } from '@renderer/components/ui/Button';
-import { CACHE_CLEANER_PATH, DEV_PANEL_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, DEV_PANEL_PATH, DUPLICATE_FINDER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import { CacheCleaner } from '@renderer/components/cachecleaner/CacheCleaner';
 import { SpaceAnalyzer } from '@renderer/components/spaceanalyzer';
 import { DevPanel } from '@renderer/components/devpanel/DevPanel';
+import { DuplicateFinder } from '@renderer/components/duplicates/DuplicateFinder';
 import { CommandPalette } from '@renderer/components/navigation/CommandPalette';
 import { useKeyboardShortcuts, useFileSystemController, useGitRadar, useProjectDetector } from '@renderer/hooks';
 import { DevPanelStatusButton } from '@renderer/components/devpanel/components/DevPanelStatusButton';
@@ -120,6 +121,8 @@ export function App(): React.JSX.Element {
                 <CacheCleaner />
               ) : tabs.activePath === DEV_PANEL_PATH ? (
                 <DevPanel />
+              ) : tabs.activePath === DUPLICATE_FINDER_PATH ? (
+                <DuplicateFinder />
               ) : tabs.activePath === SPACE_ANALYZER_PATH ? (
                 <SpaceAnalyzer />
               ) : fs.error !== null ? (
