@@ -1,5 +1,5 @@
-import { Trash2, PieChart, Code2 } from 'lucide-react';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH } from '@shared/constants';
+import { Trash2, PieChart, Code2, Sparkles } from 'lucide-react';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH } from '@shared/constants';
 
 export const SIDEBAR_TOOLS = [
   {
@@ -16,5 +16,10 @@ export const SIDEBAR_TOOLS = [
     label: 'Dev Panel',
     path: DEV_PANEL_PATH,
     icon: Code2,
+  },
+  {
+    label: 'Smart Collections',
+    path: SMART_COLLECTIONS_PATH,
+    icon: Sparkles,
   },
 ] as const;

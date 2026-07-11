@@ -15,3 +15,8 @@ export const THIS_PC_PATH = 'morph://this-pc';
 export const CACHE_CLEANER_PATH = 'morph://cache-cleaner';
 export const SPACE_ANALYZER_PATH = 'morph://space-analyzer';
 export const DEV_PANEL_PATH = 'morph://dev-panel';
+export const SMART_COLLECTIONS_PATH = 'morph://smart-collections';
+
+export function smartCollectionPath(id: string): string {
+  return `${SMART_COLLECTIONS_PATH}/${id}`;
+}

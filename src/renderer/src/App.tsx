@@ -1,4 +1,4 @@
-import { AlertCircle, HardDrive, LockKeyhole, FolderPlus, Terminal as TerminalIcon } from 'lucide-react';
+import { AlertCircle, HardDrive, Loader2, LockKeyhole, FolderPlus, Terminal as TerminalIcon } from 'lucide-react';
 import { FileContextMenu } from '@renderer/components/files/FileContextMenu';
 import { FileView } from '@renderer/components/files/FileView';
 import { FileViewer } from '@renderer/components/fileviewer';
@@ -134,7 +134,13 @@ export function App(): React.JSX.Element {
                     <Button onClick={tabs.openHome} variant="accent">Open Home</Button>
                   </div>
                 </div>
-              ) : !fs.isLoading && fs.nodes.length === 0 ? (
+              ) : fs.isLoading ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-current/55">
+                  <Loader2 size={28} className="animate-spin text-shell-accent" />
+                  <strong className="text-current">Scanning...</strong>
+                  <span className="max-w-md">Collecting files for this location.</span>
+                </div>
+              ) : fs.nodes.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-current/50">
                   <FolderPlus size={28} />
                   <span>This folder is empty</span>

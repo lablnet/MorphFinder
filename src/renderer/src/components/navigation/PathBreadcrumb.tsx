@@ -1,6 +1,14 @@
-import { ChevronRight, HardDrive, Trash2, PieChart } from 'lucide-react';
+import { ChevronRight, Code2, HardDrive, PieChart, Sparkles, Trash2 } from 'lucide-react';
 import { cn } from '@lablnet/ui';
-import { THIS_PC_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import {
+  THIS_PC_PATH,
+  CACHE_CLEANER_PATH,
+  SPACE_ANALYZER_PATH,
+  DEV_PANEL_PATH,
+  SMART_COLLECTIONS_PATH,
+  smartCollectionPath,
+} from '@shared/constants';
+import { SMART_COLLECTIONS } from '@shared/types/smartCollections';
 import { Button } from '../ui/Button';
 
 export interface PathBreadcrumbProps {
@@ -24,48 +32,62 @@ function segmentsFromPath(path: string): Segment[] {
   }));
 }
 
-export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React.JSX.Element {
+function virtualBreadcrumb(path: string): { icon: typeof HardDrive; segments: Segment[] } | null {
   if (path === THIS_PC_PATH) {
-    return (
-      <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
-        <Button
-          onClick={() => onNavigate(THIS_PC_PATH)}
-          variant="ghost"
-          className="flex shrink-0 items-center gap-2 px-1.5 py-0.5 font-medium text-current"
-        >
-          <HardDrive size={14} />
-          This PC
-        </Button>
-      </nav>
-    );
+    return { icon: HardDrive, segments: [{ name: 'This PC', path: THIS_PC_PATH }] };
   }
-
   if (path === CACHE_CLEANER_PATH) {
-    return (
-      <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
-        <Button
-          onClick={() => onNavigate(CACHE_CLEANER_PATH)}
-          variant="ghost"
-          className="flex shrink-0 items-center gap-2 px-1.5 py-0.5 font-medium text-current"
-        >
-          <Trash2 size={14} />
-          Cache Cleaner
-        </Button>
-      </nav>
-    );
+    return { icon: Trash2, segments: [{ name: 'Cache Cleaner', path: CACHE_CLEANER_PATH }] };
   }
-
   if (path === SPACE_ANALYZER_PATH) {
+    return { icon: PieChart, segments: [{ name: 'Space Analyzer', path: SPACE_ANALYZER_PATH }] };
+  }
+  if (path === DEV_PANEL_PATH) {
+    return { icon: Code2, segments: [{ name: 'Dev Panel', path: DEV_PANEL_PATH }] };
+  }
+  if (path === SMART_COLLECTIONS_PATH || path.startsWith(`${SMART_COLLECTIONS_PATH}/`)) {
+    const collectionId = path.slice(SMART_COLLECTIONS_PATH.length + 1);
+    const collection = SMART_COLLECTIONS.find((item) => item.id === collectionId);
+    return {
+      icon: Sparkles,
+      segments: [
+        { name: 'Smart Collections', path: SMART_COLLECTIONS_PATH },
+        ...(collection ? [{ name: collection.label, path: smartCollectionPath(collection.id) }] : []),
+      ],
+    };
+  }
+  return null;
+}
+
+export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React.JSX.Element {
+  const virtual = virtualBreadcrumb(path);
+  if (virtual !== null) {
+    const Icon = virtual.icon;
     return (
       <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
         <Button
-          onClick={() => onNavigate(SPACE_ANALYZER_PATH)}
+          onClick={() => onNavigate(virtual.segments[0]?.path ?? path)}
           variant="ghost"
-          className="flex shrink-0 items-center gap-2 px-1.5 py-0.5 font-medium text-current"
+          className="flex shrink-0 items-center p-1"
+          aria-label={virtual.segments[0]?.name ?? 'Virtual location'}
         >
-          <PieChart size={14} />
-          Space Analyzer
+          <Icon size={14} />
         </Button>
+        {virtual.segments.map((segment, index) => (
+          <span key={segment.path} className="flex shrink-0 items-center gap-1">
+            <ChevronRight size={12} className="text-current/40" />
+            <Button
+              onClick={() => onNavigate(segment.path)}
+              variant="ghost"
+              className={cn(
+                'shrink-0 px-1.5 py-0.5',
+                index === virtual.segments.length - 1 && 'font-medium text-current',
+              )}
+            >
+              {segment.name}
+            </Button>
+          </span>
+        ))}
       </nav>
     );
   }

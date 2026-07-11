@@ -61,6 +61,11 @@ export async function getDirectoryAnnotation(targetPath: string): Promise<Direct
   return database.annotations[targetPath] ?? emptyAnnotation(targetPath);
 }
 
+export async function listDirectoryAnnotations(): Promise<DirectoryAnnotation[]> {
+  const database = await readDatabase();
+  return Object.values(database.annotations);
+}
+
 export async function setDirectoryAnnotation(update: DirectoryAnnotationUpdate): Promise<DirectoryAnnotation> {
   const database = await readDatabase();
   const cleanedTags = update.tags

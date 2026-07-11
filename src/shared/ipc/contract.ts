@@ -7,6 +7,7 @@ import type { DevPanelInfo } from '../types/devPanel';
 import type { GitStatus, GitCommit } from '../types/git';
 import type { DirectoryAnnotation, DirectoryAnnotationUpdate } from '../types/directoryAnnotations';
 import type { FileSearchRequest, FileSearchResult } from '../types/fileSearch';
+import type { SmartCollectionRequest, SmartCollectionResult } from '../types/smartCollections';
 
 
 /**
@@ -56,6 +57,10 @@ export interface IpcContract {
   'search:files': {
     request: FileSearchRequest;
     response: FileSearchResult;
+  };
+  'smartCollections:scan': {
+    request: SmartCollectionRequest;
+    response: SmartCollectionResult;
   };
   'shell:openWith': { request: { path: string; appBundleId?: string }; response: void };
   'cache:scan': {

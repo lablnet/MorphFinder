@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import { ipc } from '@renderer/services/ipc';
-import { THIS_PC_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH } from '@shared/constants';
+import { THIS_PC_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH } from '@shared/constants';
 import { nextSelectionForKeyboard, type SelectionNavigationKey } from '../../components/files/selection';
 import { useFileSystem } from './useFileSystem';
 import { useFileOperations } from './useFileOperations';
@@ -51,7 +51,7 @@ export function useFileSystemController() {
   const [namePrompt, setNamePrompt] = useState<AppNamePromptState | null>(null);
 
   const viewMode = activeTab?.viewMode ?? 'list';
-  const isVirtualLocation = tabs.activePath === THIS_PC_PATH || tabs.activePath === CACHE_CLEANER_PATH || tabs.activePath === SPACE_ANALYZER_PATH || tabs.activePath === DEV_PANEL_PATH;
+  const isVirtualLocation = tabs.activePath === THIS_PC_PATH || tabs.activePath === CACHE_CLEANER_PATH || tabs.activePath === SPACE_ANALYZER_PATH || tabs.activePath === DEV_PANEL_PATH || tabs.activePath.startsWith(SMART_COLLECTIONS_PATH);
   const selectedNodes = useMemo(
     () => fs.nodes.filter((node) => selection.selectedSet.has(node.path)),
     [fs.nodes, selection.selectedSet],

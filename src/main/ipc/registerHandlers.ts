@@ -10,6 +10,7 @@ import { createTerminalHandlers } from './terminal.handlers';
 import { createDevPanelHandlers } from './devpanel.handlers';
 import { createAnnotationHandlers } from './annotations.handlers';
 import { createSearchHandlers } from './search.handlers';
+import { createSmartCollectionsHandlers } from './smartCollections.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -31,6 +32,7 @@ export function registerHandlers(window: BrowserWindow): void {
     ...createDevPanelHandlers(),
     ...createAnnotationHandlers(),
     ...createSearchHandlers(),
+    ...createSmartCollectionsHandlers(),
   };
 
 
