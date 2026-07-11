@@ -24,8 +24,9 @@ export function useMarquee(
     return normalizedSelectionRect(marquee.start, marquee.current);
   }, [marquee]);
 
-  const pointFromEvent = useCallback((event: React.MouseEvent) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
+  const pointFromEvent = useCallback((event: React.MouseEvent): Point => {
+    const target = event.currentTarget;
+    const bounds = target.getBoundingClientRect();
     return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
   }, []);
 
@@ -37,7 +38,8 @@ export function useMarquee(
 
   const onMouseMove = useCallback((event: React.MouseEvent) => {
     if (marquee === null) return;
-    setMarquee((current) => (current === null ? null : { ...current, current: pointFromEvent(event) }));
+    const point = pointFromEvent(event);
+    setMarquee((current) => (current === null ? null : { ...current, current: point }));
   }, [marquee, pointFromEvent]);
 
   const onMouseUp = useCallback(() => {
