@@ -9,6 +9,7 @@ import { createGitHandlers } from './git.handlers';
 import { createTerminalHandlers } from './terminal.handlers';
 import { createDevPanelHandlers } from './devpanel.handlers';
 import { createAnnotationHandlers } from './annotations.handlers';
+import { createSearchHandlers } from './search.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -29,6 +30,7 @@ export function registerHandlers(window: BrowserWindow): void {
     ...createTerminalHandlers(window),
     ...createDevPanelHandlers(),
     ...createAnnotationHandlers(),
+    ...createSearchHandlers(),
   };
 
 

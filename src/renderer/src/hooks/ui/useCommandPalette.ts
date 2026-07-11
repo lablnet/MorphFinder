@@ -8,7 +8,7 @@ import type { UIShell, UIThemeMode } from '@shared/types/layout';
 
 export interface CommandItem {
   id: string;
-  category: 'Navigation' | 'Settings' | 'Actions' | 'Current Folder';
+  category: 'Navigation' | 'Settings' | 'Actions' | 'Current Folder' | 'Global Search';
   label: string;
   description?: string;
   icon: string; // lucide icon name
@@ -31,6 +31,11 @@ export function useCommandPalette({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [globalResults, setGlobalResults] = useState<FileSystemNode[]>([]);
+  const [globalSearchMeta, setGlobalSearchMeta] = useState<{
+    scannedCount: number;
+    truncated: boolean;
+  } | null>(null);
 
   const {
     activeShell,
@@ -40,10 +45,10 @@ export function useCommandPalette({
     showHiddenFiles,
     toggleHiddenFiles,
     wellKnownDirs,
-    //tabs,
     openTab,
     closeTab,
     activeTabId,
+    activeTabPath,
   } = useAppStore(
     useShallow((state) => ({
       activeShell: state.activeShell,
@@ -53,10 +58,10 @@ export function useCommandPalette({
       showHiddenFiles: state.showHiddenFiles,
       toggleHiddenFiles: state.toggleHiddenFiles,
       wellKnownDirs: state.wellKnownDirs,
-      tabs: state.tabs,
       openTab: state.openTab,
       closeTab: state.closeTab,
       activeTabId: state.activeTabId,
+      activeTabPath: state.tabs.find((tab) => tab.id === state.activeTabId)?.path ?? null,
     })),
   );
 
@@ -94,6 +99,43 @@ export function useCommandPalette({
     });
     return unsubscribe;
   }, [toggleOpen]);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    const rootPath = activeTabPath;
+    if (!isOpen || query.length < 2 || rootPath === null || rootPath.startsWith('morph://')) {
+      setGlobalResults([]);
+      setGlobalSearchMeta(null);
+      return;
+    }
+
+    let ignore = false;
+    const timeout = window.setTimeout(() => {
+      void ipc.invoke('search:files', {
+        rootPath,
+        query,
+        includeHidden: showHiddenFiles,
+        maxResults: 30,
+        maxDepth: 5,
+      }).then((result) => {
+        if (ignore) return;
+        setGlobalResults(result.matches);
+        setGlobalSearchMeta({
+          scannedCount: result.scannedCount,
+          truncated: result.truncated,
+        });
+      }).catch(() => {
+        if (ignore) return;
+        setGlobalResults([]);
+        setGlobalSearchMeta(null);
+      });
+    }, 220);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timeout);
+    };
+  }, [activeTabPath, isOpen, searchQuery, showHiddenFiles]);
 
   // Define static commands & locations
   const items = useMemo<CommandItem[]>(() => {
@@ -263,6 +305,28 @@ export function useCommandPalette({
       });
     });
 
+    globalResults.forEach((node) => {
+      list.push({
+        id: `global-${node.path}`,
+        category: 'Global Search',
+        label: node.name,
+        description: node.path,
+        icon: node.kind === 'directory' ? 'Folder' : 'File',
+        action: () => onOpenNode(node),
+      });
+    });
+
+    if (globalSearchMeta?.truncated === true) {
+      list.push({
+        id: 'global-search-truncated',
+        category: 'Global Search',
+        label: 'More results available',
+        description: `Showing first ${globalResults.length} matches from ${globalSearchMeta.scannedCount} scanned items`,
+        icon: 'Search',
+        action: () => undefined,
+      });
+    }
+
     return list;
   }, [
     wellKnownDirs,
@@ -279,6 +343,8 @@ export function useCommandPalette({
     onOpenNode,
     onCreateFolder,
     onRefresh,
+    globalResults,
+    globalSearchMeta,
   ]);
 
   // Filter items based on search query
