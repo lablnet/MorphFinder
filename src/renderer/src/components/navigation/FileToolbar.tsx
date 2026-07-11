@@ -58,7 +58,7 @@ export function FileToolbar({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 px-2',
+        'flex min-w-0 items-center gap-2 px-2',
         shellId === 'explorer' && 'h-12 border-b border-shell-border bg-[#f9f9f9] px-4 dark:bg-[#202020]',
       )}
     >
@@ -71,7 +71,7 @@ export function FileToolbar({
       />
       <div
         className={cn(
-          'min-w-0 flex-1',
+          'min-w-0 flex-1 overflow-hidden',
           shellId === 'explorer' && 'rounded border border-shell-border bg-white/80 dark:bg-[#2b2b2b]',
         )}
       >

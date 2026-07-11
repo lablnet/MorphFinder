@@ -64,7 +64,7 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
   if (virtual !== null) {
     const Icon = virtual.icon;
     return (
-      <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
+      <nav className="scrollbar-none flex h-8 min-w-0 items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 text-sm text-current/80" aria-label="Breadcrumb">
         <Button
           onClick={() => onNavigate(virtual.segments[0]?.path ?? path)}
           variant="ghost"
@@ -74,17 +74,18 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
           <Icon size={14} />
         </Button>
         {virtual.segments.map((segment, index) => (
-          <span key={segment.path} className="flex shrink-0 items-center gap-1">
+          <span key={segment.path} className="flex min-w-0 shrink-0 items-center gap-1">
             <ChevronRight size={12} className="text-current/40" />
             <Button
               onClick={() => onNavigate(segment.path)}
               variant="ghost"
               className={cn(
-                'shrink-0 px-1.5 py-0.5',
+                'min-w-0 max-w-64 shrink px-1.5 py-0.5',
                 index === virtual.segments.length - 1 && 'font-medium text-current',
               )}
+              title={segment.name}
             >
-              {segment.name}
+              <span className="block truncate">{segment.name}</span>
             </Button>
           </span>
         ))}
@@ -95,7 +96,7 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
   const segments = segmentsFromPath(path);
 
   return (
-    <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
+    <nav className="scrollbar-none flex h-8 min-w-0 items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap px-3 text-sm text-current/80" aria-label="Breadcrumb">
       <Button
         onClick={() => onNavigate(segments[0]?.path ?? '/')}
         variant="ghost"
@@ -105,17 +106,18 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
         <HardDrive size={14} />
       </Button>
       {segments.map((segment, index) => (
-        <span key={segment.path} className="flex shrink-0 items-center gap-1">
+        <span key={segment.path} className="flex min-w-0 shrink-0 items-center gap-1">
           <ChevronRight size={12} className="text-current/40" />
           <Button
             onClick={() => onNavigate(segment.path)}
             variant="ghost"
             className={cn(
-              'shrink-0 px-1.5 py-0.5',
+              'min-w-0 max-w-64 shrink px-1.5 py-0.5',
               index === segments.length - 1 && 'font-medium text-current',
             )}
+            title={segment.name}
           >
-            {segment.name}
+            <span className="block truncate">{segment.name}</span>
           </Button>
         </span>
       ))}
