@@ -10,6 +10,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn } from '@lablnet/ui';
+import { Button } from '../ui/Button';
 
 export type FileContextAction =
   | 'open'
@@ -69,20 +70,20 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
         {actions.map(({ action, label, Icon }) => {
           const disabled = action === 'paste' && !state.canPaste;
           return (
-            <button
+            <Button
               key={action}
-              type="button"
               role="menuitem"
               disabled={disabled}
               onClick={() => onAction(action)}
+              variant="ghost"
               className={cn(
-                'flex h-8 w-full items-center gap-2 px-3 text-left outline-none',
+                'flex h-8 w-full items-center gap-2 px-3 text-left outline-none rounded-none',
                 disabled ? 'cursor-default opacity-35' : 'hover:bg-shell-sidebar focus:bg-shell-sidebar',
               )}
             >
               <Icon size={15} className="shrink-0 text-current/65" />
               <span className="truncate">{label}</span>
-            </button>
+            </Button>
           );
         })}
       </div>

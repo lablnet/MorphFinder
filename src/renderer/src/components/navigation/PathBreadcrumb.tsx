@@ -1,6 +1,7 @@
 import { ChevronRight, HardDrive } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { THIS_PC_PATH } from '@shared/constants';
+import { Button } from '../ui/Button';
 
 export interface PathBreadcrumbProps {
   path: string;
@@ -12,8 +13,6 @@ interface Segment {
   path: string;
 }
 
-/** Splits an absolute path into clickable segments. Handles both POSIX (`/a/b`) and
- *  Windows (`C:\a\b`) separators since the shell may run on either. */
 function segmentsFromPath(path: string): Segment[] {
   const isWindows = /^[a-zA-Z]:\\/.test(path);
   const separator = isWindows ? '\\' : '/';
@@ -29,14 +28,14 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
   if (path === THIS_PC_PATH) {
     return (
       <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
-        <button
-          type="button"
+        <Button
           onClick={() => onNavigate(THIS_PC_PATH)}
-          className="flex shrink-0 items-center gap-2 rounded-shell px-1.5 py-0.5 font-medium text-current hover:bg-shell-sidebar"
+          variant="ghost"
+          className="flex shrink-0 items-center gap-2 px-1.5 py-0.5 font-medium text-current"
         >
           <HardDrive size={14} />
           This PC
-        </button>
+        </Button>
       </nav>
     );
   }
@@ -45,27 +44,27 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
 
   return (
     <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
-      <button
-        type="button"
+      <Button
         onClick={() => onNavigate(segments[0]?.path ?? '/')}
-        className="flex shrink-0 items-center rounded-shell p-1 hover:bg-shell-sidebar"
+        variant="ghost"
+        className="flex shrink-0 items-center p-1"
         aria-label="Root"
       >
         <HardDrive size={14} />
-      </button>
+      </Button>
       {segments.map((segment, index) => (
         <span key={segment.path} className="flex shrink-0 items-center gap-1">
           <ChevronRight size={12} className="text-current/40" />
-          <button
-            type="button"
+          <Button
             onClick={() => onNavigate(segment.path)}
+            variant="ghost"
             className={cn(
-              'shrink-0 rounded-shell px-1.5 py-0.5 hover:bg-shell-sidebar',
+              'shrink-0 px-1.5 py-0.5',
               index === segments.length - 1 && 'font-medium text-current',
             )}
           >
             {segment.name}
-          </button>
+          </Button>
         </span>
       ))}
     </nav>

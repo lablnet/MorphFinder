@@ -1,6 +1,7 @@
 export * from './files/useFileItem';
 export * from './files/useFileOperations';
 export * from './files/useFileSystem';
+export * from './files/useFileSystemController';
 export * from './files/useMarquee';
 export * from './files/useSelection';
 export * from './files/useWellKnownDirs';

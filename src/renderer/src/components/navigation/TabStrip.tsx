@@ -1,6 +1,7 @@
 import { Plus, X } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import type { TabMetadata } from '@shared/types/tabs';
+import { Button } from '../ui/Button';
 
 export interface TabStripProps {
   tabs: TabMetadata[];
@@ -11,11 +12,6 @@ export interface TabStripProps {
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
-/**
- * Shell-agnostic tab strip: middle-click and the × button both close, dragging
- * reorders. Every visual difference between shells comes from `--shell-*` tokens
- * and the `roundedTabs` flag each ShellDefinition passes in — no per-shell branch here.
- */
 export function TabStrip({ tabs, activeTabId, onActivate, onClose, onNew, onReorder }: TabStripProps): React.JSX.Element {
   return (
     <div className="flex h-9 items-center gap-1 border-b border-shell-border bg-shell-sidebar px-2" role="tablist">
@@ -43,27 +39,27 @@ export function TabStrip({ tabs, activeTabId, onActivate, onClose, onNew, onReor
           )}
         >
           <span className="truncate">{tab.title}</span>
-          <button
-            type="button"
+          <Button
             aria-label={`Close ${tab.title}`}
             onClick={(event) => {
               event.stopPropagation();
               onClose(tab.id);
             }}
-            className="ml-auto shrink-0 rounded p-0.5 opacity-0 hover:bg-black/10 group-hover:opacity-100"
+            variant="ghost"
+            className="ml-auto shrink-0 rounded p-0.5 opacity-0 hover:bg-black/10 group-hover:opacity-100 h-auto w-auto"
           >
             <X size={12} />
-          </button>
+          </Button>
         </div>
       ))}
-      <button
-        type="button"
+      <Button
         aria-label="New tab"
         onClick={onNew}
+        variant="ghost"
         className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-shell text-current/60 hover:bg-shell-surface/60"
       >
         <Plus size={14} />
-      </button>
+      </Button>
     </div>
   );
 }
