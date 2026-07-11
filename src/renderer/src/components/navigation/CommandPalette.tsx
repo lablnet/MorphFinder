@@ -78,13 +78,13 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
   }[shell];
 
   const containerClass = {
-    finder: 'mt-[12vh] w-full max-w-[640px] rounded-2xl border border-shell-border/80 shadow-2xl flex flex-col backdrop-blur-2xl bg-shell-surface/90 text-current overflow-hidden animate-scale-up',
+    finder: 'mt-[12vh] w-full max-w-[640px] rounded-2xl border shadow-2xl flex flex-col backdrop-blur-2xl text-current overflow-hidden animate-scale-up',
     explorer: 'w-full max-w-[600px] rounded-lg border border-[#0067c0]/40 dark:border-[#4cc2ff]/40 shadow-2xl flex flex-col bg-[#fafafa] dark:bg-[#1f1f1f] text-current overflow-hidden animate-scale-up',
     dolphin: 'w-full max-w-[700px] rounded-b-xl border-x border-b border-shell-border shadow-xl flex flex-col bg-shell-surface text-current overflow-hidden animate-slide-down',
   }[shell];
 
   const searchContainerClass = {
-    finder: 'flex items-center gap-3 px-4 py-3.5 border-b border-shell-border/60 bg-transparent',
+    finder: 'flex items-center gap-3 px-4 py-3.5 border-b bg-transparent',
     explorer: 'flex items-center gap-3 px-4 py-3 border-b border-shell-border bg-white dark:bg-[#2c2c2c]',
     dolphin: 'flex items-center gap-3 px-4 py-2.5 border-b border-shell-border bg-shell-sidebar/30',
   }[shell];
@@ -116,7 +116,7 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
         explorer: 'bg-black/5 dark:bg-white/5 border-l-4 border-l-[#0067c0] dark:border-l-[#4cc2ff] rounded-none pl-2 bg-[#eaeaea] dark:bg-[#2d2d2d]',
         dolphin: 'bg-[color:var(--shell-accent)]/15 text-[color:var(--shell-accent)]',
       }[shell],
-      !isActive && 'hover:bg-shell-sidebar/40'
+      !isActive && 'hover:bg-black/5 dark:hover:bg-white/5'
     );
   };
 
@@ -128,7 +128,7 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
         explorer: 'border-shell-border text-current/50 bg-black/5 dark:bg-white/5',
         dolphin: 'border-shell-border text-current/50 bg-black/5 dark:bg-white/5',
       }[shell]
-      : 'border-shell-border text-current/40 bg-shell-sidebar/20'
+      : 'border-shell-border text-current/40 bg-black/5 dark:bg-white/5'
   );
 
   // Group items by category to render section headers
@@ -141,15 +141,24 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
   });
 
   return (
-    <div className={overlayClass} onClick={close} role="presentation">
+    <div className={overlayClass} onClick={close} role="presentation" data-shell={shell}>
       <div
         className={containerClass}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        style={shell === 'finder' ? {
+          backgroundColor: 'color-mix(in srgb, var(--shell-surface) 90%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--shell-border) 80%, transparent)',
+        } : undefined}
       >
         {/* Search Input Area */}
-        <div className={searchContainerClass}>
+        <div
+          className={searchContainerClass}
+          style={shell === 'finder' ? {
+            borderBottomColor: 'color-mix(in srgb, var(--shell-border) 60%, transparent)',
+          } : undefined}
+        >
           <Search size={shell === 'finder' ? 18 : 16} className="text-current/35 shrink-0" />
           <input
             autoFocus
@@ -197,11 +206,11 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <IconComponent
-                          size={shell === 'finder' ? 16 : 14}
-                          className={cn(
-                            'shrink-0',
-                            isActive ? 'text-inherit' : 'text-current/55'
-                          )}
+                           size={shell === 'finder' ? 16 : 14}
+                           className={cn(
+                             'shrink-0',
+                             isActive ? 'text-inherit' : 'text-current/55'
+                           )}
                         />
                         <div className="min-w-0 flex flex-col">
                           <span className="font-medium truncate text-xs sm:text-sm">
@@ -235,7 +244,10 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
         </div>
 
         {/* Help Status Bar */}
-        <div className="flex items-center justify-between border-t border-shell-border bg-shell-sidebar/20 px-4 py-2 text-[10px] text-current/40 shrink-0">
+        <div
+          className="flex items-center justify-between border-t border-shell-border px-4 py-2 text-[10px] text-current/40 shrink-0"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--shell-sidebar) 20%, transparent)' }}
+        >
           <div className="flex items-center gap-1">
             <span>Toggle:</span>
             <kbd className="font-mono bg-shell-sidebar border border-shell-border rounded px-1">

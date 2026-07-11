@@ -305,7 +305,9 @@ export function useCommandPalette({
       });
     });
 
+    const currentNodePaths = new Set(currentNodes.map((node) => node.path));
     globalResults.forEach((node) => {
+      if (currentNodePaths.has(node.path)) return;
       list.push({
         id: `global-${node.path}`,
         category: 'Global Search',
@@ -320,7 +322,7 @@ export function useCommandPalette({
       list.push({
         id: 'global-search-truncated',
         category: 'Global Search',
-        label: 'More results available',
+        label: `More "${searchQuery.trim()}" results available`,
         description: `Showing first ${globalResults.length} matches from ${globalSearchMeta.scannedCount} scanned items`,
         icon: 'Search',
         action: () => undefined,
@@ -345,6 +347,7 @@ export function useCommandPalette({
     onRefresh,
     globalResults,
     globalSearchMeta,
+    searchQuery,
   ]);
 
   // Filter items based on search query
