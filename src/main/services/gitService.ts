@@ -8,7 +8,7 @@ function runCmd(cmd: string, cwd: string): Promise<string> {
       if (error) {
         rej(error);
       } else {
-        res(stdout.trim());
+        res(stdout.trimEnd());
       }
     });
   });
