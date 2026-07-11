@@ -54,16 +54,19 @@ function changeDirectory(session: TerminalSession, target: string): string {
 
 function runCommand(window: BrowserWindow, session: TerminalSession, command: string): void {
   const trimmed = command.trim();
-  if (trimmed.length === 0) return;
+  if (trimmed.length === 0) {
+    emitData(window, session.id, '$ ');
+    return;
+  }
 
   if (session.process !== null) {
-    emitData(window, session.id, 'A command is already running.\n');
+    emitData(window, session.id, 'A command is already running.\r\n$ ');
     return;
   }
 
   const cdTarget = parseCdTarget(trimmed);
   if (cdTarget !== null) {
-    emitData(window, session.id, `${changeDirectory(session, cdTarget)}\n`);
+    emitData(window, session.id, `${changeDirectory(session, cdTarget)}\r\n$ `);
     return;
   }
 
@@ -78,12 +81,12 @@ function runCommand(window: BrowserWindow, session: TerminalSession, command: st
   child.stdout?.on('data', (chunk: Buffer) => emitData(window, session.id, chunk.toString()));
   child.stderr?.on('data', (chunk: Buffer) => emitData(window, session.id, chunk.toString()));
   child.on('error', (error) => {
-    emitData(window, session.id, `Command failed: ${error.message}\n`);
+    emitData(window, session.id, `Command failed: ${error.message}\r\n$ `);
     session.process = null;
   });
   child.on('exit', () => {
     session.process = null;
-    emitData(window, session.id, '');
+    emitData(window, session.id, '\r\n$ ');
   });
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 import { useAppStore } from '@renderer/store';
 import 'xterm/css/xterm.css';
 
@@ -40,8 +41,6 @@ export function TerminalContainer({
     if (containerRef.current === null || terminalRef.current !== null) return;
 
     const term = new Terminal({
-      cols: 120,
-      rows: 28,
       cursorBlink: true,
       convertEol: true,
       fontSize: activeShell === 'finder' ? 12 : 13,
@@ -49,11 +48,31 @@ export function TerminalContainer({
       theme: isDark ? darkTheme : lightTheme,
     });
 
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+
     term.open(containerRef.current);
     term.write('Welcome to MorphFinder Terminal\r\n\r\n$ ');
     terminalRef.current = term;
-    onResize(term.cols, term.rows);
+
+    try {
+      fitAddon.fit();
+      onResize(term.cols, term.rows);
+    } catch (err) {
+      console.error(err);
+    }
+
     term.focus();
+
+    const resizeObserver = new ResizeObserver(() => {
+      try {
+        fitAddon.fit();
+        onResize(term.cols, term.rows);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    resizeObserver.observe(containerRef.current);
 
     const dataDisposable = term.onData((data) => {
       const code = data.charCodeAt(0);
@@ -61,10 +80,7 @@ export function TerminalContainer({
         const command = commandBufferRef.current.trimEnd();
         commandBufferRef.current = '';
         term.write('\r\n');
-        if (command.length > 0) onData(`${command}\n`);
-        window.setTimeout(() => {
-          if (terminalRef.current !== null) terminalRef.current.write('$ ');
-        }, 30);
+        onData(`${command}\n`);
         return;
       }
       if (data === '\u007F') {
@@ -79,6 +95,7 @@ export function TerminalContainer({
     });
 
     return () => {
+      resizeObserver.disconnect();
       dataDisposable.dispose();
       terminalRef.current = null;
       term.dispose();
@@ -94,7 +111,9 @@ export function TerminalContainer({
     }
     const nextChunk = output.slice(lastOutputLengthRef.current);
     if (nextChunk.length > 0) {
-      term.write(nextChunk.replace(/\n/g, '\r\n'));
+      term.write(nextChunk.replace(/\n/g, '\r\n'), () => {
+        term.scrollToBottom();
+      });
       lastOutputLengthRef.current = output.length;
     }
   }, [output]);
