@@ -3,7 +3,7 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import sharp from 'sharp';
-// @ts-ignore
+// @ts-expect-error png2icons lacks typescript typings
 import png2icons from 'png2icons';
 
 const __filename = fileURLToPath(import.meta.url);

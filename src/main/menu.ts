@@ -1,4 +1,5 @@
-import { app, Menu, MenuItemConstructorOptions } from 'electron';
+import { app, Menu, BrowserWindow } from 'electron';
+import type { MenuItemConstructorOptions } from 'electron';
 
 export function setupApplicationMenu(): void {
   const isMac = process.platform === 'darwin';
@@ -65,6 +66,16 @@ export function setupApplicationMenu(): void {
         { role: 'zoomOut' as const },
         { type: 'separator' as const },
         { role: 'togglefullscreen' as const },
+        { type: 'separator' as const },
+        {
+          label: 'Toggle Command Palette',
+          accelerator: 'CmdOrCtrl+K',
+          click: (_menuItem, browserWindow) => {
+            if (browserWindow && browserWindow instanceof BrowserWindow) {
+              browserWindow.webContents.send('command-palette:toggle');
+            }
+          },
+        },
       ],
     },
     // { role: 'windowMenu' }

@@ -73,6 +73,7 @@ export interface IpcEvents {
     done: boolean;
     error?: string;
   };
+  'command-palette:toggle': void;
 }
 
 export type IpcEventChannel = keyof IpcEvents;

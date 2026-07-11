@@ -16,6 +16,7 @@ export * from './files/viewers/useMarkdownViewer';
 export * from './ui/useLayoutShell';
 export * from './ui/useTabs';
 export * from './ui/useTheme';
+export * from './ui/useCommandPalette';
 
 export * from './utils/useElementSize';
 export * from './utils/useKeyboardShortcuts';

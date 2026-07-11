@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ipc } from '@renderer/services/ipc';
+import type { editor } from 'monaco-editor';
 
 /** Map file extensions to Monaco language IDs. */
 const EXTENSION_TO_LANGUAGE: Record<string, string> = {
@@ -36,7 +37,7 @@ interface UseCodeViewerOptions {
 
 export function useCodeViewer({ filePath, extension }: UseCodeViewerOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<ReturnType<typeof import('monaco-editor')['editor']['create']> | null>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [truncated, setTruncated] = useState(false);
