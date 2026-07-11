@@ -3,6 +3,7 @@ import { FixedSizeList, type ListChildComponentProps } from 'react-window';
 import { useMemo, useState, useCallback } from 'react';
 import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
 import type { FileSystemNode } from '@shared/types/fileSystem';
+import type { GitFileStatus } from '@shared/types/git';
 import { FileIcon } from '../../fileicons/FileIcon';
 import { marqueeSelectionForList, type SelectionRect } from '../selection';
 import type { FileViewProps } from '../types';
@@ -15,6 +16,7 @@ type SortDirection = 'asc' | 'desc';
 
 interface RowData extends Omit<FileViewProps, 'nodes'> {
   nodes: FileSystemNode[];
+  gitStatusMap?: Record<string, GitFileStatus> | undefined;
 }
 
 function compareNodes(a: FileSystemNode, b: FileSystemNode, key: SortKey, direction: SortDirection): number {
@@ -47,6 +49,27 @@ function ListFileItem({ node, data, style }: ListFileItemProps): React.JSX.Eleme
     onExternalDrag: data.onExternalDrag,
   });
 
+  const gitStatus = data.gitStatusMap?.[node.path];
+  const gitLabel = gitStatus
+    ? {
+        modified: 'M',
+        staged: 'S',
+        added: 'A',
+        untracked: 'U',
+        ignored: 'I',
+      }[gitStatus]
+    : '';
+
+  const gitColorClass = gitStatus
+    ? {
+        modified: 'text-amber-500 font-semibold',
+        staged: 'text-green-600 font-semibold',
+        added: 'text-green-500 font-semibold',
+        untracked: 'text-blue-500 font-semibold',
+        ignored: 'text-gray-400 opacity-50',
+      }[gitStatus]
+    : '';
+
   return (
     <div
       data-file-item="true"
@@ -54,7 +77,7 @@ function ListFileItem({ node, data, style }: ListFileItemProps): React.JSX.Eleme
       {...dragProps}
       {...mouseProps}
       className={cn(
-        'grid cursor-default grid-cols-[minmax(180px,1fr)_120px_120px_180px] items-center text-sm',
+        'grid cursor-default grid-cols-[minmax(180px,1fr)_120px_120px_180px_80px] items-center text-sm',
         selected ? 'bg-[color:var(--shell-accent)]/15' : 'hover:bg-shell-sidebar',
       )}
     >
@@ -71,12 +94,21 @@ function ListFileItem({ node, data, style }: ListFileItemProps): React.JSX.Eleme
             )}
           />
         ) : (
-          <span className="truncate">{node.name}</span>
+          <span className={cn(
+            'truncate',
+            gitStatus === 'modified' && 'text-amber-600 dark:text-amber-400 font-medium',
+            gitStatus === 'added' && 'text-green-600 dark:text-green-400 font-medium',
+            gitStatus === 'untracked' && 'text-blue-600 dark:text-blue-400 font-medium',
+            gitStatus === 'ignored' && 'text-current/30 line-through'
+          )}>{node.name}</span>
         )}
       </span>
       <span className="truncate px-3 capitalize text-current/70">{node.kind}</span>
       <span className="truncate px-3 text-right text-current/70">{node.kind === 'directory' ? '--' : formatBytes(node.sizeInBytes)}</span>
       <span className="truncate px-3 text-current/70">{formatModifiedDate(node.modifiedAt)}</span>
+      <span className={cn('truncate px-3 text-center text-xs font-semibold', gitColorClass)}>
+        {gitLabel || '--'}
+      </span>
     </div>
   );
 }
@@ -105,6 +137,7 @@ export function FileListTable({
   dropDestinationPath,
   onMove,
   onExternalDrag,
+  gitStatusMap,
 }: FileViewProps): React.JSX.Element {
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -175,17 +208,18 @@ export function FileListTable({
         if (paths.length > 0) onMove(paths, dropDestinationPath);
       }}
     >
-      <div className="grid grid-cols-[minmax(180px,1fr)_120px_120px_180px] border-b border-shell-border bg-shell-surface text-xs font-medium text-current/60">
+      <div className="grid grid-cols-[minmax(180px,1fr)_120px_120px_180px_80px] border-b border-shell-border bg-shell-surface text-xs font-medium text-current/60">
         {header('name', 'Name')}
         {header('kind', 'Kind')}
         {header('size', 'Size', 'text-right')}
         {header('modified', 'Modified')}
+        <span className="px-3 py-2 text-center text-current/60 font-semibold select-none">Git</span>
       </div>
       {size.width > 0 && size.height > rowHeight ? (
         <FixedSizeList
           height={size.height - rowHeight}
           itemCount={sortedNodes.length}
-          itemData={{ nodes: sortedNodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, renamingPath, renamingValue, renamingError, onRenameValueChange, onCommitRename, onCancelRename, dropDestinationPath, onMove, onExternalDrag }}
+          itemData={{ nodes: sortedNodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, renamingPath, renamingValue, renamingError, onRenameValueChange, onCommitRename, onCancelRename, dropDestinationPath, onMove, onExternalDrag, gitStatusMap }}
           itemSize={rowHeight}
           width={size.width}
         >

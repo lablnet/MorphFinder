@@ -3,6 +3,7 @@ import type { FileContentResponse } from '../types/fileViewer';
 import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '../types/native';
 import type { CacheCleanRequest, CacheCleanResult, CacheScanResult } from '../types/cache';
 import type { SpaceAnalyzerResult } from '../types/spaceAnalyzer';
+import type { GitStatus, GitCommit } from '../types/git';
 
 
 /**
@@ -69,6 +70,14 @@ export interface IpcContract {
   'analyzer:cancel': {
     request: void;
     response: void;
+  };
+  'git:status': {
+    request: { path: string };
+    response: GitStatus;
+  };
+  'git:history': {
+    request: { path: string };
+    response: GitCommit[];
   };
 }
 

@@ -12,8 +12,10 @@ import { LoadingState } from './components/LoadingState';
 import { ShieldAlert, RefreshCw, FolderClosed } from 'lucide-react';
 import { Button } from '../ui/Button';
 
+import type { SpaceAnalyzerNode } from '@shared/types/spaceAnalyzer';
+
 // Helper to look up a node recursively by path in the tree
-function findNodeInTree(node: any, path: string): any | null {
+function findNodeInTree(node: SpaceAnalyzerNode, path: string): SpaceAnalyzerNode | null {
   if (node.path === path) return node;
   if (node.children) {
     for (const child of node.children) {

@@ -5,7 +5,6 @@ import { FileViewer } from '@renderer/components/fileviewer';
 import { TabStrip } from '@renderer/components/navigation/TabStrip';
 import { ShellLayout } from '@renderer/layouts/ShellLayout';
 import { ipc } from '@renderer/services/ipc';
-import { useKeyboardShortcuts, useFileSystemController } from '@renderer/hooks';
 import { FileToolbar } from '@renderer/components/navigation/FileToolbar';
 import { NamePromptDialog } from '@renderer/components/ui/NamePromptDialog';
 import { Button } from '@renderer/components/ui/Button';
@@ -13,6 +12,10 @@ import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import { CacheCleaner } from '@renderer/components/cachecleaner/CacheCleaner';
 import { SpaceAnalyzer } from '@renderer/components/spaceanalyzer';
 import { CommandPalette } from '@renderer/components/navigation/CommandPalette';
+import { useKeyboardShortcuts, useFileSystemController, useGitRadar } from '@renderer/hooks';
+import { GitRadar } from '@renderer/components/gitradar/GitRadar';
+import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
+
 
 export function App(): React.JSX.Element {
   useKeyboardShortcuts();
@@ -44,6 +47,8 @@ export function App(): React.JSX.Element {
     onRenameValueChange,
     closeContextMenu,
   } = useFileSystemController();
+
+  const gitRadar = useGitRadar(tabs.activePath);
 
   return (
     <>
@@ -77,6 +82,15 @@ export function App(): React.JSX.Element {
             viewMode={viewMode}
             onViewModeChange={(mode) => setActiveTabViewMode(mode)}
             onRefresh={fs.refresh}
+            gitRadarNode={
+              <GitRadar
+                activePath={tabs.activePath ?? ''}
+                activeShell={layoutShell.shell.id}
+                gitStatus={gitRadar.gitStatus}
+                isOpen={gitRadar.isOpen}
+                toggleOpen={gitRadar.toggleOpen}
+              />
+            }
           />
         </ShellLayout.PathArea>
         <ShellLayout.Content>
@@ -127,6 +141,7 @@ export function App(): React.JSX.Element {
               dropDestinationPath={isVirtualLocation ? null : tabs.activePath}
               onMove={(paths, destinationDir) => void moveDroppedPaths(paths, destinationDir)}
               onExternalDrag={(paths) => void ipc.invoke('shell:startDrag', { paths })}
+              gitStatusMap={gitRadar.gitStatus?.statusMap}
             />
           )}
           {contextMenu !== null ? (
@@ -158,6 +173,15 @@ export function App(): React.JSX.Element {
         onOpenNode={fs.openNode}
         onCreateFolder={() => void createFolder()}
         onRefresh={fs.refresh}
+      />
+      <GitDrawer
+        isOpen={gitRadar.isOpen}
+        onClose={gitRadar.toggleOpen}
+        gitStatus={gitRadar.gitStatus}
+        gitHistory={gitRadar.gitHistory}
+        isLoading={gitRadar.isLoading}
+        onRefresh={gitRadar.refresh}
+        error={gitRadar.error}
       />
     </>
   );

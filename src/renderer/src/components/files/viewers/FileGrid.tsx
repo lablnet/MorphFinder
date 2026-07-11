@@ -36,20 +36,39 @@ function GridFileItem({ node, data, style }: GridFileItemProps): React.JSX.Eleme
     onExternalDrag: data.onExternalDrag,
   });
 
+  const gitStatus = data.gitStatusMap?.[node.path];
+  const gitColor = gitStatus
+    ? {
+        modified: 'bg-amber-500 ring-1 ring-white dark:ring-black',
+        staged: 'bg-green-600 ring-1 ring-white dark:ring-black',
+        added: 'bg-green-500 ring-1 ring-white dark:ring-black',
+        untracked: 'bg-blue-500 ring-1 ring-white dark:ring-black',
+        ignored: 'bg-gray-500 ring-1 ring-white dark:ring-black',
+      }[gitStatus]
+    : '';
+
   return (
     <div style={style} className="p-1.5">
       <button
         data-file-item="true"
         type="button"
-        title={node.name}
+        title={`${node.name}${gitStatus ? ` (${gitStatus})` : ''}`}
         {...dragProps}
         {...mouseProps}
         className={cn(
-          'flex h-full w-full flex-col items-center justify-start gap-2 rounded-shell p-2 text-center text-xs outline-none',
+          'flex h-full w-full flex-col items-center justify-start gap-2 rounded-shell p-2 text-center text-xs outline-none relative transition-all',
           selected ? 'bg-[color:var(--shell-accent)]/15 ring-1 ring-[color:var(--shell-accent)]' : 'hover:bg-shell-sidebar',
+          gitStatus === 'modified' && 'border border-amber-500/30 bg-amber-500/5',
+          gitStatus === 'added' && 'border border-green-500/30 bg-green-500/5',
+          gitStatus === 'untracked' && 'border border-blue-500/30 bg-blue-500/5',
         )}
       >
-        <FileIcon node={node} size={data.iconSize} className={node.kind === 'directory' ? 'text-[color:var(--shell-accent)]' : 'text-current/75'} />
+        <div className="relative">
+          <FileIcon node={node} size={data.iconSize} className={node.kind === 'directory' ? 'text-[color:var(--shell-accent)]' : 'text-current/75'} />
+          {gitColor && (
+            <span className={cn('absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full', gitColor)} />
+          )}
+        </div>
         {isRenaming ? (
           <input
             {...renameInputProps}
@@ -61,7 +80,13 @@ function GridFileItem({ node, data, style }: GridFileItemProps): React.JSX.Eleme
             )}
           />
         ) : (
-          <span className="line-clamp-2 w-full break-words">{node.name}</span>
+          <span className={cn(
+            'line-clamp-2 w-full break-words',
+            gitStatus === 'modified' && 'text-amber-600 dark:text-amber-400 font-medium',
+            gitStatus === 'added' && 'text-green-600 dark:text-green-400 font-medium',
+            gitStatus === 'untracked' && 'text-blue-600 dark:text-blue-400 font-medium',
+            gitStatus === 'ignored' && 'text-current/30 line-through'
+          )}>{node.name}</span>
         )}
       </button>
     </div>

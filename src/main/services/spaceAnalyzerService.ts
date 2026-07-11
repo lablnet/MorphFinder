@@ -225,7 +225,7 @@ async function scanDirectorySizeRecursive(
     }
 
     return resultNode;
-  } catch (error) {
+  } catch {
     return {
       name: nodeName,
       path: dirPath,

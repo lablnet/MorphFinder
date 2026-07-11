@@ -5,6 +5,7 @@ import { createShellHandlers } from './shell.handlers';
 import { createNativeHandlers } from './native.handlers';
 import { createCacheHandlers } from './cache.handlers';
 import { createAnalyzerHandlers } from './analyzer.handlers';
+import { createGitHandlers } from './git.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -21,6 +22,7 @@ export function registerHandlers(window: BrowserWindow): void {
     ...createNativeHandlers(),
     ...createCacheHandlers(),
     ...createAnalyzerHandlers(window),
+    ...createGitHandlers(window),
   };
 
   for (const channel of Object.keys(handlers) as IpcChannel[]) {

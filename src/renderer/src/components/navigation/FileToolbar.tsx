@@ -26,6 +26,7 @@ export interface FileToolbarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onRefresh: () => void;
+  gitRadarNode?: React.ReactNode;
 }
 
 const VIEW_OPTIONS: Array<{ mode: ViewMode; label: string; Icon: typeof Grid2X2 }> = [
@@ -52,6 +53,7 @@ export function FileToolbar({
   viewMode,
   onViewModeChange,
   onRefresh,
+  gitRadarNode,
 }: FileToolbarProps): React.JSX.Element {
   return (
     <div
@@ -130,6 +132,8 @@ export function FileToolbar({
         >
           <RefreshCw size={15} />
         </Button>
+
+        {gitRadarNode}
       </div>
     </div>
   );

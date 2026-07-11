@@ -1,4 +1,5 @@
 import type { FileSystemNode } from '@shared/types/fileSystem';
+import type { GitFileStatus } from '@shared/types/git';
 
 /** Shared by FileGrid / FileListTable / FileColumnView so FileView.tsx can dispatch
  *  between them without any view knowing about the others. */
@@ -19,4 +20,6 @@ export interface FileViewProps {
   dropDestinationPath: string | null;
   onMove: (paths: string[], destinationDir: string) => void;
   onExternalDrag: (paths: string[]) => void;
+  gitStatusMap?: Record<string, GitFileStatus> | undefined;
 }
+

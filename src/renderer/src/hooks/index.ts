@@ -18,6 +18,9 @@ export * from './ui/useTabs';
 export * from './ui/useTheme';
 export * from './ui/useCommandPalette';
 
+export * from './git/useGitRadar';
+
 export * from './utils/useElementSize';
 export * from './utils/useKeyboardShortcuts';
+
 export * from './spaceanalyzer/useSpaceAnalyzer';
