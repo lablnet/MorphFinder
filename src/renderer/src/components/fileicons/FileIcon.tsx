@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { ipc } from '@renderer/services/ipc';
+import { useFileThumbnail } from '@renderer/hooks';
 import {
   FolderIcon,
   CUSTOM_ICONS,
@@ -13,69 +13,17 @@ export interface FileIconProps {
   className?: string;
 }
 
-// Simple in-memory cache for loaded thumbnails to make scrolling super smooth
-const thumbnailDataUrlCache = new Map<string, string>();
-
-// extensions we can fetch native thumbnails for
-const PREVIEWABLE_EXTENSIONS = [
-  'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'heic', 'bmp', 'tiff',
-  'mp4', 'mov', 'mkv', 'avi', 'webm',
-  'pdf',
-  'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'pages', 'key', 'numbers'
-];
-
 export const FileIcon: React.FC<FileIconProps> = ({
   node,
   size = 24,
   className = '',
 }) => {
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const { thumbnailUrl } = useFileThumbnail(node, size);
+  const isDirectory = node.kind === 'directory';
 
   const extension = node.extension === '' && node.name.startsWith('.')
     ? node.name.slice(1).toLowerCase()
     : node.extension.toLowerCase();
-  const isDirectory = node.kind === 'directory';
-
-  useEffect(() => {
-    // Reset state for new node path
-    setThumbnailUrl(null);
-
-    if (isDirectory) return;
-
-    if (!PREVIEWABLE_EXTENSIONS.includes(extension)) return;
-
-    // Check memory cache first
-    const cacheKey = `${node.path}:${size}`;
-    const cached = thumbnailDataUrlCache.get(cacheKey);
-    if (cached) {
-      setThumbnailUrl(cached);
-      return;
-    }
-
-    let isMounted = true;
-
-    // Invoke main process native quicklook thumbnail generator
-    ipc.invoke('native:thumbnail', {
-      path: node.path,
-      width: size * 2, // high DPI / retina backing
-      height: size * 2,
-      scale: 2,
-    })
-      .then((thumbnail) => {
-        if (!isMounted) return;
-        if (thumbnail?.dataUrl) {
-          thumbnailDataUrlCache.set(cacheKey, thumbnail.dataUrl);
-          setThumbnailUrl(thumbnail.dataUrl);
-        }
-      })
-      .catch((err) => {
-        console.warn('Failed to load native thumbnail for:', node.path, err);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [node.path, extension, isDirectory, size]);
 
   // 1. Folders
   if (isDirectory) {
@@ -106,3 +54,4 @@ export const FileIcon: React.FC<FileIconProps> = ({
   const TargetIcon = CUSTOM_ICONS[extension] ?? DefaultFileIcon;
   return <TargetIcon size={size} className={className} />;
 };
+

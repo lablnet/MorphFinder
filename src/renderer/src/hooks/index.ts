@@ -5,6 +5,7 @@ export * from './files/useFileSystemController';
 export * from './files/useMarquee';
 export * from './files/useSelection';
 export * from './files/useWellKnownDirs';
+export * from './files/useFileThumbnail';
 
 export * from './ui/useLayoutShell';
 export * from './ui/useTabs';
