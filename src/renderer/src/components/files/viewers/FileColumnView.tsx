@@ -1,17 +1,13 @@
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@lablnet/ui';
-import { useState } from 'react';
-import { FileIcon } from '../fileicons/FileIcon';
-import { marqueeSelectionForList, normalizedSelectionRect, type SelectionRect } from './selection';
-import type { FileViewProps } from './types';
-import { readDraggedPaths } from './dragDrop';
+import { useCallback } from 'react';
+import { FileIcon } from '../../fileicons/FileIcon';
+import { marqueeSelectionForList, type SelectionRect } from '../selection';
+import type { FileViewProps } from '../types';
+import { readDraggedPaths } from '../dragDrop';
 import { useFileItem } from '@renderer/hooks/useFileItem';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-
-interface MarqueeState {
-  start: { x: number; y: number };
-  current: { x: number; y: number };
-}
+import { useMarquee } from '@renderer/hooks/useMarquee';
 
 interface ColumnFileItemProps {
   node: FileSystemNode;
@@ -108,22 +104,27 @@ export function FileColumnView({
   onMove,
   onExternalDrag,
 }: FileViewProps): React.JSX.Element {
-  const [marquee, setMarquee] = useState<MarqueeState | null>(null);
-  const [suppressNextClick, setSuppressNextClick] = useState(false);
   const rowHeight = 32;
   const topOffset = 4;
-  const marqueeRect: SelectionRect | null = marquee === null ? null : normalizedSelectionRect(marquee.start, marquee.current);
 
-  const pointFromEvent = (event: React.MouseEvent): { x: number; y: number } => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-  };
+  const calculateSelection = useCallback(
+    (rect: SelectionRect) =>
+      marqueeSelectionForList(nodes, rect, { rowHeight, topOffset }),
+    [nodes]
+  );
+
+  const {
+    marqueeRect,
+    suppressNextClick: isMarqueeDragging,
+    setSuppressNextClick,
+    marqueeHandlers,
+  } = useMarquee(onSelectionChange, calculateSelection);
 
   return (
     <div
       className="flex h-full overflow-auto"
       onClick={() => {
-        if (suppressNextClick) {
+        if (isMarqueeDragging) {
           setSuppressNextClick(false);
           return;
         }
@@ -142,22 +143,7 @@ export function FileColumnView({
     >
       <div
         className="relative w-72 shrink-0 border-r border-shell-border py-1"
-        onMouseDown={(event) => {
-          if (event.button !== 0 || (event.target as Element).closest('[data-file-item="true"]') !== null) return;
-          setMarquee({ start: pointFromEvent(event), current: pointFromEvent(event) });
-        }}
-        onMouseMove={(event) => {
-          if (marquee === null) return;
-          setMarquee((current) => (current === null ? null : { ...current, current: pointFromEvent(event) }));
-        }}
-        onMouseUp={() => {
-          if (marqueeRect !== null) {
-            const wasDrag = marqueeRect.right - marqueeRect.left > 3 || marqueeRect.bottom - marqueeRect.top > 3;
-            onSelectionChange(marqueeSelectionForList(nodes, marqueeRect, { rowHeight, topOffset }));
-            setSuppressNextClick(wasDrag);
-          }
-          setMarquee(null);
-        }}
+        {...marqueeHandlers}
       >
         {nodes.map((node) => (
           <ColumnFileItem

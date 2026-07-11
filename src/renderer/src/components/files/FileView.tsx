@@ -1,7 +1,7 @@
 import type { ViewMode } from '@shared/types/layout';
-import { FileColumnView } from './FileColumnView';
-import { FileGrid } from './FileGrid';
-import { FileListTable } from './FileListTable';
+import { FileColumnView } from './viewers/FileColumnView';
+import { FileGrid } from './viewers/FileGrid';
+import { FileListTable } from './viewers/FileListTable';
 import type { FileViewProps } from './types';
 
 export interface RoutedFileViewProps extends FileViewProps {

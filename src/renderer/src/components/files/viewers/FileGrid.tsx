@@ -1,22 +1,18 @@
 import { cn } from '@lablnet/ui';
 import { FixedSizeGrid, type GridChildComponentProps } from 'react-window';
-import { useState } from 'react';
+import { useCallback } from 'react';
 import { useElementSize } from '@renderer/hooks/useElementSize';
-import { FileIcon } from '../fileicons/FileIcon';
-import { marqueeSelectionForGrid, normalizedSelectionRect, type SelectionRect } from './selection';
-import type { FileViewProps } from './types';
+import { FileIcon } from '../../fileicons/FileIcon';
+import { marqueeSelectionForGrid, type SelectionRect } from '../selection';
+import type { FileViewProps } from '../types';
 import { useFileItem } from '@renderer/hooks/useFileItem';
-import { readDraggedPaths } from './dragDrop';
+import { readDraggedPaths } from '../dragDrop';
 import type { FileSystemNode } from '@shared/types/fileSystem';
+import { useMarquee } from '@renderer/hooks/useMarquee';
 
 interface GridItemData extends FileViewProps {
   columnCount: number;
   iconSize: number;
-}
-
-interface MarqueeState {
-  start: { x: number; y: number };
-  current: { x: number; y: number };
 }
 
 interface GridFileItemProps {
@@ -101,20 +97,29 @@ export function FileGrid({
   onExternalDrag,
 }: FileViewProps): React.JSX.Element {
   const [containerRef, size] = useElementSize<HTMLDivElement>();
-  const [marquee, setMarquee] = useState<MarqueeState | null>(null);
-  const [suppressNextClick, setSuppressNextClick] = useState(false);
   const iconSize = density === 'compact' ? 28 : 36;
   const columnWidth = density === 'compact' ? 96 : 112;
   const rowHeight = density === 'compact' ? 92 : 112;
   const columnCount = Math.max(1, Math.floor(size.width / columnWidth));
   const resolvedColumnWidth = size.width > 0 ? Math.floor(size.width / columnCount) : columnWidth;
   const rowCount = Math.ceil(nodes.length / columnCount);
-  const marqueeRect: SelectionRect | null = marquee === null ? null : normalizedSelectionRect(marquee.start, marquee.current);
 
-  const pointFromEvent = (event: React.MouseEvent): { x: number; y: number } => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-  };
+  const calculateSelection = useCallback(
+    (rect: SelectionRect) =>
+      marqueeSelectionForGrid(nodes, rect, {
+        columnCount,
+        columnWidth: resolvedColumnWidth,
+        rowHeight,
+      }),
+    [nodes, columnCount, resolvedColumnWidth, rowHeight]
+  );
+
+  const {
+    marqueeRect,
+    suppressNextClick,
+    setSuppressNextClick,
+    marqueeHandlers,
+  } = useMarquee(onSelectionChange, calculateSelection);
 
   return (
     <div
@@ -127,29 +132,7 @@ export function FileGrid({
         }
         onSelectionChange([]);
       }}
-      onMouseDown={(event) => {
-        if (event.button !== 0 || (event.target as Element).closest('[data-file-item="true"]') !== null) return;
-        const point = pointFromEvent(event);
-        setMarquee({ start: point, current: point });
-      }}
-      onMouseMove={(event) => {
-        if (marquee === null) return;
-        setMarquee((current) => (current === null ? null : { ...current, current: pointFromEvent(event) }));
-      }}
-      onMouseUp={() => {
-        if (marqueeRect !== null) {
-          const wasDrag = marqueeRect.right - marqueeRect.left > 3 || marqueeRect.bottom - marqueeRect.top > 3;
-          onSelectionChange(
-            marqueeSelectionForGrid(nodes, marqueeRect, {
-              columnCount,
-              columnWidth: resolvedColumnWidth,
-              rowHeight,
-            }),
-          );
-          setSuppressNextClick(wasDrag);
-        }
-        setMarquee(null);
-      }}
+      {...marqueeHandlers}
       onContextMenu={(event) => onContextMenu(null, event)}
       onDragOver={(event) => {
         if (dropDestinationPath !== null) event.preventDefault();

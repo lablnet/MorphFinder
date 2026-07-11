@@ -1,25 +1,21 @@
 import { cn } from '@lablnet/ui';
 import { FixedSizeList, type ListChildComponentProps } from 'react-window';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useElementSize } from '@renderer/hooks/useElementSize';
 import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { FileIcon } from '../fileicons/FileIcon';
-import { marqueeSelectionForList, normalizedSelectionRect, type SelectionRect } from './selection';
-import type { FileViewProps } from './types';
+import { FileIcon } from '../../fileicons/FileIcon';
+import { marqueeSelectionForList, type SelectionRect } from '../selection';
+import type { FileViewProps } from '../types';
 import { useFileItem } from '@renderer/hooks/useFileItem';
-import { readDraggedPaths } from './dragDrop';
+import { readDraggedPaths } from '../dragDrop';
+import { useMarquee } from '@renderer/hooks/useMarquee';
 
 type SortKey = 'name' | 'kind' | 'size' | 'modified';
 type SortDirection = 'asc' | 'desc';
 
 interface RowData extends Omit<FileViewProps, 'nodes'> {
   nodes: FileSystemNode[];
-}
-
-interface MarqueeState {
-  start: { x: number; y: number };
-  current: { x: number; y: number };
 }
 
 function compareNodes(a: FileSystemNode, b: FileSystemNode, key: SortKey, direction: SortDirection): number {
@@ -114,11 +110,8 @@ export function FileListTable({
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [marquee, setMarquee] = useState<MarqueeState | null>(null);
-  const [suppressNextClick, setSuppressNextClick] = useState(false);
   const rowHeight = density === 'compact' ? 28 : 34;
   const headerHeight = 33;
-  const marqueeRect: SelectionRect | null = marquee === null ? null : normalizedSelectionRect(marquee.start, marquee.current);
   const sortedNodes = useMemo(
     () => [...nodes].sort((a, b) => compareNodes(a, b, sortKey, sortDirection)),
     [nodes, sortDirection, sortKey],
@@ -139,10 +132,18 @@ export function FileListTable({
     </button>
   );
 
-  const pointFromEvent = (event: React.MouseEvent): { x: number; y: number } => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-  };
+  const calculateSelection = useCallback(
+    (rect: SelectionRect) =>
+      marqueeSelectionForList(sortedNodes, rect, { rowHeight, topOffset: headerHeight }),
+    [sortedNodes, rowHeight]
+  );
+
+  const {
+    marqueeRect,
+    suppressNextClick,
+    setSuppressNextClick,
+    marqueeHandlers,
+  } = useMarquee(onSelectionChange, calculateSelection);
 
   return (
     <div
@@ -155,22 +156,7 @@ export function FileListTable({
         }
         onSelectionChange([]);
       }}
-      onMouseDown={(event) => {
-        if (event.button !== 0 || (event.target as Element).closest('[data-file-item="true"]') !== null) return;
-        setMarquee({ start: pointFromEvent(event), current: pointFromEvent(event) });
-      }}
-      onMouseMove={(event) => {
-        if (marquee === null) return;
-        setMarquee((current) => (current === null ? null : { ...current, current: pointFromEvent(event) }));
-      }}
-      onMouseUp={() => {
-        if (marqueeRect !== null) {
-          const wasDrag = marqueeRect.right - marqueeRect.left > 3 || marqueeRect.bottom - marqueeRect.top > 3;
-          onSelectionChange(marqueeSelectionForList(sortedNodes, marqueeRect, { rowHeight, topOffset: headerHeight }));
-          setSuppressNextClick(wasDrag);
-        }
-        setMarquee(null);
-      }}
+      {...marqueeHandlers}
       onContextMenu={(event) => onContextMenu(null, event)}
       onDragOver={(event) => {
         if (dropDestinationPath !== null) event.preventDefault();
