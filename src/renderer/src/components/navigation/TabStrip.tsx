@@ -14,7 +14,7 @@ export interface TabStripProps {
 
 export function TabStrip({ tabs, activeTabId, onActivate, onClose, onNew, onReorder }: TabStripProps): React.JSX.Element {
   return (
-    <div className="flex h-9 items-center gap-1 border-b border-shell-border bg-shell-sidebar px-2" role="tablist">
+    <div className="flex h-full w-full items-center gap-1 px-2" role="tablist">
       {tabs.map((tab, index) => (
         <div
           key={tab.id}
