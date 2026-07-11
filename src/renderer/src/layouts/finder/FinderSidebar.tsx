@@ -1,10 +1,14 @@
 import React from 'react';
-import { Download, FileText, Home, LayoutGrid, Monitor, type LucideIcon } from 'lucide-react';
+import { Download, FileText, Home, LayoutGrid, Monitor, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
+import { useAppStore } from '@renderer/store';
 
 export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
+  const pinnedFolders = useAppStore((state) => state.pinnedFolders);
+  const unpinFolder = useAppStore((state) => state.unpinFolder);
+
   const favorites = wellKnownDirs === null
     ? []
     : [
@@ -21,6 +25,21 @@ export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: Sidebar
           <SidebarRow key={item.path} {...item} isActive={item.path === activePath} onClick={() => onNavigate(item.path)} />
         ))}
       </SidebarGroup>
+      {pinnedFolders.length > 0 && (
+        <SidebarGroup title="Pinned">
+          {pinnedFolders.map((path) => (
+            <SidebarRow
+              key={path}
+              label={path.split('/').pop() || path}
+              path={path}
+              icon={Folder}
+              isActive={path === activePath}
+              onClick={() => onNavigate(path)}
+              onUnpin={() => unpinFolder(path)}
+            />
+          ))}
+        </SidebarGroup>
+      )}
       <SidebarGroup title="Locations">
         <SidebarRow label="Macintosh HD" path="/" icon={LayoutGrid} isActive={activePath === '/'} onClick={() => onNavigate('/')} />
       </SidebarGroup>
@@ -55,21 +74,37 @@ interface SidebarRowProps {
   icon: LucideIcon;
   isActive: boolean;
   onClick: () => void;
+  onUnpin?: () => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin }: SidebarRowProps): React.JSX.Element {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'flex h-7 items-center gap-2 rounded px-2 text-left w-full',
-        isActive ? 'bg-shell-accent/15 font-semibold text-shell-accent' : 'hover:bg-black/5 dark:hover:bg-white/5 text-current/80 hover:text-current',
+    <div className="group flex h-7 items-center justify-between w-full rounded hover:bg-black/5 dark:hover:bg-white/5">
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          'flex h-full items-center gap-2 rounded px-2 text-left flex-1 min-w-0',
+          isActive ? 'bg-shell-accent/15 font-semibold text-shell-accent' : 'text-current/80 hover:text-current',
+        )}
+      >
+        <Icon size={14} className="shrink-0" />
+        <span className="truncate">{label}</span>
+      </button>
+      {onUnpin && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onUnpin();
+          }}
+          className="mr-2 hidden group-hover:flex text-current/40 hover:text-current/80 transition-colors cursor-pointer"
+          title="Unpin Folder"
+        >
+          <X size={12} />
+        </button>
       )}
-    >
-      <Icon size={14} />
-      <span className="truncate">{label}</span>
-    </button>
+    </div>
   );
 }
 export default FinderSidebar;

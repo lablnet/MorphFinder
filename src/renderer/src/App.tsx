@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { AlertCircle, HardDrive, Loader2, LockKeyhole, FolderPlus, Terminal as TerminalIcon } from 'lucide-react';
 import { FileContextMenu } from '@renderer/components/files/FileContextMenu';
 import { FileView } from '@renderer/components/files/FileView';
@@ -21,7 +21,7 @@ import { DevPanelStatusButton } from '@renderer/components/devpanel/components/D
 import { GitRadar } from '@renderer/components/gitradar/GitRadar';
 import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
 import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
-import { DirectoryAnnotator } from '@renderer/components/directoryannotator';
+import { DetailsPanel } from '@renderer/components/files/DetailsPanel';
 import { useAppStore } from '@renderer/store';
 import { cn } from '@lablnet/ui';
 
@@ -32,6 +32,11 @@ export function App(): React.JSX.Element {
 
   const terminalOpen = useAppStore((state) => state.terminalOpen);
   const toggleTerminal = useAppStore((state) => state.toggleTerminal);
+  
+  const detailsNode = useAppStore((state) => state.detailsNode);
+  const closeDetails = useAppStore((state) => state.closeDetails);
+  const activeTagFilter = useAppStore((state) => state.activeTagFilter);
+  const annotations = useAppStore((state) => state.annotations);
 
   const {
     tabs,
@@ -45,7 +50,6 @@ export function App(): React.JSX.Element {
     renameDraft,
     namePrompt,
     contextMenu,
-    annotationNode,
     statusText,
     onNamePromptChange,
     closeNamePrompt,
@@ -60,8 +64,15 @@ export function App(): React.JSX.Element {
     setActiveTabViewMode,
     onRenameValueChange,
     closeContextMenu,
-    closeAnnotator,
   } = useFileSystemController();
+
+  const filteredNodes = useMemo(() => {
+    if (!activeTagFilter) return fs.nodes;
+    return fs.nodes.filter((node) => {
+      const ann = annotations[node.path];
+      return ann?.tags.some((t) => t.label === activeTagFilter);
+    });
+  }, [fs.nodes, activeTagFilter, annotations]);
 
   const gitRadar = useGitRadar(tabs.activePath);
   const projectDetector = useProjectDetector(isVirtualLocation ? null : tabs.activePath);
@@ -154,16 +165,16 @@ export function App(): React.JSX.Element {
                   <strong className="text-current">Scanning...</strong>
                   <span className="max-w-md">Collecting files for this location.</span>
                 </div>
-              ) : fs.nodes.length === 0 ? (
+              ) : filteredNodes.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-current/50">
                   <FolderPlus size={28} />
-                  <span>This folder is empty</span>
-                  {!isVirtualLocation ? <Button onClick={() => void createFolder()} variant="outline">New Folder</Button> : null}
+                  <span>{fs.nodes.length === 0 ? 'This folder is empty' : 'No items match the selected tag filter'}</span>
+                  {fs.nodes.length === 0 && !isVirtualLocation ? <Button onClick={() => void createFolder()} variant="outline">New Folder</Button> : null}
                 </div>
               ) : (
                 <FileView
                   viewMode={viewMode}
-                  nodes={fs.nodes}
+                  nodes={filteredNodes}
                   selectedPaths={selection.selectedSet}
                   density="comfortable"
                   onOpen={fs.openNode}
@@ -183,8 +194,8 @@ export function App(): React.JSX.Element {
                 />
               )}
               </div>
-              {!isVirtualLocation && fs.error === null && tabs.activeId !== null && annotationNode !== null ? (
-                <DirectoryAnnotator node={annotationNode} onClose={closeAnnotator} />
+              {fs.error === null && tabs.activeId !== null && detailsNode !== null ? (
+                <DetailsPanel node={detailsNode} onClose={closeDetails} />
               ) : null}
             </div>
             <TerminalPanel />

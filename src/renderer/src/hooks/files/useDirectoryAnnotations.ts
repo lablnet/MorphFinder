@@ -49,6 +49,8 @@ export function useDirectoryAnnotations(path: string | null) {
     try {
       const saved = await ipc.invoke('annotations:set', { path, tags: next.tags, notes: next.notes });
       setAnnotation(saved);
+      const { useAppStore } = await import('@renderer/store');
+      useAppStore.getState().updateAnnotation(saved);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {

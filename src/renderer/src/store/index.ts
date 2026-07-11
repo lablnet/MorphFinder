@@ -28,6 +28,7 @@ export const useAppStore = create<AppStore>()(
         showHiddenFiles: state.showHiddenFiles,
         tabs: state.tabs,
         activeTabId: state.activeTabId,
+        pinnedFolders: state.pinnedFolders,
       }),
     },
   ),

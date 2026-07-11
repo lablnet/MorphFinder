@@ -7,6 +7,7 @@ import type { FileViewProps } from '../types';
 import { readDraggedPaths } from '../dragDrop';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import { useElementSize, useFileItem, useMarquee } from '@renderer/hooks';
+import { useAppStore } from '@renderer/store';
 
 interface GridItemData extends FileViewProps {
   columnCount: number;
@@ -47,16 +48,20 @@ function GridFileItem({ node, data, style }: GridFileItemProps): React.JSX.Eleme
       }[gitStatus]
     : '';
 
+  const annotations = useAppStore((state) => state.annotations);
+  const annotation = annotations[node.path];
+  const tags = annotation?.tags || [];
+
   return (
     <div style={style} className="p-1.5">
       <button
         data-file-item="true"
         type="button"
-        title={`${node.name}${gitStatus ? ` (${gitStatus})` : ''}`}
+        title={`${node.name}${gitStatus ? ` (${gitStatus})` : ''}${tags.length > 0 ? ` [Tags: ${tags.map(t => t.label).join(', ')}]` : ''}`}
         {...dragProps}
         {...mouseProps}
         className={cn(
-          'flex h-full w-full flex-col items-center justify-start gap-2 rounded-shell p-2 text-center text-xs outline-none relative transition-all',
+          'flex h-full w-full flex-col items-center justify-start gap-1 rounded-shell p-2 text-center text-xs outline-none relative transition-all',
           selected ? 'bg-[color:var(--shell-accent)]/15 ring-1 ring-[color:var(--shell-accent)]' : 'hover:bg-shell-sidebar',
           gitStatus === 'modified' && 'border border-amber-500/30 bg-amber-500/5',
           gitStatus === 'added' && 'border border-green-500/30 bg-green-500/5',
@@ -69,6 +74,21 @@ function GridFileItem({ node, data, style }: GridFileItemProps): React.JSX.Eleme
             <span className={cn('absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full', gitColor)} />
           )}
         </div>
+        
+        {/* Render tags as small colored dots/badges */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-0.5 max-w-full my-0.5">
+            {tags.map((t) => (
+              <span
+                key={t.id}
+                className="h-1.5 w-1.5 rounded-full shrink-0 border border-black/10 dark:border-white/10"
+                style={{ backgroundColor: t.color }}
+                title={t.label}
+              />
+            ))}
+          </div>
+        )}
+
         {isRenaming ? (
           <input
             {...renameInputProps}

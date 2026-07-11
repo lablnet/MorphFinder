@@ -9,6 +9,7 @@ export * from './files/useFileThumbnail';
 export * from './files/useDevPanel';
 export * from './files/useProjectDetector';
 export * from './files/useDirectoryAnnotations';
+export * from './files/useDetailsPanel';
 export * from './files/viewers/useImageViewer';
 export * from './files/viewers/useVideoPlayer';
 export * from './files/viewers/useAudioPlayer';

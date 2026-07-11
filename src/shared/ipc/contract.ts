@@ -121,6 +121,10 @@ export interface IpcContract {
     request: DirectoryAnnotationUpdate;
     response: DirectoryAnnotation;
   };
+  'annotations:list': {
+    request: void;
+    response: DirectoryAnnotation[];
+  };
   'terminal:create': {
     request: { cwd: string };
     response: { id: string };

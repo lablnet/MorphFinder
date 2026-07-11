@@ -1,5 +1,5 @@
 import React from 'react';
-import { FolderPlus, Trash2, Grid2X2, List, Columns3, RefreshCw } from 'lucide-react';
+import { FolderPlus, Trash2, Grid2X2, List, Columns3, RefreshCw, Tag } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { HistoryButtons } from './HistoryButtons';
 import { PathBreadcrumb } from './PathBreadcrumb';
@@ -7,6 +7,7 @@ import { ShellSwitcher } from '../chrome/ShellSwitcher';
 import { ThemeToggle } from '../chrome/ThemeToggle';
 import { Button } from '../ui/Button';
 import type { ViewMode, UIShell, UIThemeMode } from '@shared/types/layout';
+import { useAppStore } from '@renderer/store';
 
 export interface FileToolbarProps {
   shellId: UIShell;
@@ -55,6 +56,21 @@ export function FileToolbar({
   onRefresh,
   gitRadarNode,
 }: FileToolbarProps): React.JSX.Element {
+  const annotations = useAppStore((state) => state.annotations);
+  const activeTagFilter = useAppStore((state) => state.activeTagFilter);
+  const setActiveTagFilter = useAppStore((state) => state.setActiveTagFilter);
+
+  // Compute unique tag labels
+  const uniqueTags = React.useMemo(() => {
+    const tagsSet = new Set<string>();
+    Object.values(annotations).forEach((ann) => {
+      ann.tags.forEach((t) => {
+        if (t.label.trim()) tagsSet.add(t.label.trim());
+      });
+    });
+    return Array.from(tagsSet);
+  }, [annotations]);
+
   return (
     <div
       className={cn(
@@ -77,10 +93,28 @@ export function FileToolbar({
       >
         <PathBreadcrumb path={activePath} onNavigate={navigate} />
       </div>
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1.5">
         <ShellSwitcher activeShell={shellId} onSelect={setShell} />
         <ThemeToggle mode={themeMode} onChange={onThemeChange} />
         
+        {uniqueTags.length > 0 && (
+          <div className="flex items-center gap-1 text-xs border-l border-shell-border pl-1.5 h-6">
+            <Tag size={13} className="text-current/55 shrink-0" />
+            <select
+              value={activeTagFilter || ''}
+              onChange={(e) => setActiveTagFilter(e.target.value || null)}
+              className="bg-shell-sidebar text-current/80 hover:text-current border border-shell-border rounded px-1 py-0.5 outline-none text-[11px] cursor-pointer max-w-[100px] h-7"
+            >
+              <option value="">All Tags</option>
+              {uniqueTags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <Button
           title="New Folder"
           aria-label="New Folder"

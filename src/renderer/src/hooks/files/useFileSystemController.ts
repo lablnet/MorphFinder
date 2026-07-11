@@ -50,6 +50,17 @@ export function useFileSystemController() {
   const [renameDraft, setRenameDraft] = useState<RenameDraft>(null);
   const [namePrompt, setNamePrompt] = useState<AppNamePromptState | null>(null);
 
+  const setAnnotations = useAppStore((state) => state.setAnnotations);
+  useEffect(() => {
+    void ipc.invoke('annotations:list', undefined)
+      .then((list) => {
+        setAnnotations(list);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch annotations list:', err);
+      });
+  }, [setAnnotations]);
+
   const viewMode = activeTab?.viewMode ?? 'list';
   const isVirtualLocation = tabs.activePath === THIS_PC_PATH || tabs.activePath === CACHE_CLEANER_PATH || tabs.activePath === SPACE_ANALYZER_PATH || tabs.activePath === DEV_PANEL_PATH || tabs.activePath === DUPLICATE_FINDER_PATH || tabs.activePath === FILE_TIMELINE_PATH || tabs.activePath.startsWith(SMART_COLLECTIONS_PATH);
   const selectedNodes = useMemo(
@@ -185,6 +196,7 @@ export function useFileSystemController() {
       y: event.clientY,
       hasTarget: node !== null,
       canPaste: clipboard !== null && destinationForPaste(node) !== null,
+      node,
     });
   }, [selectedNodes, selection.selectedSet, clipboard, destinationForPaste]);
 
@@ -200,6 +212,15 @@ export function useFileSystemController() {
     if (action === 'paste') void pasteClipboard(contextNode);
     if (action === 'trash' && contextTargets.length > 0) {
       void operations.trash(contextTargets.map((node) => node.path)).then(fs.refresh);
+    }
+    if (action === 'details' && primaryNode !== null) {
+      useAppStore.getState().openDetails(primaryNode);
+    }
+    if (action === 'pin' && primaryNode !== null) {
+      useAppStore.getState().pinFolder(primaryNode.path);
+    }
+    if (action === 'unpin' && primaryNode !== null) {
+      useAppStore.getState().unpinFolder(primaryNode.path);
     }
     if (action === 'annotate' && primaryNode !== null) setAnnotationNode(primaryNode);
     if (action === 'new-folder') void createFolder();

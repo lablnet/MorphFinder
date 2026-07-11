@@ -1,5 +1,7 @@
 import type { StateCreator } from 'zustand';
 import { DEFAULT_VIEW_MODE_BY_SHELL, type UIShell, type UIThemeMode, type ViewMode } from '@shared/types/layout';
+import type { DirectoryAnnotation } from '@shared/types/directoryAnnotations';
+import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { AppStore } from './index';
 
 export interface LayoutSlice {
@@ -21,6 +23,19 @@ export interface LayoutSlice {
   setTerminalHeight: (height: number) => void;
   queueTerminalCommand: (cwd: string, command: string) => void;
   clearTerminalQueuedCommand: () => void;
+  
+  // Annotation-Aware UI additions
+  pinnedFolders: string[];
+  pinFolder: (path: string) => void;
+  unpinFolder: (path: string) => void;
+  annotations: Record<string, DirectoryAnnotation>;
+  setAnnotations: (annotations: DirectoryAnnotation[]) => void;
+  updateAnnotation: (annotation: DirectoryAnnotation) => void;
+  activeTagFilter: string | null;
+  setActiveTagFilter: (tag: string | null) => void;
+  detailsNode: FileSystemNode | null;
+  openDetails: (node: FileSystemNode) => void;
+  closeDetails: () => void;
 }
 
 const SHELL_CYCLE_ORDER: UIShell[] = ['finder', 'explorer', 'dolphin'];
@@ -81,4 +96,38 @@ export const createLayoutSlice: StateCreator<AppStore, [], [], LayoutSlice> = (s
     }),
 
   clearTerminalQueuedCommand: () => set({ terminalQueuedCommand: null }),
+
+  // Annotation-Aware UI implementations
+  pinnedFolders: [],
+  pinFolder: (path) =>
+    set((state) => {
+      if (state.pinnedFolders.includes(path)) return {};
+      return { pinnedFolders: [...state.pinnedFolders, path] };
+    }),
+  unpinFolder: (path) =>
+    set((state) => ({
+      pinnedFolders: state.pinnedFolders.filter((p) => p !== path),
+    })),
+  annotations: {},
+  setAnnotations: (list) =>
+    set(() => {
+      const annotations: Record<string, DirectoryAnnotation> = {};
+      for (const ann of list) {
+        annotations[ann.path] = ann;
+      }
+      return { annotations };
+    }),
+  updateAnnotation: (ann) =>
+    set((state) => ({
+      annotations: { ...state.annotations, [ann.path]: ann },
+      // Update detailsNode annotation if it's currently open
+      detailsNode: state.detailsNode && state.detailsNode.path === ann.path 
+        ? { ...state.detailsNode } 
+        : state.detailsNode
+    })),
+  activeTagFilter: null,
+  setActiveTagFilter: (tag) => set({ activeTagFilter: tag }),
+  detailsNode: null,
+  openDetails: (node) => set({ detailsNode: node }),
+  closeDetails: () => set({ detailsNode: null }),
 });

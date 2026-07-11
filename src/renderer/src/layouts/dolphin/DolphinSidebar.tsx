@@ -1,10 +1,14 @@
 import React from 'react';
-import { Download, FileText, HardDrive, Home, type LucideIcon } from 'lucide-react';
+import { Download, FileText, HardDrive, Home, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
+import { useAppStore } from '@renderer/store';
 
 export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
+  const pinnedFolders = useAppStore((state) => state.pinnedFolders);
+  const unpinFolder = useAppStore((state) => state.unpinFolder);
+
   const places = wellKnownDirs === null
     ? []
     : [
@@ -20,6 +24,21 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
           <SidebarRow key={item.path} {...item} isActive={item.path === activePath} onClick={() => onNavigate(item.path)} />
         ))}
       </SidebarGroup>
+      {pinnedFolders.length > 0 && (
+        <SidebarGroup title="Pinned">
+          {pinnedFolders.map((path) => (
+            <SidebarRow
+              key={path}
+              label={path.split('/').pop() || path}
+              path={path}
+              icon={Folder}
+              isActive={path === activePath}
+              onClick={() => onNavigate(path)}
+              onUnpin={() => unpinFolder(path)}
+            />
+          ))}
+        </SidebarGroup>
+      )}
       <SidebarGroup title="Devices">
         <SidebarRow label="Root" path="/" icon={HardDrive} isActive={activePath === '/'} onClick={() => onNavigate('/')} />
       </SidebarGroup>
@@ -54,21 +73,37 @@ interface SidebarRowProps {
   icon: LucideIcon;
   isActive: boolean;
   onClick: () => void;
+  onUnpin?: () => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin }: SidebarRowProps): React.JSX.Element {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 rounded-shell px-2 py-1 text-left w-full',
-        isActive ? 'bg-shell-accent/20 font-medium text-shell-accent' : 'hover:bg-black/5',
+    <div className="group flex items-center justify-between w-full rounded-shell hover:bg-black/5">
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          'flex items-center gap-2 rounded-shell px-2 py-1 text-left flex-1 min-w-0',
+          isActive ? 'bg-shell-accent/20 font-medium text-shell-accent' : '',
+        )}
+      >
+        <Icon size={15} className="shrink-0" />
+        <span className="truncate">{label}</span>
+      </button>
+      {onUnpin && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onUnpin();
+          }}
+          className="mr-2 hidden group-hover:flex text-current/40 hover:text-current/80 transition-colors cursor-pointer"
+          title="Unpin Folder"
+        >
+          <X size={12} />
+        </button>
       )}
-    >
-      <Icon size={15} />
-      <span className="truncate">{label}</span>
-    </button>
+    </div>
   );
 }
 export default DolphinSidebar;

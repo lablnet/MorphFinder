@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   ClipboardPaste,
   Copy,
@@ -9,9 +10,13 @@ import {
   RefreshCw,
   Scissors,
   Trash2,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { Button } from '../ui/Button';
+import type { FileSystemNode } from '@shared/types/fileSystem';
+import { useAppStore } from '@renderer/store';
 
 export type FileContextAction =
   | 'open'
@@ -21,6 +26,9 @@ export type FileContextAction =
   | 'cut'
   | 'paste'
   | 'trash'
+  | 'details'
+  | 'pin'
+  | 'unpin'
   | 'annotate'
   | 'new-folder'
   | 'show-in-folder'
@@ -31,6 +39,7 @@ export interface FileContextMenuState {
   y: number;
   hasTarget: boolean;
   canPaste: boolean;
+  node?: FileSystemNode | null;
 }
 
 interface FileContextMenuProps {
@@ -39,30 +48,37 @@ interface FileContextMenuProps {
   onClose: () => void;
 }
 
-const TARGET_ACTIONS: Array<{ action: FileContextAction; label: string; Icon: typeof FolderOpen }> = [
-  { action: 'open', label: 'Open', Icon: FolderOpen },
-  { action: 'open-with-system', label: 'Open with System App', Icon: ExternalLink },
-  { action: 'rename', label: 'Rename', Icon: Pencil },
-  { action: 'copy', label: 'Copy', Icon: Copy },
-  { action: 'cut', label: 'Cut', Icon: Scissors },
-  { action: 'trash', label: 'Move to Trash', Icon: Trash2 },
-  { action: 'annotate', label: 'Notes & Tags', Icon: FileText },
-  { action: 'show-in-folder', label: 'Show in Folder', Icon: ExternalLink },
-];
-
 const BACKGROUND_ACTIONS: Array<{ action: FileContextAction; label: string; Icon: typeof FolderOpen }> = [
   { action: 'paste', label: 'Paste', Icon: ClipboardPaste },
   { action: 'new-folder', label: 'New Folder', Icon: FolderPlus },
   { action: 'refresh', label: 'Refresh', Icon: RefreshCw },
 ];
 
-export function contextActionsForState(state: Pick<FileContextMenuState, 'hasTarget'>): FileContextAction[] {
-  const actions = state.hasTarget ? [...TARGET_ACTIONS, ...BACKGROUND_ACTIONS] : BACKGROUND_ACTIONS;
-  return actions.map((action) => action.action);
-}
-
 export function FileContextMenu({ state, onAction, onClose }: FileContextMenuProps): React.JSX.Element {
-  const actions = state.hasTarget ? [...TARGET_ACTIONS, ...BACKGROUND_ACTIONS] : BACKGROUND_ACTIONS;
+  const pinnedFolders = useAppStore((state) => state.pinnedFolders);
+  const isPinned = state.node && state.node.kind === 'directory' && pinnedFolders.includes(state.node.path);
+
+  const targetActions: Array<{ action: FileContextAction; label: string; Icon: any }> = [
+    { action: 'open', label: 'Open', Icon: FolderOpen },
+    { action: 'open-with-system', label: 'Open with System App', Icon: ExternalLink },
+    { action: 'rename', label: 'Rename', Icon: Pencil },
+    { action: 'copy', label: 'Copy', Icon: Copy },
+    { action: 'cut', label: 'Cut', Icon: Scissors },
+    { action: 'trash', label: 'Move to Trash', Icon: Trash2 },
+    { action: 'details', label: 'Details', Icon: FileText },
+  ];
+
+  if (state.node && state.node.kind === 'directory') {
+    if (isPinned) {
+      targetActions.push({ action: 'unpin', label: 'Unpin Folder', Icon: PinOff });
+    } else {
+      targetActions.push({ action: 'pin', label: 'Pin Folder', Icon: Pin });
+    }
+  }
+
+  targetActions.push({ action: 'show-in-folder', label: 'Show in Folder', Icon: ExternalLink });
+
+  const actions = state.hasTarget ? [...targetActions, ...BACKGROUND_ACTIONS] : BACKGROUND_ACTIONS;
 
   return (
     <div className="fixed inset-0 z-50" onClick={onClose} onContextMenu={(event) => event.preventDefault()}>

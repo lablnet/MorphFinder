@@ -1,11 +1,15 @@
 import React from 'react';
-import { Download, FileText, Laptop, Star, type LucideIcon } from 'lucide-react';
+import { Download, FileText, Laptop, Star, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { THIS_PC_PATH } from '@shared/constants';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
+import { useAppStore } from '@renderer/store';
 
 export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
+  const pinnedFolders = useAppStore((state) => state.pinnedFolders);
+  const unpinFolder = useAppStore((state) => state.unpinFolder);
+
   const quickAccess = wellKnownDirs === null
     ? []
     : [
@@ -21,6 +25,21 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
           <SidebarRow key={item.path} {...item} isActive={item.path === activePath} onClick={() => onNavigate(item.path)} />
         ))}
       </SidebarGroup>
+      {pinnedFolders.length > 0 && (
+        <SidebarGroup title="Pinned">
+          {pinnedFolders.map((path) => (
+            <SidebarRow
+              key={path}
+              label={path.split('/').pop() || path}
+              path={path}
+              icon={Folder}
+              isActive={path === activePath}
+              onClick={() => onNavigate(path)}
+              onUnpin={() => unpinFolder(path)}
+            />
+          ))}
+        </SidebarGroup>
+      )}
       <SidebarGroup title="This PC">
         <SidebarRow
           label="This PC"
@@ -61,21 +80,37 @@ interface SidebarRowProps {
   icon: LucideIcon;
   isActive: boolean;
   onClick: () => void;
+  onUnpin?: () => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin }: SidebarRowProps): React.JSX.Element {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'flex h-9 items-center gap-3 rounded px-2 text-left w-full',
-        isActive ? 'bg-[color:var(--shell-accent)]/15 font-medium text-[color:var(--shell-accent)]' : 'hover:bg-black/5 dark:hover:bg-white/5',
+    <div className="group flex h-9 items-center justify-between w-full rounded hover:bg-black/5 dark:hover:bg-white/5">
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          'flex h-full items-center gap-3 rounded px-2 text-left flex-1 min-w-0',
+          isActive ? 'bg-[color:var(--shell-accent)]/15 font-medium text-[color:var(--shell-accent)]' : '',
+        )}
+      >
+        <Icon size={16} className="shrink-0" />
+        <span className="truncate">{label}</span>
+      </button>
+      {onUnpin && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onUnpin();
+          }}
+          className="mr-2 hidden group-hover:flex text-current/40 hover:text-current/80 transition-colors cursor-pointer"
+          title="Unpin Folder"
+        >
+          <X size={12} />
+        </button>
       )}
-    >
-      <Icon size={16} />
-      <span className="truncate">{label}</span>
-    </button>
+    </div>
   );
 }
 export default ExplorerSidebar;
