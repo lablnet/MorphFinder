@@ -18,6 +18,7 @@ import { DevPanelStatusButton } from '@renderer/components/devpanel/components/D
 import { GitRadar } from '@renderer/components/gitradar/GitRadar';
 import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
 import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
+import { DirectoryAnnotator } from '@renderer/components/directoryannotator';
 import { useAppStore } from '@renderer/store';
 import { cn } from '@lablnet/ui';
 
@@ -41,6 +42,7 @@ export function App(): React.JSX.Element {
     renameDraft,
     namePrompt,
     contextMenu,
+    annotationNode,
     statusText,
     onNamePromptChange,
     closeNamePrompt,
@@ -55,6 +57,7 @@ export function App(): React.JSX.Element {
     setActiveTabViewMode,
     onRenameValueChange,
     closeContextMenu,
+    closeAnnotator,
   } = useFileSystemController();
 
   const gitRadar = useGitRadar(tabs.activePath);
@@ -105,7 +108,8 @@ export function App(): React.JSX.Element {
         </ShellLayout.PathArea>
         <ShellLayout.Content>
           <div className="flex h-full flex-col overflow-hidden">
-            <div className="flex-1 min-h-0 relative bg-transparent">
+            <div className="flex min-h-0 flex-1 bg-transparent">
+              <div className="relative min-w-0 flex-1">
               {tabs.activeId === null ? (
                 <div className="flex h-full items-center justify-center">
                   <Button onClick={tabs.openHome} variant="accent">
@@ -158,6 +162,10 @@ export function App(): React.JSX.Element {
                   gitStatusMap={gitRadar.gitStatus?.statusMap}
                 />
               )}
+              </div>
+              {!isVirtualLocation && fs.error === null && tabs.activeId !== null && annotationNode !== null ? (
+                <DirectoryAnnotator node={annotationNode} onClose={closeAnnotator} />
+              ) : null}
             </div>
             <TerminalPanel />
           </div>

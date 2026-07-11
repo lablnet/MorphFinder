@@ -2,6 +2,7 @@ import {
   ClipboardPaste,
   Copy,
   ExternalLink,
+  FileText,
   FolderOpen,
   FolderPlus,
   Pencil,
@@ -20,6 +21,7 @@ export type FileContextAction =
   | 'cut'
   | 'paste'
   | 'trash'
+  | 'annotate'
   | 'new-folder'
   | 'show-in-folder'
   | 'refresh';
@@ -44,6 +46,7 @@ const TARGET_ACTIONS: Array<{ action: FileContextAction; label: string; Icon: ty
   { action: 'copy', label: 'Copy', Icon: Copy },
   { action: 'cut', label: 'Cut', Icon: Scissors },
   { action: 'trash', label: 'Move to Trash', Icon: Trash2 },
+  { action: 'annotate', label: 'Notes & Tags', Icon: FileText },
   { action: 'show-in-folder', label: 'Show in Folder', Icon: ExternalLink },
 ];
 

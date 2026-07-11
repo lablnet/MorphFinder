@@ -10,6 +10,7 @@ describe('contextActionsForState', () => {
       'copy',
       'cut',
       'trash',
+      'annotate',
       'show-in-folder',
       'paste',
       'new-folder',

@@ -5,6 +5,7 @@ import type { CacheCleanRequest, CacheCleanResult, CacheScanResult } from '../ty
 import type { SpaceAnalyzerResult } from '../types/spaceAnalyzer';
 import type { DevPanelInfo } from '../types/devPanel';
 import type { GitStatus, GitCommit } from '../types/git';
+import type { DirectoryAnnotation, DirectoryAnnotationUpdate } from '../types/directoryAnnotations';
 
 
 /**
@@ -88,6 +89,14 @@ export interface IpcContract {
     request: { cwd: string; command: string };
     response: void;
   };
+  'annotations:get': {
+    request: { path: string };
+    response: DirectoryAnnotation;
+  };
+  'annotations:set': {
+    request: DirectoryAnnotationUpdate;
+    response: DirectoryAnnotation;
+  };
   'terminal:create': {
     request: { cwd: string };
     response: { id: string };
@@ -138,4 +147,3 @@ export interface IpcEvents {
 }
 
 export type IpcEventChannel = keyof IpcEvents;
-

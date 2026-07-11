@@ -46,6 +46,7 @@ export function useFileSystemController() {
   const [contextMenu, setContextMenu] = useState<FileContextMenuState | null>(null);
   const [contextNode, setContextNode] = useState<FileSystemNode | null>(null);
   const [contextTargets, setContextTargets] = useState<FileSystemNode[]>([]);
+  const [annotationNode, setAnnotationNode] = useState<FileSystemNode | null>(null);
   const [renameDraft, setRenameDraft] = useState<RenameDraft>(null);
   const [namePrompt, setNamePrompt] = useState<AppNamePromptState | null>(null);
 
@@ -200,6 +201,7 @@ export function useFileSystemController() {
     if (action === 'trash' && contextTargets.length > 0) {
       void operations.trash(contextTargets.map((node) => node.path)).then(fs.refresh);
     }
+    if (action === 'annotate' && primaryNode !== null) setAnnotationNode(primaryNode);
     if (action === 'new-folder') void createFolder();
     if (action === 'show-in-folder' && primaryNode !== null) void ipc.invoke('shell:showInFolder', { path: primaryNode.path });
     if (action === 'refresh') fs.refresh();
@@ -279,6 +281,7 @@ export function useFileSystemController() {
     renameDraft,
     namePrompt,
     contextMenu,
+    annotationNode,
     statusText,
     onNamePromptChange,
     closeNamePrompt,
@@ -293,5 +296,6 @@ export function useFileSystemController() {
     setActiveTabViewMode,
     onRenameValueChange,
     closeContextMenu,
+    closeAnnotator: () => setAnnotationNode(null),
   };
 }
