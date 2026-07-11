@@ -33,33 +33,43 @@ export function FileColumnView({
       onClick={() => onSelectionChange([])}
       onContextMenu={(event) => onContextMenu(null, event)}
     >
-      {columns.map((col) => (
-        <div
-          key={col.path}
-          className="relative w-72 shrink-0 border-r border-shell-border py-1 overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {col.nodes.map((node) => (
-            <ColumnFileItem
-              key={node.path}
-              node={node}
-              nodes={col.nodes}
-              selectedPaths={selectedPaths}
-              onOpen={onOpen}
-              onSelectionChange={onSelectionChange}
-              onContextMenu={onContextMenu}
-              renamingPath={renamingPath}
-              renamingValue={renamingValue}
-              renamingError={renamingError}
-              onRenameValueChange={onRenameValueChange}
-              onCommitRename={onCommitRename}
-              onCancelRename={onCancelRename}
-              onMove={onMove}
-              onExternalDrag={onExternalDrag}
-            />
-          ))}
-        </div>
-      ))}
+      {columns.map((col, index) => {
+        // Build selection set for this specific column. 
+        // A node in this column is selected if it is globally selected OR if it is the parent of the next column in the stack.
+        const colSelectedPaths = new Set(selectedPaths);
+        const nextCol = columns[index + 1];
+        if (nextCol) {
+          colSelectedPaths.add(nextCol.path);
+        }
+
+        return (
+          <div
+            key={col.path}
+            className="relative w-72 shrink-0 border-r border-shell-border py-1 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {col.nodes.map((node) => (
+              <ColumnFileItem
+                key={node.path}
+                node={node}
+                nodes={col.nodes}
+                selectedPaths={colSelectedPaths}
+                onOpen={onOpen}
+                onSelectionChange={onSelectionChange}
+                onContextMenu={onContextMenu}
+                renamingPath={renamingPath}
+                renamingValue={renamingValue}
+                renamingError={renamingError}
+                onRenameValueChange={onRenameValueChange}
+                onCommitRename={onCommitRename}
+                onCancelRename={onCancelRename}
+                onMove={onMove}
+                onExternalDrag={onExternalDrag}
+              />
+            ))}
+          </div>
+        );
+      })}
 
       {/* Render the details preview column on the right when a file is selected */}
       {isFileSelectedInLastCol && selectedNodeInLastCol ? (

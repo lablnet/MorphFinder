@@ -159,7 +159,7 @@ export function App(): React.JSX.Element {
                     <Button onClick={tabs.openHome} variant="accent">Open Home</Button>
                   </div>
                 </div>
-              ) : fs.isLoading ? (
+              ) : fs.isLoading && fs.nodes.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-current/55">
                   <Loader2 size={28} className="animate-spin text-shell-accent" />
                   <strong className="text-current">Scanning...</strong>
