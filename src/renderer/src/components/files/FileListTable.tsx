@@ -29,6 +29,7 @@ function ListRow({ index, style, data }: ListChildComponentProps<RowData>): Reac
 
   const Icon = iconForNode(node);
   const selected = data.selectedPaths.has(node.path);
+  const isRenaming = data.renamingPath === node.path;
 
   return (
     <div
@@ -53,10 +54,16 @@ function ListRow({ index, style, data }: ListChildComponentProps<RowData>): Reac
         event.stopPropagation();
         data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
       }}
-      onDoubleClick={() => data.onOpen(node)}
+      onDoubleClick={() => {
+        if (!isRenaming) data.onOpen(node);
+      }}
       onContextMenu={(event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (event.ctrlKey) {
+          data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
+          return;
+        }
         if (!data.selectedPaths.has(node.path)) data.onSelectionChange([node.path], node.path);
         data.onContextMenu(node, event);
       }}
@@ -67,7 +74,36 @@ function ListRow({ index, style, data }: ListChildComponentProps<RowData>): Reac
     >
       <span className="flex min-w-0 items-center gap-2 truncate px-3">
         <Icon size={16} className={node.kind === 'directory' ? 'shrink-0 text-[color:var(--shell-accent)]' : 'shrink-0 text-current/70'} />
-        <span className="truncate">{node.name}</span>
+        {isRenaming ? (
+          <input
+            autoFocus
+            value={data.renamingValue}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => data.onRenameValueChange(event.target.value)}
+            onFocus={(event) => event.currentTarget.select()}
+            onBlur={data.onCommitRename}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                data.onCommitRename();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                data.onCancelRename();
+              }
+            }}
+            aria-invalid={data.renamingError !== null}
+            title={data.renamingError ?? undefined}
+            className={cn(
+              'h-6 min-w-0 flex-1 rounded border bg-shell-surface px-1 text-sm outline-none',
+              data.renamingError === null ? 'border-[color:var(--shell-accent)]' : 'border-red-500',
+            )}
+          />
+        ) : (
+          <span className="truncate">{node.name}</span>
+        )}
       </span>
       <span className="truncate px-3 capitalize text-current/70">{node.kind}</span>
       <span className="truncate px-3 text-right text-current/70">{node.kind === 'directory' ? '--' : formatBytes(node.sizeInBytes)}</span>
@@ -83,6 +119,12 @@ export function FileListTable({
   onSelectionChange,
   onContextMenu,
   onStartRename,
+  renamingPath,
+  renamingValue,
+  renamingError,
+  onRenameValueChange,
+  onCommitRename,
+  onCancelRename,
   density,
   dropDestinationPath,
   onMove,
@@ -138,7 +180,7 @@ export function FileListTable({
         <FixedSizeList
           height={size.height - rowHeight}
           itemCount={sortedNodes.length}
-          itemData={{ nodes: sortedNodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, dropDestinationPath, onMove, onExternalDrag }}
+          itemData={{ nodes: sortedNodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, renamingPath, renamingValue, renamingError, onRenameValueChange, onCommitRename, onCancelRename, dropDestinationPath, onMove, onExternalDrag }}
           itemSize={rowHeight}
           width={size.width}
         >

@@ -28,7 +28,7 @@ export function createFsHandlers(window: BrowserWindow): {
     'fs:readDirectory': ({ path, includeHidden }) => readDirectory(path, includeHidden),
     'fs:rename': ({ path, newName }) => renameEntry(path, newName),
     'fs:createFolder': ({ parentPath, name }) => createFolder(parentPath, name),
-    'fs:operate': (request) => Promise.resolve({ operationId: runFileOperation(request, window.webContents) }),
+    'fs:operate': async (request) => ({ operationId: await runFileOperation(request, window.webContents) }),
     'fs:wellKnownDirs': () => Promise.resolve(wellKnownDirectories()),
     'fs:watch': ({ path }) => {
       activeUnwatchers.get(path)?.();

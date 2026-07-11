@@ -1,5 +1,5 @@
-import { basename, join } from 'node:path';
-import { cp, rename as fsRename } from 'node:fs/promises';
+import { basename, extname, join } from 'node:path';
+import { access, cp, rename as fsRename } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import type { WebContents } from 'electron';
 import type { FileOperationRequest } from '@shared/types/fileSystem';
@@ -7,13 +7,39 @@ import { trashPaths } from './fileSystemService';
 
 /**
  * Runs a copy/move/trash batch and streams progress over `fs:operationProgress`.
- * Fires and forgets from the caller's perspective — the renderer subscribes to the
- * operationId returned by `fs:operate` rather than awaiting the whole batch.
+ * Resolves after the batch completes so callers can refresh the directory at the
+ * right time instead of racing the filesystem.
  */
-export function runFileOperation(request: FileOperationRequest, webContents: WebContents): string {
+export async function runFileOperation(request: FileOperationRequest, webContents: WebContents): Promise<string> {
   const operationId = randomUUID();
-  void executeOperation(operationId, request, webContents);
+  await executeOperation(operationId, request, webContents);
   return operationId;
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function uniqueCopyDestination(destinationDir: string, sourcePath: string): Promise<string> {
+  const sourceName = basename(sourcePath);
+  const firstDestination = join(destinationDir, sourceName);
+  if (!(await pathExists(firstDestination))) return firstDestination;
+
+  const extension = extname(sourceName);
+  const stem = extension.length > 0 ? sourceName.slice(0, -extension.length) : sourceName;
+
+  for (let index = 1; index < 10_000; index += 1) {
+    const suffix = index === 1 ? '_copy' : `_copy_${index}`;
+    const destination = join(destinationDir, `${stem}${suffix}${extension}`);
+    if (!(await pathExists(destination))) return destination;
+  }
+
+  throw new Error(`Could not find an available copy name for ${sourceName}`);
 }
 
 async function executeOperation(
@@ -36,10 +62,11 @@ async function executeOperation(
         if (request.destinationDir === undefined) {
           throw new Error(`${request.kind} requires a destinationDir`);
         }
-        const destination = join(request.destinationDir, basename(sourcePath));
         if (request.kind === 'copy') {
+          const destination = await uniqueCopyDestination(request.destinationDir, sourcePath);
           await cp(sourcePath, destination, { recursive: true, errorOnExist: false, force: true });
         } else {
+          const destination = join(request.destinationDir, basename(sourcePath));
           await fsRename(sourcePath, destination);
         }
       }

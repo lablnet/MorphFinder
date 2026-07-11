@@ -30,10 +30,21 @@ const VIEW_OPTIONS: Array<{ mode: ViewMode; label: string; Icon: typeof Grid2X2 
 ];
 
 type ClipboardState = { kind: 'copy' | 'cut'; paths: string[] } | null;
+type RenameDraft = { node: FileSystemNode; value: string; error: string | null } | null;
+type NamePromptState = {
+  title: string;
+  defaultValue: string;
+  value: string;
+  resolve: (value: string | null) => void;
+} | null;
 const SELECTION_KEYS = new Set<string>(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
 
 function isPrimaryModifier(event: KeyboardEvent): boolean {
-  return navigator.platform.toLowerCase().includes('mac') ? event.metaKey : event.ctrlKey;
+  return event.metaKey || event.ctrlKey;
+}
+
+function copyNameSuggestion(name: string): string {
+  return name.startsWith('copy_') ? name : `copy_${name}`;
 }
 
 export function App(): React.JSX.Element {
@@ -50,6 +61,9 @@ export function App(): React.JSX.Element {
   const [clipboard, setClipboard] = useState<ClipboardState>(null);
   const [contextMenu, setContextMenu] = useState<FileContextMenuState | null>(null);
   const [contextNode, setContextNode] = useState<FileSystemNode | null>(null);
+  const [contextTargets, setContextTargets] = useState<FileSystemNode[]>([]);
+  const [renameDraft, setRenameDraft] = useState<RenameDraft>(null);
+  const [namePrompt, setNamePrompt] = useState<NamePromptState>(null);
 
   const viewMode = activeTab?.viewMode ?? 'list';
   const isVirtualLocation = tabs.activePath === THIS_PC_PATH;
@@ -57,23 +71,72 @@ export function App(): React.JSX.Element {
     () => fs.nodes.filter((node) => selection.selectedSet.has(node.path)),
     [fs.nodes, selection.selectedSet],
   );
-  const contextSelection = contextNode === null ? selectedNodes : selectedNodes.length > 0 ? selectedNodes : [contextNode];
-
   const handleSelectionChange = useCallback((paths: string[], anchorPath?: string): void => {
     if (paths.length === 0) selection.clear();
     else selection.set(paths, anchorPath);
   }, [selection]);
 
+  const askForName = useCallback((title: string, defaultValue: string): Promise<string | null> => (
+    new Promise((resolve) => setNamePrompt({ title, defaultValue, value: defaultValue, resolve }))
+  ), []);
+
+  const closeNamePrompt = useCallback((value: string | null): void => {
+    setNamePrompt((current) => {
+      current?.resolve(value);
+      return null;
+    });
+  }, []);
+
   const renameNode = useCallback(async (node: FileSystemNode): Promise<void> => {
-    const nextName = window.prompt('Rename', node.name)?.trim();
-    if (nextName === undefined || nextName.length === 0 || nextName === node.name) return;
-    await ipc.invoke('fs:rename', { path: node.path, newName: nextName });
-    fs.refresh();
-  }, [fs]);
+    setRenameDraft({ node, value: node.name, error: null });
+  }, []);
+
+  const commitRename = useCallback((): void => {
+    const draft = renameDraft;
+    if (draft === null) return;
+
+    const nextName = draft.value.trim();
+    if (nextName.length === 0 || nextName === draft.node.name) {
+      setRenameDraft(null);
+      return;
+    }
+
+    const nameAlreadyExists = fs.nodes.some((node) => (
+      node.path !== draft.node.path &&
+      node.name.localeCompare(nextName, undefined, { sensitivity: 'accent' }) === 0
+    ));
+    if (nameAlreadyExists) {
+      setRenameDraft({
+        node: draft.node,
+        value: copyNameSuggestion(nextName),
+        error: 'Name already in use.',
+      });
+      return;
+    }
+
+    void ipc.invoke('fs:rename', { path: draft.node.path, newName: nextName })
+      .then(() => {
+        setRenameDraft(null);
+        fs.refresh();
+      })
+      .catch((cause) => {
+        const message = cause instanceof Error ? cause.message : String(cause);
+        const isNameConflict = message.toLowerCase().includes('already exists');
+        setRenameDraft({
+          node: draft.node,
+          value: isNameConflict ? copyNameSuggestion(nextName) : nextName,
+          error: isNameConflict ? 'Name already in use.' : message,
+        });
+      });
+  }, [fs, renameDraft]);
+
+  const cancelRename = useCallback((): void => {
+    setRenameDraft(null);
+  }, []);
 
   const createFolder = async (): Promise<void> => {
     if (tabs.activePath.length === 0 || isVirtualLocation) return;
-    const name = window.prompt('New folder name', 'Untitled Folder')?.trim();
+    const name = (await askForName('New Folder', 'Untitled Folder'))?.trim();
     if (name === undefined || name.length === 0) return;
     await ipc.invoke('fs:createFolder', { parentPath: tabs.activePath, name });
     fs.refresh();
@@ -112,7 +175,13 @@ export function App(): React.JSX.Element {
 
   const openContextMenu = (node: FileSystemNode | null, event: React.MouseEvent): void => {
     event.preventDefault();
+    const targets = node === null
+      ? selectedNodes
+      : selection.selectedSet.has(node.path)
+        ? selectedNodes
+        : [node];
     setContextNode(node);
+    setContextTargets(targets);
     setContextMenu({
       x: event.clientX,
       y: event.clientY,
@@ -122,16 +191,16 @@ export function App(): React.JSX.Element {
   };
 
   const runContextAction = (action: FileContextAction): void => {
-    const primaryNode = contextNode ?? contextSelection[0] ?? null;
+    const primaryNode = contextNode ?? contextTargets[0] ?? null;
     setContextMenu(null);
 
     if (action === 'open' && primaryNode !== null) fs.openNode(primaryNode);
     if (action === 'rename' && primaryNode !== null) void renameNode(primaryNode);
-    if (action === 'copy' && contextSelection.length > 0) setClipboard({ kind: 'copy', paths: contextSelection.map((node) => node.path) });
-    if (action === 'cut' && contextSelection.length > 0) setClipboard({ kind: 'cut', paths: contextSelection.map((node) => node.path) });
+    if (action === 'copy' && contextTargets.length > 0) setClipboard({ kind: 'copy', paths: contextTargets.map((node) => node.path) });
+    if (action === 'cut' && contextTargets.length > 0) setClipboard({ kind: 'cut', paths: contextTargets.map((node) => node.path) });
     if (action === 'paste') void pasteClipboard(contextNode);
-    if (action === 'trash' && contextSelection.length > 0) {
-      void operations.trash(contextSelection.map((node) => node.path)).then(fs.refresh);
+    if (action === 'trash' && contextTargets.length > 0) {
+      void operations.trash(contextTargets.map((node) => node.path)).then(fs.refresh);
     }
     if (action === 'new-folder') void createFolder();
     if (action === 'show-in-folder' && primaryNode !== null) void ipc.invoke('shell:showInFolder', { path: primaryNode.path });
@@ -146,6 +215,7 @@ export function App(): React.JSX.Element {
 
   useEffect(() => {
     function handleFileKeys(event: KeyboardEvent): void {
+      if (renameDraft !== null) return;
       const selected = fs.nodes.find((node) => node.path === selection.selectedPaths[0]);
       if (event.key === 'F2' && selected !== undefined) {
         event.preventDefault();
@@ -187,11 +257,13 @@ export function App(): React.JSX.Element {
 
     window.addEventListener('keydown', handleFileKeys);
     return () => window.removeEventListener('keydown', handleFileKeys);
-  }, [fs, handleSelectionChange, operations, pasteClipboard, renameNode, selection.selectedPaths, viewMode]);
+  }, [fs, handleSelectionChange, operations, pasteClipboard, renameDraft, renameNode, selection.selectedPaths, viewMode]);
 
   const statusText = fs.isLoading
     ? 'Loading...'
-    : fs.error !== null
+    : renameDraft?.error !== null && renameDraft?.error !== undefined
+      ? renameDraft.error
+      : fs.error !== null
       ? fs.error
       : `${fs.nodes.length} item${fs.nodes.length === 1 ? '' : 's'}${selection.selectedPaths.length > 0 ? `, ${selection.selectedPaths.length} selected` : ''}`;
 
@@ -324,6 +396,12 @@ export function App(): React.JSX.Element {
             onSelectionChange={handleSelectionChange}
             onContextMenu={openContextMenu}
             onStartRename={(node) => void renameNode(node)}
+            renamingPath={renameDraft?.node.path ?? null}
+            renamingValue={renameDraft?.value ?? ''}
+            renamingError={renameDraft?.error ?? null}
+            onRenameValueChange={(value) => setRenameDraft((current) => (current === null ? null : { ...current, value, error: null }))}
+            onCommitRename={commitRename}
+            onCancelRename={cancelRename}
             dropDestinationPath={isVirtualLocation ? null : tabs.activePath}
             onMove={(paths, destinationDir) => void moveDroppedPaths(paths, destinationDir)}
             onExternalDrag={(paths) => void ipc.invoke('shell:startDrag', { paths })}
@@ -331,6 +409,39 @@ export function App(): React.JSX.Element {
         )}
         {contextMenu !== null ? (
           <FileContextMenu state={contextMenu} onAction={runContextAction} onClose={() => setContextMenu(null)} />
+        ) : null}
+        {namePrompt !== null ? (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/25 px-4" role="presentation" onMouseDown={() => closeNamePrompt(null)}>
+            <form
+              className="w-full max-w-sm rounded-shell border border-shell-border bg-shell-surface p-4 shadow-xl"
+              onMouseDown={(event) => event.stopPropagation()}
+              onSubmit={(event) => {
+                event.preventDefault();
+                closeNamePrompt(namePrompt.value);
+              }}
+            >
+              <label className="block text-sm font-medium text-current" htmlFor="name-prompt-input">{namePrompt.title}</label>
+              <input
+                id="name-prompt-input"
+                autoFocus
+                value={namePrompt.value}
+                onChange={(event) => setNamePrompt((current) => (current === null ? null : { ...current, value: event.target.value }))}
+                onFocus={(event) => event.currentTarget.select()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') closeNamePrompt(null);
+                }}
+                className="mt-3 h-9 w-full rounded-shell border border-shell-border bg-transparent px-3 text-sm outline-none focus:border-[color:var(--shell-accent)]"
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <button type="button" onClick={() => closeNamePrompt(null)} className="rounded-shell border border-shell-border px-3 py-1.5 text-sm">
+                  Cancel
+                </button>
+                <button type="submit" className="rounded-shell bg-[color:var(--shell-accent)] px-3 py-1.5 text-sm font-medium text-white">
+                  OK
+                </button>
+              </div>
+            </form>
+          </div>
         ) : null}
       </ShellLayout.Content>
       <ShellLayout.StatusArea>

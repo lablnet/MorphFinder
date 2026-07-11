@@ -43,6 +43,9 @@ export async function readDirectory(path: string, includeHidden: boolean): Promi
 export async function renameEntry(path: string, newName: string): Promise<FileSystemNode> {
   const parentDir = join(path, '..');
   const destination = join(parentDir, newName);
+  if (destination !== path && await pathExists(destination)) {
+    throw new Error(`A file or folder named "${newName}" already exists.`);
+  }
   await fsRename(path, destination);
   const node = await toFileSystemNode(parentDir, newName);
   if (node === null) throw new Error(`Renamed entry is no longer accessible: ${destination}`);

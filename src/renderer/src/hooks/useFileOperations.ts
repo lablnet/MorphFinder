@@ -27,7 +27,7 @@ export function useFileOperations(): UseFileOperationsResult {
       destinationDir === undefined ? { kind, sourcePaths } : { kind, sourcePaths, destinationDir };
     const { operationId } = await ipc.invoke('fs:operate', request);
     setActiveOperationId(operationId);
-    setProgress({ operationId, completed: 0, total: sourcePaths.length, currentPath: sourcePaths[0] ?? '', done: false });
+    setProgress({ operationId, completed: sourcePaths.length, total: sourcePaths.length, currentPath: sourcePaths.at(-1) ?? '', done: true });
   }, []);
 
   return {

@@ -11,6 +11,12 @@ export function FileColumnView({
   onOpen,
   onSelectionChange,
   onContextMenu,
+  renamingPath,
+  renamingValue,
+  renamingError,
+  onRenameValueChange,
+  onCommitRename,
+  onCancelRename,
   dropDestinationPath,
   onMove,
   onExternalDrag,
@@ -34,6 +40,7 @@ export function FileColumnView({
         {nodes.map((node) => {
           const Icon = iconForNode(node);
           const selected = selectedPaths.has(node.path);
+          const isRenaming = renamingPath === node.path;
 
           return (
             <button
@@ -59,10 +66,16 @@ export function FileColumnView({
                 event.stopPropagation();
                 onSelectionChange(nextSelectionForEvent(nodes, selectedPaths, node, event), node.path);
               }}
-              onDoubleClick={() => onOpen(node)}
+              onDoubleClick={() => {
+                if (!isRenaming) onOpen(node);
+              }}
               onContextMenu={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.ctrlKey) {
+                  onSelectionChange(nextSelectionForEvent(nodes, selectedPaths, node, event), node.path);
+                  return;
+                }
                 if (!selectedPaths.has(node.path)) onSelectionChange([node.path], node.path);
                 onContextMenu(node, event);
               }}
@@ -72,7 +85,36 @@ export function FileColumnView({
               )}
             >
               <Icon size={16} className={node.kind === 'directory' ? 'shrink-0 text-[color:var(--shell-accent)]' : 'shrink-0 text-current/70'} />
-              <span className="min-w-0 flex-1 truncate">{node.name}</span>
+              {isRenaming ? (
+                <input
+                  autoFocus
+                  value={renamingValue}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => onRenameValueChange(event.target.value)}
+                  onFocus={(event) => event.currentTarget.select()}
+                  onBlur={onCommitRename}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onCommitRename();
+                    }
+                    if (event.key === 'Escape') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onCancelRename();
+                    }
+                  }}
+                  aria-invalid={renamingError !== null}
+                  title={renamingError ?? undefined}
+                  className={cn(
+                    'h-6 min-w-0 flex-1 rounded border bg-shell-surface px-1 text-sm outline-none',
+                    renamingError === null ? 'border-[color:var(--shell-accent)]' : 'border-red-500',
+                  )}
+                />
+              ) : (
+                <span className="min-w-0 flex-1 truncate">{node.name}</span>
+              )}
               {node.kind === 'directory' ? <ChevronRight size={14} className="shrink-0 text-current/40" /> : null}
             </button>
           );

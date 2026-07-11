@@ -24,6 +24,7 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
 
   const Icon = iconForNode(node);
   const selected = data.selectedPaths.has(node.path);
+  const isRenaming = data.renamingPath === node.path;
 
   return (
     <div style={style} className="p-1.5">
@@ -50,10 +51,16 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
           event.stopPropagation();
           data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
         }}
-        onDoubleClick={() => data.onOpen(node)}
+        onDoubleClick={() => {
+          if (!isRenaming) data.onOpen(node);
+        }}
         onContextMenu={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          if (event.ctrlKey) {
+            data.onSelectionChange(nextSelectionForEvent(data.nodes, data.selectedPaths, node, event), node.path);
+            return;
+          }
           if (!data.selectedPaths.has(node.path)) data.onSelectionChange([node.path], node.path);
           data.onContextMenu(node, event);
         }}
@@ -63,7 +70,36 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
         )}
       >
         <Icon size={data.iconSize} className={node.kind === 'directory' ? 'text-[color:var(--shell-accent)]' : 'text-current/75'} />
-        <span className="line-clamp-2 w-full break-words">{node.name}</span>
+        {isRenaming ? (
+          <input
+            autoFocus
+            value={data.renamingValue}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => data.onRenameValueChange(event.target.value)}
+            onFocus={(event) => event.currentTarget.select()}
+            onBlur={data.onCommitRename}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                data.onCommitRename();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                data.onCancelRename();
+              }
+            }}
+            aria-invalid={data.renamingError !== null}
+            title={data.renamingError ?? undefined}
+            className={cn(
+              'h-6 w-full rounded border bg-shell-surface px-1 text-center text-xs outline-none',
+              data.renamingError === null ? 'border-[color:var(--shell-accent)]' : 'border-red-500',
+            )}
+          />
+        ) : (
+          <span className="line-clamp-2 w-full break-words">{node.name}</span>
+        )}
       </button>
     </div>
   );
@@ -77,6 +113,12 @@ export function FileGrid({
   onSelectionChange,
   onContextMenu,
   onStartRename,
+  renamingPath,
+  renamingValue,
+  renamingError,
+  onRenameValueChange,
+  onCommitRename,
+  onCancelRename,
   dropDestinationPath,
   onMove,
   onExternalDrag,
@@ -150,7 +192,7 @@ export function FileGrid({
           rowCount={rowCount}
           rowHeight={rowHeight}
           width={size.width}
-          itemData={{ nodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, dropDestinationPath, onMove, onExternalDrag, columnCount, iconSize }}
+          itemData={{ nodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, renamingPath, renamingValue, renamingError, onRenameValueChange, onCommitRename, onCancelRename, dropDestinationPath, onMove, onExternalDrag, columnCount, iconSize }}
         >
           {GridCell}
         </FixedSizeGrid>
