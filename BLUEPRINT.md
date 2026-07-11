@@ -132,7 +132,7 @@ composition and tokens, never logic. Adding a fourth skin = one folder + one reg
 - [x] Link `@lablnet/ui` via `"file:../ui"`; verify `Button` renders in the scaffold
 - [x] Path aliases: `@shared/*`, `@renderer/*`, `@main/*` in tsconfig + electron-vite
 - [x] CI workflow: lint → typecheck → unit tests on macOS/Windows/Linux runners
-- [ ] First commit: booting empty window
+- [x] First commit: booting empty window
 
 ### Phase 1 — Process Architecture & Security
 - [x] `createMainWindow`: `titleBarStyle: 'hidden'` + `trafficLightPosition` (mac) / `titleBarOverlay` (win/linux) so all three skins can draw their own chrome
