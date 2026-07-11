@@ -21,6 +21,7 @@ import {
   SunMoon,
   Folder,
   File,
+  PieChart,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -39,6 +40,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   SunMoon,
   Folder,
   File,
+  PieChart,
 };
 
 interface CommandPaletteProps {

@@ -13,3 +13,4 @@ export const MIN_WINDOW_HEIGHT = 560;
 
 export const THIS_PC_PATH = 'morph://this-pc';
 export const CACHE_CLEANER_PATH = 'morph://cache-cleaner';
+export const SPACE_ANALYZER_PATH = 'morph://space-analyzer';

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
-import { CACHE_CLEANER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { UIShell, UIThemeMode } from '@shared/types/layout';
@@ -149,6 +149,14 @@ export function useCommandPalette({
       description: CACHE_CLEANER_PATH,
       icon: 'Trash2',
       action: () => openTab(CACHE_CLEANER_PATH),
+    });
+    list.push({
+      id: 'nav-space-analyzer',
+      category: 'Navigation',
+      label: 'Open Space Analyzer',
+      description: SPACE_ANALYZER_PATH,
+      icon: 'PieChart',
+      action: () => openTab(SPACE_ANALYZER_PATH),
     });
 
     // --- ACTIONS ---

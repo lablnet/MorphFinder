@@ -1,6 +1,6 @@
-import { Download, FileText, HardDrive, Home, Trash2, type LucideIcon } from 'lucide-react';
+import { Download, FileText, HardDrive, Home, Trash2, PieChart, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
-import { CACHE_CLEANER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import type { SidebarProps } from '../types';
 
 export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
@@ -29,6 +29,13 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
           icon={Trash2}
           isActive={activePath === CACHE_CLEANER_PATH}
           onClick={() => onNavigate(CACHE_CLEANER_PATH)}
+        />
+        <SidebarRow
+          label="Space Analyzer"
+          path={SPACE_ANALYZER_PATH}
+          icon={PieChart}
+          isActive={activePath === SPACE_ANALYZER_PATH}
+          onClick={() => onNavigate(SPACE_ANALYZER_PATH)}
         />
       </SidebarGroup>
     </aside>

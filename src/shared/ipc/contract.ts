@@ -2,6 +2,8 @@ import type { DirectoryListing, FileOperationRequest, FileSystemNode } from '../
 import type { FileContentResponse } from '../types/fileViewer';
 import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '../types/native';
 import type { CacheCleanRequest, CacheCleanResult, CacheScanResult } from '../types/cache';
+import type { SpaceAnalyzerResult } from '../types/spaceAnalyzer';
+
 
 /**
  * Every request/response channel in one map. Preload, main handlers, and the renderer
@@ -56,6 +58,18 @@ export interface IpcContract {
     request: CacheCleanRequest;
     response: CacheCleanResult;
   };
+  'analyzer:scan': {
+    request: { path: string };
+    response: SpaceAnalyzerResult;
+  };
+  'shell:selectFolder': {
+    request: { defaultPath?: string };
+    response: string | null;
+  };
+  'analyzer:cancel': {
+    request: void;
+    response: void;
+  };
 }
 
 export type IpcChannel = keyof IpcContract;
@@ -74,6 +88,11 @@ export interface IpcEvents {
     error?: string;
   };
   'command-palette:toggle': void;
+  'analyzer:progress': {
+    scannedPath: string;
+    fileCount: number;
+    size: number;
+  };
 }
 
 export type IpcEventChannel = keyof IpcEvents;

@@ -20,3 +20,4 @@ export * from './ui/useCommandPalette';
 
 export * from './utils/useElementSize';
 export * from './utils/useKeyboardShortcuts';
+export * from './spaceanalyzer/useSpaceAnalyzer';
