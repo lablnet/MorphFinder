@@ -1,0 +1,112 @@
+import React from 'react';
+import { cn } from '@lablnet/ui';
+import type { FileSystemNode } from '@shared/types/fileSystem';
+import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
+import { FileIcon } from '../../../fileicons/FileIcon';
+import { useFileItem } from '@renderer/hooks';
+import { useAppStore } from '@renderer/store';
+import type { RowData } from '../FileListTable';
+
+export interface ListFileItemProps {
+  node: FileSystemNode;
+  data: RowData;
+  style: React.CSSProperties;
+}
+
+export function ListFileItem({ node, data, style }: ListFileItemProps): React.JSX.Element {
+  const { selected, isRenaming, dragProps, mouseProps, renameInputProps } = useFileItem({
+    node,
+    nodes: data.nodes,
+    selectedPaths: data.selectedPaths,
+    renamingPath: data.renamingPath,
+    renamingValue: data.renamingValue,
+    onOpen: data.onOpen,
+    onSelectionChange: data.onSelectionChange,
+    onContextMenu: data.onContextMenu,
+    onCommitRename: data.onCommitRename,
+    onCancelRename: data.onCancelRename,
+    onRenameValueChange: data.onRenameValueChange,
+    onMove: data.onMove,
+    onExternalDrag: data.onExternalDrag,
+  });
+
+  const gitStatus = data.gitStatusMap?.[node.path];
+  const gitLabel = gitStatus
+    ? {
+        modified: 'M',
+        staged: 'S',
+        added: 'A',
+        untracked: 'U',
+        ignored: 'I',
+      }[gitStatus]
+    : '';
+
+  const gitColorClass = gitStatus
+    ? {
+        modified: 'text-amber-500 font-semibold',
+        staged: 'text-green-600 font-semibold',
+        added: 'text-green-500 font-semibold',
+        untracked: 'text-blue-500 font-semibold',
+        ignored: 'text-gray-400 opacity-50',
+      }[gitStatus]
+    : '';
+
+  const annotations = useAppStore((state) => state.annotations);
+  const annotation = annotations[node.path];
+  const tags = annotation?.tags || [];
+
+  return (
+    <div
+      data-file-item="true"
+      style={style}
+      {...dragProps}
+      {...mouseProps}
+      className={cn(
+        'grid cursor-default grid-cols-[minmax(180px,1fr)_120px_120px_180px_80px] items-center text-sm',
+        selected ? 'bg-[color:var(--shell-accent)]/15 ring-1 ring-[color:var(--shell-accent)] ring-inset' : 'hover:bg-shell-sidebar',
+      )}
+    >
+      <span className="flex min-w-0 items-center gap-2 truncate px-3">
+        <FileIcon node={node} size={16} className={node.kind === 'directory' ? 'shrink-0 text-[color:var(--shell-accent)]' : 'shrink-0 text-current/70'} />
+        {isRenaming ? (
+          <input
+            {...renameInputProps}
+            aria-invalid={data.renamingError !== null}
+            title={data.renamingError ?? undefined}
+            className={cn(
+              'h-6 min-w-0 flex-1 rounded border bg-shell-surface px-1 text-sm outline-none',
+              data.renamingError === null ? 'border-[color:var(--shell-accent)]' : 'border-red-500',
+            )}
+          />
+        ) : (
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <span className={cn(
+              'truncate',
+              gitStatus === 'modified' && 'text-amber-600 dark:text-amber-400 font-medium',
+              gitStatus === 'added' && 'text-green-600 dark:text-green-400 font-medium',
+              gitStatus === 'untracked' && 'text-blue-600 dark:text-blue-400 font-medium',
+              gitStatus === 'ignored' && 'text-current/30 line-through'
+            )}>{node.name}</span>
+            {tags.map((t) => (
+              <span
+                key={t.id}
+                className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-medium border text-current/90 shrink-0 select-none"
+                style={{ backgroundColor: `${t.color}15`, borderColor: t.color }}
+                title={t.label}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: t.color }} />
+                {t.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </span>
+      <span className="truncate px-3 capitalize text-current/70">{node.kind}</span>
+      <span className="truncate px-3 text-right text-current/70">{node.kind === 'directory' ? '--' : formatBytes(node.sizeInBytes)}</span>
+      <span className="truncate px-3 text-current/70">{formatModifiedDate(node.modifiedAt)}</span>
+      <span className={cn('truncate px-3 text-center text-xs font-semibold', gitColorClass)}>
+        {gitLabel || '--'}
+      </span>
+    </div>
+  );
+}
