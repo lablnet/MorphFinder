@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, FileText, Laptop, Star, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { THIS_PC_PATH } from '@shared/constants';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
 import { useAppStore } from '@renderer/store';
+import { SidebarContextMenu, type SidebarContextMenuState } from '../../components/navigation/SidebarContextMenu';
 
 export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const unpinFolder = useAppStore((state) => state.unpinFolder);
+  const [contextMenu, setContextMenu] = useState<SidebarContextMenuState | null>(null);
 
   const quickAccess = wellKnownDirs === null
     ? []
@@ -18,11 +20,26 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
         { label: 'Downloads', path: wellKnownDirs.downloads, icon: Download },
       ];
 
+  const handleContextMenu = (path: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      path,
+    });
+  };
+
   return (
     <aside className="flex w-64 shrink-0 flex-col gap-4 overflow-y-auto border-r border-shell-border bg-shell-sidebar px-3 py-4 text-sm">
       <SidebarGroup title="Quick access">
         {quickAccess.map((item) => (
-          <SidebarRow key={item.path} {...item} isActive={item.path === activePath} onClick={() => onNavigate(item.path)} />
+          <SidebarRow
+            key={item.path}
+            {...item}
+            isActive={item.path === activePath}
+            onClick={() => onNavigate(item.path)}
+            onContextMenu={(e) => handleContextMenu(item.path, e)}
+          />
         ))}
       </SidebarGroup>
       {pinnedFolders.length > 0 && (
@@ -36,6 +53,7 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
               isActive={path === activePath}
               onClick={() => onNavigate(path)}
               onUnpin={() => unpinFolder(path)}
+              onContextMenu={(e) => handleContextMenu(path, e)}
             />
           ))}
         </SidebarGroup>
@@ -47,6 +65,7 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
           icon={Laptop}
           isActive={activePath === THIS_PC_PATH}
           onClick={() => onNavigate(THIS_PC_PATH)}
+          onContextMenu={(e) => handleContextMenu(THIS_PC_PATH, e)}
         />
       </SidebarGroup>
       <SidebarGroup title="Tools">
@@ -58,9 +77,14 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
             icon={item.icon}
             isActive={activePath === item.path}
             onClick={() => onNavigate(item.path)}
+            onContextMenu={(e) => handleContextMenu(item.path, e)}
           />
         ))}
       </SidebarGroup>
+
+      {contextMenu && (
+        <SidebarContextMenu state={contextMenu} onClose={() => setContextMenu(null)} />
+      )}
     </aside>
   );
 }
@@ -81,17 +105,21 @@ interface SidebarRowProps {
   isActive: boolean;
   onClick: () => void;
   onUnpin?: () => void;
+  onContextMenu: (event: React.MouseEvent) => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin, onContextMenu }: SidebarRowProps): React.JSX.Element {
   return (
-    <div className="group flex h-9 items-center justify-between w-full rounded hover:bg-black/5 dark:hover:bg-white/5">
+    <div
+      onContextMenu={onContextMenu}
+      className="group flex h-9 items-center justify-between w-full rounded hover:bg-black/5 dark:hover:bg-white/5"
+    >
       <button
         type="button"
         onClick={onClick}
         className={cn(
           'flex h-full items-center gap-3 rounded px-2 text-left flex-1 min-w-0',
-          isActive ? 'bg-[color:var(--shell-accent)]/15 font-medium text-[color:var(--shell-accent)]' : '',
+          isActive ? 'bg-[color:var(--shell-accent)]/15 font-semibold text-[color:var(--shell-accent)]' : '',
         )}
       >
         <Icon size={16} className="shrink-0" />

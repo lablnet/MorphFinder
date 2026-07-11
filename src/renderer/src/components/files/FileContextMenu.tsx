@@ -20,6 +20,8 @@ import { useAppStore } from '@renderer/store';
 
 export type FileContextAction =
   | 'open'
+  | 'open-in-new-tab'
+  | 'open-in-new-window'
   | 'open-with-system'
   | 'rename'
   | 'copy'
@@ -58,15 +60,26 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const isPinned = state.node && state.node.kind === 'directory' && pinnedFolders.includes(state.node.path);
 
-  const targetActions: Array<{ action: FileContextAction; label: string; Icon: any }> = [
-    { action: 'open', label: 'Open', Icon: FolderOpen },
+  const targetActions: Array<{ action: FileContextAction; label: string; Icon: any }> = [];
+
+  if (state.node && state.node.kind === 'directory') {
+    targetActions.push(
+      { action: 'open', label: 'Open', Icon: FolderOpen },
+      { action: 'open-in-new-tab', label: 'Open in New Tab', Icon: FolderPlus },
+      { action: 'open-in-new-window', label: 'Open in New Window', Icon: ExternalLink }
+    );
+  } else {
+    targetActions.push({ action: 'open', label: 'Open', Icon: FolderOpen });
+  }
+
+  targetActions.push(
     { action: 'open-with-system', label: 'Open with System App', Icon: ExternalLink },
     { action: 'rename', label: 'Rename', Icon: Pencil },
     { action: 'copy', label: 'Copy', Icon: Copy },
     { action: 'cut', label: 'Cut', Icon: Scissors },
     { action: 'trash', label: 'Move to Trash', Icon: Trash2 },
-    { action: 'details', label: 'Details', Icon: FileText },
-  ];
+    { action: 'details', label: 'Details', Icon: FileText }
+  );
 
   if (state.node && state.node.kind === 'directory') {
     if (isPinned) {

@@ -209,6 +209,12 @@ export function useFileSystemController() {
     setContextMenu(null);
 
     if (action === 'open' && primaryNode !== null) fs.openNode(primaryNode);
+    if (action === 'open-in-new-tab' && primaryNode !== null) {
+      useAppStore.getState().openTab(primaryNode.path, { activate: true });
+    }
+    if (action === 'open-in-new-window' && primaryNode !== null) {
+      void ipc.invoke('shell:newWindow', { path: primaryNode.path });
+    }
     if (action === 'open-with-system' && primaryNode !== null) void ipc.invoke('shell:openWith', { path: primaryNode.path });
     if (action === 'rename' && primaryNode !== null) void renameNode(primaryNode);
     if (action === 'copy' && contextTargets.length > 0) setClipboard({ kind: 'copy', paths: contextTargets.map((node) => node.path) });

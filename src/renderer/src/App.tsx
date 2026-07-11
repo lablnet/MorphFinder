@@ -84,6 +84,17 @@ export function App(): React.JSX.Element {
     }
   }, [isVirtualLocation, tabs.activePath]);
 
+  const tabsOpenRef = useRef(tabs.open);
+  tabsOpenRef.current = tabs.open;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialPath = params.get('initialPath');
+    if (initialPath) {
+      tabsOpenRef.current(initialPath);
+    }
+  }, []);
+
   return (
     <>
       <ShellLayout>

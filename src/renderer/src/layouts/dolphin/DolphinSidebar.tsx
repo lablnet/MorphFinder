@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, FileText, HardDrive, Home, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
 import { useAppStore } from '@renderer/store';
+import { SidebarContextMenu, type SidebarContextMenuState } from '../../components/navigation/SidebarContextMenu';
 
 export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const unpinFolder = useAppStore((state) => state.unpinFolder);
+  const [contextMenu, setContextMenu] = useState<SidebarContextMenuState | null>(null);
 
   const places = wellKnownDirs === null
     ? []
@@ -17,11 +19,26 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
         { label: 'Downloads', path: wellKnownDirs.downloads, icon: Download },
       ];
 
+  const handleContextMenu = (path: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      path,
+    });
+  };
+
   return (
     <aside className="flex w-48 shrink-0 flex-col gap-4 overflow-y-auto border-r border-shell-border bg-shell-sidebar p-2 text-sm">
       <SidebarGroup title="Places">
         {places.map((item) => (
-          <SidebarRow key={item.path} {...item} isActive={item.path === activePath} onClick={() => onNavigate(item.path)} />
+          <SidebarRow
+            key={item.path}
+            {...item}
+            isActive={item.path === activePath}
+            onClick={() => onNavigate(item.path)}
+            onContextMenu={(e) => handleContextMenu(item.path, e)}
+          />
         ))}
       </SidebarGroup>
       {pinnedFolders.length > 0 && (
@@ -35,12 +52,20 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
               isActive={path === activePath}
               onClick={() => onNavigate(path)}
               onUnpin={() => unpinFolder(path)}
+              onContextMenu={(e) => handleContextMenu(path, e)}
             />
           ))}
         </SidebarGroup>
       )}
       <SidebarGroup title="Devices">
-        <SidebarRow label="Root" path="/" icon={HardDrive} isActive={activePath === '/'} onClick={() => onNavigate('/')} />
+        <SidebarRow
+          label="Root"
+          path="/"
+          icon={HardDrive}
+          isActive={activePath === '/'}
+          onClick={() => onNavigate('/')}
+          onContextMenu={(e) => handleContextMenu('/', e)}
+        />
       </SidebarGroup>
       <SidebarGroup title="Tools">
         {SIDEBAR_TOOLS.map((item) => (
@@ -51,9 +76,14 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
             icon={item.icon}
             isActive={activePath === item.path}
             onClick={() => onNavigate(item.path)}
+            onContextMenu={(e) => handleContextMenu(item.path, e)}
           />
         ))}
       </SidebarGroup>
+
+      {contextMenu && (
+        <SidebarContextMenu state={contextMenu} onClose={() => setContextMenu(null)} />
+      )}
     </aside>
   );
 }
@@ -74,11 +104,15 @@ interface SidebarRowProps {
   isActive: boolean;
   onClick: () => void;
   onUnpin?: () => void;
+  onContextMenu: (event: React.MouseEvent) => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin, onContextMenu }: SidebarRowProps): React.JSX.Element {
   return (
-    <div className="group flex items-center justify-between w-full rounded-shell hover:bg-black/5">
+    <div
+      onContextMenu={onContextMenu}
+      className="group flex items-center justify-between w-full rounded-shell hover:bg-black/5"
+    >
       <button
         type="button"
         onClick={onClick}

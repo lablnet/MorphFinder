@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, FileText, Home, LayoutGrid, Monitor, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
 import { useAppStore } from '@renderer/store';
+import { SidebarContextMenu, type SidebarContextMenuState } from '../../components/navigation/SidebarContextMenu';
 
 export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const unpinFolder = useAppStore((state) => state.unpinFolder);
+  const [contextMenu, setContextMenu] = useState<SidebarContextMenuState | null>(null);
 
   const favorites = wellKnownDirs === null
     ? []
@@ -18,11 +20,26 @@ export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: Sidebar
         { label: 'Downloads', path: wellKnownDirs.downloads, icon: Download },
       ];
 
+  const handleContextMenu = (path: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      path,
+    });
+  };
+
   return (
     <aside className="flex w-52 shrink-0 flex-col gap-4 overflow-y-auto border-r border-shell-border bg-shell-sidebar p-3 text-sm">
       <SidebarGroup title="Favorites">
         {favorites.map((item) => (
-          <SidebarRow key={item.path} {...item} isActive={item.path === activePath} onClick={() => onNavigate(item.path)} />
+          <SidebarRow
+            key={item.path}
+            {...item}
+            isActive={item.path === activePath}
+            onClick={() => onNavigate(item.path)}
+            onContextMenu={(e) => handleContextMenu(item.path, e)}
+          />
         ))}
       </SidebarGroup>
       {pinnedFolders.length > 0 && (
@@ -36,12 +53,20 @@ export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: Sidebar
               isActive={path === activePath}
               onClick={() => onNavigate(path)}
               onUnpin={() => unpinFolder(path)}
+              onContextMenu={(e) => handleContextMenu(path, e)}
             />
           ))}
         </SidebarGroup>
       )}
       <SidebarGroup title="Locations">
-        <SidebarRow label="Macintosh HD" path="/" icon={LayoutGrid} isActive={activePath === '/'} onClick={() => onNavigate('/')} />
+        <SidebarRow
+          label="Macintosh HD"
+          path="/"
+          icon={LayoutGrid}
+          isActive={activePath === '/'}
+          onClick={() => onNavigate('/')}
+          onContextMenu={(e) => handleContextMenu('/', e)}
+        />
       </SidebarGroup>
       <SidebarGroup title="Tools">
         {SIDEBAR_TOOLS.map((item) => (
@@ -52,9 +77,14 @@ export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: Sidebar
             icon={item.icon}
             isActive={activePath === item.path}
             onClick={() => onNavigate(item.path)}
+            onContextMenu={(e) => handleContextMenu(item.path, e)}
           />
         ))}
       </SidebarGroup>
+
+      {contextMenu && (
+        <SidebarContextMenu state={contextMenu} onClose={() => setContextMenu(null)} />
+      )}
     </aside>
   );
 }
@@ -75,11 +105,15 @@ interface SidebarRowProps {
   isActive: boolean;
   onClick: () => void;
   onUnpin?: () => void;
+  onContextMenu: (event: React.MouseEvent) => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin, onContextMenu }: SidebarRowProps): React.JSX.Element {
   return (
-    <div className="group flex h-7 items-center justify-between w-full rounded hover:bg-black/5 dark:hover:bg-white/5">
+    <div
+      onContextMenu={onContextMenu}
+      className="group flex h-7 items-center justify-between w-full rounded hover:bg-black/5 dark:hover:bg-white/5"
+    >
       <button
         type="button"
         onClick={onClick}

@@ -42,6 +42,7 @@ export interface IpcContract {
   'fs:unwatch': { request: { path: string }; response: void };
   'shell:trash': { request: { paths: string[] }; response: void };
   'shell:open': { request: { path: string }; response: void };
+  'shell:newWindow': { request: { path?: string }; response: void };
   'shell:showInFolder': { request: { path: string }; response: void };
   'shell:startDrag': { request: { paths: string[] }; response: void };
   'native:capabilities': { request: void; response: NativeCapabilities };

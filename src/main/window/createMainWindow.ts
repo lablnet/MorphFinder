@@ -4,12 +4,14 @@ import { existsSync } from 'node:fs';
 import { MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH } from '@shared/constants';
 import { guardNavigation } from '../security';
 
+const activeWindows = new Set<BrowserWindow>();
+
 /**
  * Frameless-capable chrome on every OS: each Tri-UI shell draws its own title bar
  * region, so we hide the native one but keep the traffic-light / overlay controls
  * electron still needs to render depending on platform.
  */
-export function createMainWindow(): BrowserWindow {
+export function createMainWindow(initialPath?: string): BrowserWindow {
   const window = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -32,6 +34,11 @@ export function createMainWindow(): BrowserWindow {
     },
   });
 
+  activeWindows.add(window);
+  window.on('closed', () => {
+    activeWindows.delete(window);
+  });
+
   window.on('ready-to-show', () => window.show());
 
   guardNavigation(window.webContents);
@@ -41,10 +48,13 @@ export function createMainWindow(): BrowserWindow {
   });
 
   const devServerUrl = process.env.ELECTRON_RENDERER_URL;
+  const query = initialPath ? `?initialPath=${encodeURIComponent(initialPath)}` : '';
   if (devServerUrl !== undefined) {
-    void window.loadURL(devServerUrl);
+    void window.loadURL(devServerUrl + query);
   } else {
-    void window.loadFile(join(__dirname, '../renderer/index.html'));
+    void window.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: initialPath ? { initialPath } : {},
+    });
   }
 
   return window;

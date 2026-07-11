@@ -2,6 +2,8 @@ import { app, dialog, type BrowserWindow } from 'electron';
 import type { IpcContract } from '@shared/ipc/contract';
 import { openPath, showItemInFolder, trashPaths } from '../services/fileSystemService';
 
+import { createMainWindow } from '../window/createMainWindow';
+
 type Handler<C extends keyof IpcContract> = (
   request: IpcContract[C]['request'],
 ) => IpcContract[C]['response'] | Promise<IpcContract[C]['response']>;
@@ -9,6 +11,7 @@ type Handler<C extends keyof IpcContract> = (
 export function createShellHandlers(window: BrowserWindow): {
   'shell:trash': Handler<'shell:trash'>;
   'shell:open': Handler<'shell:open'>;
+  'shell:newWindow': Handler<'shell:newWindow'>;
   'shell:showInFolder': Handler<'shell:showInFolder'>;
   'shell:startDrag': Handler<'shell:startDrag'>;
   'shell:openWith': Handler<'shell:openWith'>;
@@ -17,6 +20,12 @@ export function createShellHandlers(window: BrowserWindow): {
   return {
     'shell:trash': ({ paths }) => trashPaths(paths),
     'shell:open': ({ path }) => openPath(path),
+    'shell:newWindow': ({ path }) => {
+      const newWin = createMainWindow(path);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { registerHandlers } = require('./registerHandlers');
+      registerHandlers(newWin);
+    },
     'shell:showInFolder': ({ path }) => Promise.resolve(showItemInFolder(path)),
     'shell:startDrag': async ({ paths }) => {
       const path = paths[0];
