@@ -6,6 +6,7 @@ import { createNativeHandlers } from './native.handlers';
 import { createCacheHandlers } from './cache.handlers';
 import { createAnalyzerHandlers } from './analyzer.handlers';
 import { createGitHandlers } from './git.handlers';
+import { createTerminalHandlers } from './terminal.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -23,7 +24,9 @@ export function registerHandlers(window: BrowserWindow): void {
     ...createCacheHandlers(),
     ...createAnalyzerHandlers(window),
     ...createGitHandlers(window),
+    ...createTerminalHandlers(window),
   };
+
 
   for (const channel of Object.keys(handlers) as IpcChannel[]) {
     // Single, intentional boundary cast: each handler is correctly typed at its

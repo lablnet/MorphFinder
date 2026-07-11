@@ -79,6 +79,22 @@ export interface IpcContract {
     request: { path: string };
     response: GitCommit[];
   };
+  'terminal:create': {
+    request: { cwd: string };
+    response: { id: string };
+  };
+  'terminal:write': {
+    request: { id: string; data: string };
+    response: void;
+  };
+  'terminal:resize': {
+    request: { id: string; cols: number; rows: number };
+    response: void;
+  };
+  'terminal:kill': {
+    request: { id: string };
+    response: void;
+  };
 }
 
 export type IpcChannel = keyof IpcContract;
@@ -102,6 +118,15 @@ export interface IpcEvents {
     fileCount: number;
     size: number;
   };
+  'terminal:data': {
+    id: string;
+    data: string;
+  };
+  'terminal:exit': {
+    id: string;
+    exitCode: number;
+  };
 }
 
 export type IpcEventChannel = keyof IpcEvents;
+

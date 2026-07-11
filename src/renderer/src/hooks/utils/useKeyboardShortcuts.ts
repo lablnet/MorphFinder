@@ -13,12 +13,17 @@ export function useKeyboardShortcuts(): void {
   const tabs = useTabs();
   const cycleShell = useAppStore((state) => state.cycleShell);
   const toggleHiddenFiles = useAppStore((state) => state.toggleHiddenFiles);
+  const toggleTerminal = useAppStore((state) => state.toggleTerminal);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
       if (!isPrimaryModifier(event)) return;
 
       switch (event.key.toLowerCase()) {
+        case '`':
+          event.preventDefault();
+          toggleTerminal();
+          break;
         case 't':
           event.preventDefault();
           tabs.openHome();

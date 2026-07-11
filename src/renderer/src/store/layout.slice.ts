@@ -6,6 +6,8 @@ export interface LayoutSlice {
   activeShell: UIShell;
   themeMode: UIThemeMode;
   showHiddenFiles: boolean;
+  terminalOpen: boolean;
+  terminalHeight: number;
   setShell: (shell: UIShell) => void;
   /** Cmd/Ctrl+Shift+U — walks Finder → Explorer → Dolphin → Finder. */
   cycleShell: () => void;
@@ -13,6 +15,9 @@ export interface LayoutSlice {
   toggleHiddenFiles: () => void;
   /** Per-shell default so a freshly opened tab matches its shell's native convention. */
   defaultViewModeForActiveShell: () => ViewMode;
+  setTerminalOpen: (open: boolean) => void;
+  toggleTerminal: () => void;
+  setTerminalHeight: (height: number) => void;
 }
 
 const SHELL_CYCLE_ORDER: UIShell[] = ['finder', 'explorer', 'dolphin'];
@@ -29,6 +34,8 @@ export const createLayoutSlice: StateCreator<AppStore, [], [], LayoutSlice> = (s
   activeShell: detectPlatformDefaultShell(),
   themeMode: 'system',
   showHiddenFiles: false,
+  terminalOpen: false,
+  terminalHeight: 300,
 
   setShell: (shell) =>
     set((state) => ({
@@ -56,4 +63,11 @@ export const createLayoutSlice: StateCreator<AppStore, [], [], LayoutSlice> = (s
   toggleHiddenFiles: () => set((state) => ({ showHiddenFiles: !state.showHiddenFiles })),
 
   defaultViewModeForActiveShell: () => DEFAULT_VIEW_MODE_BY_SHELL[get().activeShell],
+
+  setTerminalOpen: (open) => set({ terminalOpen: open }),
+
+  toggleTerminal: () => set((state) => ({ terminalOpen: !state.terminalOpen })),
+
+  setTerminalHeight: (height) => set({ terminalHeight: Math.max(150, Math.min(height, window.innerHeight - 200)) }),
 });
+

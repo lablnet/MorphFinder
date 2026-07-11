@@ -17,6 +17,7 @@ export * from './ui/useLayoutShell';
 export * from './ui/useTabs';
 export * from './ui/useTheme';
 export * from './ui/useCommandPalette';
+export * from './ui/useTerminal';
 
 export * from './git/useGitRadar';
 
