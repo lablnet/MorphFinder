@@ -41,6 +41,11 @@ export interface MarqueeGridLayout {
   rowHeight: number;
 }
 
+export interface MarqueeListLayout {
+  rowHeight: number;
+  topOffset?: number;
+}
+
 function intersects(a: SelectionRect, b: SelectionRect): boolean {
   return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
@@ -72,6 +77,23 @@ export function marqueeSelectionForGrid(
         bottom: (row + 1) * layout.rowHeight,
       });
     })
+    .map((node) => node.path);
+}
+
+export function marqueeSelectionForList(
+  nodes: FileSystemNode[],
+  rect: SelectionRect,
+  layout: MarqueeListLayout,
+): string[] {
+  return nodes
+    .filter((_, index) =>
+      intersects(rect, {
+        left: 0,
+        top: (layout.topOffset ?? 0) + index * layout.rowHeight,
+        right: Number.MAX_SAFE_INTEGER,
+        bottom: (layout.topOffset ?? 0) + (index + 1) * layout.rowHeight,
+      }),
+    )
     .map((node) => node.path);
 }
 

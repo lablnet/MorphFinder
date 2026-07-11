@@ -29,6 +29,7 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
   return (
     <div style={style} className="p-1.5">
       <button
+        data-file-item="true"
         type="button"
         title={node.name}
         draggable
@@ -46,6 +47,9 @@ function GridCell({ columnIndex, rowIndex, style, data }: GridChildComponentProp
           event.stopPropagation();
           const paths = readDraggedPaths(event.dataTransfer).filter((path) => path !== node.path);
           if (paths.length > 0) data.onMove(paths, node.path);
+        }}
+        onMouseDown={(event) => {
+          if (event.button === 0 && event.ctrlKey) event.preventDefault();
         }}
         onClick={(event) => {
           event.stopPropagation();
@@ -151,7 +155,7 @@ export function FileGrid({
         onSelectionChange([]);
       }}
       onMouseDown={(event) => {
-        if (event.button !== 0 || event.target !== event.currentTarget) return;
+        if (event.button !== 0 || (event.target as Element).closest('[data-file-item="true"]') !== null) return;
         const point = pointFromEvent(event);
         setMarquee({ start: point, current: point });
       }}

@@ -5,7 +5,7 @@ import { useElementSize } from '@renderer/hooks/useElementSize';
 import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import { iconForNode } from './fileIcons';
-import { nextSelectionForEvent } from './selection';
+import { marqueeSelectionForList, nextSelectionForEvent, normalizedSelectionRect, type SelectionRect } from './selection';
 import type { FileViewProps } from './types';
 import { pathsForDrag, readDraggedPaths, writeDraggedPaths } from './dragDrop';
 
@@ -14,6 +14,11 @@ type SortDirection = 'asc' | 'desc';
 
 interface RowData extends Omit<FileViewProps, 'nodes'> {
   nodes: FileSystemNode[];
+}
+
+interface MarqueeState {
+  start: { x: number; y: number };
+  current: { x: number; y: number };
 }
 
 function compareNodes(a: FileSystemNode, b: FileSystemNode, key: SortKey, direction: SortDirection): number {
@@ -33,6 +38,7 @@ function ListRow({ index, style, data }: ListChildComponentProps<RowData>): Reac
 
   return (
     <div
+      data-file-item="true"
       style={style}
       draggable
       onDragStart={(event) => {
@@ -49,6 +55,9 @@ function ListRow({ index, style, data }: ListChildComponentProps<RowData>): Reac
         event.stopPropagation();
         const paths = readDraggedPaths(event.dataTransfer).filter((path) => path !== node.path);
         if (paths.length > 0) data.onMove(paths, node.path);
+      }}
+      onMouseDown={(event) => {
+        if (event.button === 0 && event.ctrlKey) event.preventDefault();
       }}
       onClick={(event) => {
         event.stopPropagation();
@@ -133,7 +142,11 @@ export function FileListTable({
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [marquee, setMarquee] = useState<MarqueeState | null>(null);
+  const [suppressNextClick, setSuppressNextClick] = useState(false);
   const rowHeight = density === 'compact' ? 28 : 34;
+  const headerHeight = 33;
+  const marqueeRect: SelectionRect | null = marquee === null ? null : normalizedSelectionRect(marquee.start, marquee.current);
   const sortedNodes = useMemo(
     () => [...nodes].sort((a, b) => compareNodes(a, b, sortKey, sortDirection)),
     [nodes, sortDirection, sortKey],
@@ -154,11 +167,38 @@ export function FileListTable({
     </button>
   );
 
+  const pointFromEvent = (event: React.MouseEvent): { x: number; y: number } => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+  };
+
   return (
     <div
       ref={containerRef}
-      className="h-full overflow-hidden"
-      onClick={() => onSelectionChange([])}
+      className="relative h-full overflow-hidden"
+      onClick={() => {
+        if (suppressNextClick) {
+          setSuppressNextClick(false);
+          return;
+        }
+        onSelectionChange([]);
+      }}
+      onMouseDown={(event) => {
+        if (event.button !== 0 || (event.target as Element).closest('[data-file-item="true"]') !== null) return;
+        setMarquee({ start: pointFromEvent(event), current: pointFromEvent(event) });
+      }}
+      onMouseMove={(event) => {
+        if (marquee === null) return;
+        setMarquee((current) => (current === null ? null : { ...current, current: pointFromEvent(event) }));
+      }}
+      onMouseUp={() => {
+        if (marqueeRect !== null) {
+          const wasDrag = marqueeRect.right - marqueeRect.left > 3 || marqueeRect.bottom - marqueeRect.top > 3;
+          onSelectionChange(marqueeSelectionForList(sortedNodes, marqueeRect, { rowHeight, topOffset: headerHeight }));
+          setSuppressNextClick(wasDrag);
+        }
+        setMarquee(null);
+      }}
       onContextMenu={(event) => onContextMenu(null, event)}
       onDragOver={(event) => {
         if (dropDestinationPath !== null) event.preventDefault();
@@ -186,6 +226,17 @@ export function FileListTable({
         >
           {ListRow}
         </FixedSizeList>
+      ) : null}
+      {marqueeRect !== null ? (
+        <div
+          className="pointer-events-none absolute border border-[color:var(--shell-accent)] bg-[color:var(--shell-accent)]/15"
+          style={{
+            left: marqueeRect.left,
+            top: marqueeRect.top,
+            width: marqueeRect.right - marqueeRect.left,
+            height: marqueeRect.bottom - marqueeRect.top,
+          }}
+        />
       ) : null}
     </div>
   );
