@@ -1,5 +1,6 @@
 import { join } from 'node:path';
-import { BrowserWindow, shell } from 'electron';
+import { BrowserWindow, shell, app } from 'electron';
+import { existsSync } from 'node:fs';
 import { MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH } from '@shared/constants';
 import { guardNavigation } from '../security';
 
@@ -20,6 +21,9 @@ export function createMainWindow(): BrowserWindow {
     ...(process.platform === 'darwin'
       ? { trafficLightPosition: { x: 16, y: 16 } }
       : { titleBarOverlay: { color: '#00000000', symbolColor: '#8a8a8a', height: 36 } }),
+    ...(existsSync(join(app.getAppPath(), 'build/icon.png'))
+      ? { icon: join(app.getAppPath(), 'build/icon.png') }
+      : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,

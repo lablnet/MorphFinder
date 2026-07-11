@@ -21,7 +21,7 @@ export const useAppStore = create<AppStore>()(
       ...createFileSystemSlice(...args),
     }),
     {
-      name: 'morphfinder-store',
+      name: 'MorphFinder-store',
       partialize: (state) => ({
         activeShell: state.activeShell,
         themeMode: state.themeMode,

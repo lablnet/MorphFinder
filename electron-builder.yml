@@ -1,4 +1,4 @@
-appId: net.lablnet.morphfinder
+appId: net.lablnet.MorphFinder
 productName: MorphFinder
 directories:
   output: release
