@@ -1,7 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppStore } from '@renderer/store';
 import { ipc } from '@renderer/services/ipc';
-import type { Terminal } from 'xterm';
 
 export function useTerminal() {
   const terminalOpen = useAppStore((state) => state.terminalOpen);
@@ -10,10 +9,11 @@ export function useTerminal() {
   const setTerminalOpen = useAppStore((state) => state.setTerminalOpen);
   const setTerminalHeight = useAppStore((state) => state.setTerminalHeight);
   const terminalQueuedCommand = useAppStore((state) => state.terminalQueuedCommand);
+  const clearTerminalQueuedCommand = useAppStore((state) => state.clearTerminalQueuedCommand);
   const activePath = useAppStore((state) => state.activeTab()?.path ?? null);
+  const [output, setOutput] = useState('');
 
   const sessionIdRef = useRef<string | null>(null);
-  const xtermRef = useRef<Terminal | null>(null);
   const activePathRef = useRef<string | null>(null);
   const handledCommandNonceRef = useRef<number | null>(null);
 
@@ -50,9 +50,8 @@ export function useTerminal() {
       : navigator.platform.toLowerCase().includes('win') ? 'C:\\' : '/';
 
     const id = await createSession(cwd);
-    if (id && xtermRef.current) {
-      xtermRef.current.reset();
-      xtermRef.current.write('\r\n\x1b[1;36m[MorphFinder Terminal Restarted]\x1b[0m\r\n\r\n');
+    if (id) {
+      setOutput('\n[MorphFinder Terminal Restarted]\n\n');
     }
   }, [createSession]);
 
@@ -63,31 +62,34 @@ export function useTerminal() {
     }
   }, []);
 
-  // Resize terminal helper
+  const writeQueuedCommand = useCallback((): void => {
+    if (terminalQueuedCommand === null || sessionIdRef.current === null) return;
+    if (handledCommandNonceRef.current === terminalQueuedCommand.nonce) return;
+    handledCommandNonceRef.current = terminalQueuedCommand.nonce;
+    const cleanPath = terminalQueuedCommand.cwd.replace(/"/g, '\\"');
+    writeData(`cd "${cleanPath}"\n${terminalQueuedCommand.command}\n`);
+    clearTerminalQueuedCommand();
+  }, [clearTerminalQueuedCommand, terminalQueuedCommand, writeData]);
+
   const resizeSession = useCallback((cols: number, rows: number) => {
     if (sessionIdRef.current) {
       void ipc.invoke('terminal:resize', { id: sessionIdRef.current, cols, rows });
     }
   }, []);
 
-  // Set terminal reference and bind listeners
-  const setXtermInstance = useCallback((xterm: Terminal | null) => {
-    xtermRef.current = xterm;
-  }, []);
-
   // Listen for background events from the main process
   useEffect(() => {
-    const unsubData = ipc.on('terminal:data', (payload: any) => {
+    const unsubData = ipc.on('terminal:data', (payload: { id: string; data: string }) => {
       const { id, data } = payload;
-      if (id === sessionIdRef.current && xtermRef.current) {
-        xtermRef.current.write(data);
+      if (id === sessionIdRef.current) {
+        setOutput((current) => `${current}${data}`);
       }
     });
 
-    const unsubExit = ipc.on('terminal:exit', (payload: any) => {
+    const unsubExit = ipc.on('terminal:exit', (payload: { id: string; exitCode: number }) => {
       const { id, exitCode } = payload;
-      if (id === sessionIdRef.current && xtermRef.current) {
-        xtermRef.current.write(`\r\n\r\n\x1b[1;31m[Process exited with code ${exitCode}]\x1b[0m\r\n`);
+      if (id === sessionIdRef.current) {
+        setOutput((current) => `${current}\n\n[Process exited with code ${exitCode}]\n`);
         sessionIdRef.current = null;
       }
     });
@@ -105,7 +107,9 @@ export function useTerminal() {
         const initialCwd = activePathRef.current && !activePathRef.current.startsWith('morph://')
           ? activePathRef.current
           : navigator.platform.toLowerCase().includes('win') ? 'C:\\' : '/';
-        void createSession(initialCwd);
+        void createSession(initialCwd).then(() => {
+          writeQueuedCommand();
+        });
       }
     } else {
       void killSession();
@@ -117,7 +121,7 @@ export function useTerminal() {
         void killSession();
       }
     };
-  }, [terminalOpen, createSession, killSession]);
+  }, [terminalOpen, createSession, killSession, writeQueuedCommand]);
 
   // Sync directory navigation: automatically cd when the user changes directories
   useEffect(() => {
@@ -128,24 +132,22 @@ export function useTerminal() {
     // Using a brief timeout or delay to prevent collision with rapid path typing
     const timer = setTimeout(() => {
       const cleanPath = activePath.replace(/"/g, '\\"');
-      writeData(`cd "${cleanPath}"\r`);
+      writeData(`cd "${cleanPath}"\n`);
     }, 200);
 
     return () => clearTimeout(timer);
   }, [activePath, terminalOpen, writeData]);
 
   useEffect(() => {
-    if (!terminalOpen || terminalQueuedCommand === null) return;
+    if (!terminalOpen || terminalQueuedCommand === null || sessionIdRef.current === null) return;
     if (handledCommandNonceRef.current === terminalQueuedCommand.nonce) return;
 
     const timer = setTimeout(() => {
-      handledCommandNonceRef.current = terminalQueuedCommand.nonce;
-      const cleanPath = terminalQueuedCommand.cwd.replace(/"/g, '\\"');
-      writeData(`cd "${cleanPath}"\r${terminalQueuedCommand.command}\r`);
+      writeQueuedCommand();
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [terminalOpen, terminalQueuedCommand, writeData]);
+  }, [terminalOpen, terminalQueuedCommand, writeQueuedCommand]);
 
   // Kill terminal on window unload
   useEffect(() => {
@@ -161,10 +163,10 @@ export function useTerminal() {
   return {
     isOpen: terminalOpen,
     height: terminalHeight,
+    output,
     toggle: toggleTerminal,
     setOpen: setTerminalOpen,
     setHeight: setTerminalHeight,
-    setXtermInstance,
     writeData,
     resizeSession,
     restart,

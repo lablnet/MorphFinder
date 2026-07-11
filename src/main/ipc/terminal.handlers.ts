@@ -28,7 +28,7 @@ export function createTerminalHandlers(window: BrowserWindow): TerminalHandlers 
       return createTerminalSession(window, cwd);
     },
     'terminal:write': ({ id, data }) => {
-      writeToTerminalSession(id, data);
+      writeToTerminalSession(id, data, window);
     },
     'terminal:resize': ({ id, cols, rows }) => {
       resizeTerminalSession(id, cols, rows);

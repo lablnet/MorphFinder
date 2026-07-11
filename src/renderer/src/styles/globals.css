@@ -241,3 +241,26 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+.terminal-container .xterm-viewport {
+  scrollbar-color: color-mix(in srgb, var(--shell-accent) 45%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--shell-accent) 35%, transparent);
+  border-radius: 999px;
+}
+
+.terminal-container .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--shell-accent) 55%, transparent);
+}

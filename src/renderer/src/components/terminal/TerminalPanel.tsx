@@ -9,9 +9,9 @@ export function TerminalPanel(): React.JSX.Element | null {
   const {
     isOpen,
     height,
+    output,
     setHeight,
     setOpen,
-    setXtermInstance,
     writeData,
     resizeSession,
     restart,
@@ -113,7 +113,7 @@ export function TerminalPanel(): React.JSX.Element | null {
       {/* Actual terminal renderer */}
       <div className="flex-1 min-h-0 w-full flex flex-col bg-shell-surface/40">
         <TerminalContainer
-          onXtermInstance={setXtermInstance}
+          output={output}
           onData={writeData}
           onResize={resizeSession}
         />

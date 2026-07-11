@@ -1,145 +1,122 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { existsSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { isAbsolute, resolve } from 'node:path';
 import type { BrowserWindow } from 'electron';
-
-const requireFn = createRequire(import.meta.url);
 
 interface TerminalSession {
   id: string;
-  process: ChildProcess | any; // ChildProcess or node-pty.IPty
-  isPty: boolean;
+  cwd: string;
+  buffer: string;
+  process: ChildProcess | null;
 }
 
 const sessions = new Map<string, TerminalSession>();
 
-function getShellPath(): { shell: string; args: string[] } {
-  const platform = process.platform;
-  if (platform === 'win32') {
-    return { shell: 'powershell.exe', args: ['-NoLogo'] };
-  } else if (platform === 'darwin') {
-    // Spawn zsh in interactive mode so prompts and auto-echos work better
-    return { shell: '/bin/zsh', args: ['-i'] };
-  } else {
-    return { shell: '/bin/bash', args: ['-i'] };
+function resolveTerminalCwd(cwd: string): string {
+  if (!cwd || cwd.startsWith('morph://')) return homedir();
+  try {
+    if (!existsSync(cwd)) return homedir();
+    const details = statSync(cwd);
+    return details.isDirectory() ? cwd : homedir();
+  } catch {
+    return homedir();
   }
 }
 
-export function createTerminalSession(window: BrowserWindow, cwd: string): { id: string } {
+function emitData(window: BrowserWindow, id: string, data: string): void {
+  if (!window.isDestroyed()) {
+    window.webContents.send('terminal:data', { id, data });
+  }
+}
+
+function shellCommand(command: string): { shell: string; args: string[] } {
+  if (process.platform === 'win32') {
+    return { shell: 'powershell.exe', args: ['-NoLogo', '-NoProfile', '-Command', command] };
+  }
+  const shell = process.platform === 'darwin' ? '/bin/zsh' : '/bin/bash';
+  return { shell, args: ['-lc', command] };
+}
+
+function parseCdTarget(command: string): string | null {
+  const match = /^cd(?:\s+(.+))?$/.exec(command.trim());
+  if (!match) return null;
+  const rawTarget = match[1]?.trim();
+  if (!rawTarget || rawTarget === '~') return homedir();
+  return rawTarget.replace(/^["']|["']$/g, '');
+}
+
+function changeDirectory(session: TerminalSession, target: string): string {
+  const nextPath = resolveTerminalCwd(isAbsolute(target) ? target : resolve(session.cwd, target));
+  session.cwd = nextPath;
+  return nextPath;
+}
+
+function runCommand(window: BrowserWindow, session: TerminalSession, command: string): void {
+  const trimmed = command.trim();
+  if (trimmed.length === 0) return;
+
+  if (session.process !== null) {
+    emitData(window, session.id, 'A command is already running.\n');
+    return;
+  }
+
+  const cdTarget = parseCdTarget(trimmed);
+  if (cdTarget !== null) {
+    emitData(window, session.id, `${changeDirectory(session, cdTarget)}\n`);
+    return;
+  }
+
+  const { shell, args } = shellCommand(trimmed);
+  const child = spawn(shell, args, {
+    cwd: session.cwd,
+    env: { ...process.env, TERM: 'xterm-256color', FORCE_COLOR: '1' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  session.process = child;
+
+  child.stdout?.on('data', (chunk: Buffer) => emitData(window, session.id, chunk.toString()));
+  child.stderr?.on('data', (chunk: Buffer) => emitData(window, session.id, chunk.toString()));
+  child.on('error', (error) => {
+    emitData(window, session.id, `Command failed: ${error.message}\n`);
+    session.process = null;
+  });
+  child.on('exit', () => {
+    session.process = null;
+    emitData(window, session.id, '');
+  });
+}
+
+export function createTerminalSession(_window: BrowserWindow, cwd: string): { id: string } {
   const id = `term-${Math.random().toString(36).substring(2, 11)}`;
-  const { shell, args } = getShellPath();
-
-  // Try node-pty dynamic load
-  let ptyProcess: any = null;
-  let isPty = false;
-
-  try {
-    const pty = requireFn('node-pty');
-    ptyProcess = pty.spawn(shell, args, {
-      name: 'xterm-color',
-      cols: 80,
-      rows: 24,
-      cwd,
-      env: process.env,
-    });
-    isPty = true;
-  } catch {
-    // node-pty not available, fallback to standard child_process
-  }
-
-  if (isPty && ptyProcess) {
-    ptyProcess.onData((data: string) => {
-      if (!window.isDestroyed()) {
-        window.webContents.send('terminal:data', { id, data });
-      }
-    });
-
-    ptyProcess.onExit(({ exitCode }: { exitCode: number }) => {
-      if (!window.isDestroyed()) {
-        window.webContents.send('terminal:exit', { id, exitCode });
-      }
-      sessions.delete(id);
-    });
-
-    sessions.set(id, { id, process: ptyProcess, isPty: true });
-  } else {
-    // Fallback: child_process.spawn
-    // Merge process.env with TERM=xterm-256color to encourage colored output
-    const shellEnv = {
-      ...process.env,
-      TERM: 'xterm-256color',
-      FORCE_COLOR: '1',
-    };
-
-    const child = spawn(shell, args, {
-      cwd,
-      env: shellEnv,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-
-    child.stdout?.on('data', (chunk: Buffer) => {
-      if (!window.isDestroyed()) {
-        window.webContents.send('terminal:data', { id, data: chunk.toString() });
-      }
-    });
-
-    child.stderr?.on('data', (chunk: Buffer) => {
-      if (!window.isDestroyed()) {
-        window.webContents.send('terminal:data', { id, data: chunk.toString() });
-      }
-    });
-
-    child.on('exit', (code) => {
-      const exitCode = code ?? 0;
-      if (!window.isDestroyed()) {
-        window.webContents.send('terminal:exit', { id, exitCode });
-      }
-      sessions.delete(id);
-    });
-
-    sessions.set(id, { id, process: child, isPty: false });
-  }
-
+  sessions.set(id, {
+    id,
+    cwd: resolveTerminalCwd(cwd),
+    buffer: '',
+    process: null,
+  });
   return { id };
 }
 
-export function writeToTerminalSession(id: string, data: string): void {
+export function writeToTerminalSession(id: string, data: string, window?: BrowserWindow): void {
   const session = sessions.get(id);
-  if (!session) return;
+  if (!session || window === undefined) return;
 
-  if (session.isPty) {
-    session.process.write(data);
-  } else {
-    const child = session.process as ChildProcess;
-    child.stdin?.write(data);
+  session.buffer += data.replace(/\r/g, '\n');
+  const lines = session.buffer.split('\n');
+  session.buffer = lines.pop() ?? '';
+  for (const line of lines) {
+    runCommand(window, session, line);
   }
 }
 
-export function resizeTerminalSession(id: string, cols: number, rows: number): void {
-  const session = sessions.get(id);
-  if (!session) return;
-
-  if (session.isPty) {
-    try {
-      session.process.resize(cols, rows);
-    } catch {
-      // Ignore resize errors
-    }
-  }
+export function resizeTerminalSession(_id: string, _cols: number, _rows: number): void {
+  // No-op: the safe backend is command based, not a native PTY.
 }
 
 export function killTerminalSession(id: string): void {
   const session = sessions.get(id);
   if (!session) return;
-
-  if (session.isPty) {
-    try {
-      session.process.kill();
-    } catch {
-      // Ignore kill errors
-    }
-  } else {
-    const child = session.process as ChildProcess;
-    child.kill();
-  }
+  session.process?.kill();
   sessions.delete(id);
 }

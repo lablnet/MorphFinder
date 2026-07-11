@@ -20,6 +20,7 @@ export interface LayoutSlice {
   toggleTerminal: () => void;
   setTerminalHeight: (height: number) => void;
   queueTerminalCommand: (cwd: string, command: string) => void;
+  clearTerminalQueuedCommand: () => void;
 }
 
 const SHELL_CYCLE_ORDER: UIShell[] = ['finder', 'explorer', 'dolphin'];
@@ -78,4 +79,6 @@ export const createLayoutSlice: StateCreator<AppStore, [], [], LayoutSlice> = (s
       terminalOpen: true,
       terminalQueuedCommand: { cwd, command, nonce: Date.now() },
     }),
+
+  clearTerminalQueuedCommand: () => set({ terminalQueuedCommand: null }),
 });
