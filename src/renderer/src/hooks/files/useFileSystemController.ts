@@ -184,11 +184,15 @@ export function useFileSystemController() {
 
   const openContextMenu = useCallback((node: FileSystemNode | null, event: React.MouseEvent): void => {
     event.preventDefault();
-    const targets = node === null
-      ? selectedNodes
-      : selection.selectedSet.has(node.path)
-        ? selectedNodes
-        : [node];
+    let targets = selectedNodes;
+    if (node !== null) {
+      if (!selection.selectedSet.has(node.path)) {
+        selection.set([node.path], node.path);
+        targets = [node];
+      } else {
+        targets = selectedNodes;
+      }
+    }
     setContextNode(node);
     setContextTargets(targets);
     setContextMenu({
@@ -198,7 +202,7 @@ export function useFileSystemController() {
       canPaste: clipboard !== null && destinationForPaste(node) !== null,
       node,
     });
-  }, [selectedNodes, selection.selectedSet, clipboard, destinationForPaste]);
+  }, [selectedNodes, selection, clipboard, destinationForPaste]);
 
   const runContextAction = useCallback((action: FileContextAction): void => {
     const primaryNode = contextNode ?? contextTargets[0] ?? null;
