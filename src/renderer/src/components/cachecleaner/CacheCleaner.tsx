@@ -35,6 +35,7 @@ export function CacheCleaner(): React.JSX.Element {
     handleToggleSelect,
     handleToggleSelectAll,
     handleClean,
+    handleCancelClean,
     toggleSort,
     sortedTargets,
     totalScannedSize,
@@ -166,6 +167,7 @@ export function CacheCleaner(): React.JSX.Element {
         activeShell={activeShell}
         cleaning={cleaning}
         progressState={progressState}
+        onCancel={handleCancelClean}
       />
     </div>
   );

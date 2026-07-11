@@ -7,12 +7,14 @@ interface ProgressDialogProps {
   activeShell: string;
   cleaning: boolean;
   progressState: ProgressState;
+  onCancel?: () => void;
 }
 
 export function ProgressDialog({
   activeShell,
   cleaning,
   progressState,
+  onCancel,
 }: ProgressDialogProps): React.JSX.Element | null {
   const shell = activeShell === 'explorer' || activeShell === 'dolphin' ? activeShell : 'finder';
 
@@ -26,6 +28,12 @@ export function ProgressDialog({
     explorer: 'bg-[#0067c0] h-full transition-all duration-150',
     dolphin: 'bg-[color:var(--shell-accent)] h-full transition-all duration-150',
     finder: 'bg-blue-500 h-full transition-all duration-150 rounded-full',
+  }[shell];
+
+  const btnCancelClass = {
+    explorer: 'bg-transparent hover:bg-black/5 dark:hover:bg-white/5 border border-shell-border text-current rounded-none px-4 py-1 text-sm',
+    dolphin: 'bg-transparent hover:bg-black/5 border border-shell-border text-current rounded-shell px-4 py-1.5 text-sm',
+    finder: 'bg-transparent hover:bg-black/5 dark:hover:bg-white/5 border border-shell-border text-current rounded-shell px-4 py-1.5 text-sm',
   }[shell];
 
   if (!cleaning) return null;
@@ -68,6 +76,14 @@ export function ProgressDialog({
             {formatBytes(progressState.freedBytes)}
           </span>
         </div>
+
+        {onCancel && (
+          <div className={`flex shrink-0 ${shell === 'finder' ? 'justify-center' : 'justify-end'} pt-2`}>
+            <button onClick={onCancel} className={btnCancelClass}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </BaseDialog>
   );

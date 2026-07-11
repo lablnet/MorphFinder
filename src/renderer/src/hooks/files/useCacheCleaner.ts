@@ -1,4 +1,4 @@
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { ipc } from '@renderer/services/ipc';
 import type { CacheTarget, CacheScanResult, CacheCleanResult } from '@shared/types/cache';
 
@@ -116,8 +116,15 @@ export function useCacheCleaner() {
     }
   };
 
+  const cancelRef = useRef(false);
+
+  const handleCancelClean = (): void => {
+    cancelRef.current = true;
+  };
+
   const handleClean = async (): Promise<void> => {
     if (selectedIds.size === 0) return;
+    cancelRef.current = false;
     setCleaning(true);
     setFreedMessage(null);
     setErrors({});
@@ -132,8 +139,14 @@ export function useCacheCleaner() {
 
     let totalFreed = 0;
     const newErrors: Record<string, string> = {};
+    let wasCancelled = false;
 
     for (let i = 0; i < targetIdArray.length; i++) {
+      if (cancelRef.current) {
+        wasCancelled = true;
+        break;
+      }
+
       const targetId = targetIdArray[i];
       if (targetId === undefined) continue;
       const target = targets.find((t) => t.id === targetId);
@@ -165,12 +178,21 @@ export function useCacheCleaner() {
         freedBytes: totalFreed,
       }));
 
+      if (cancelRef.current) {
+        wasCancelled = true;
+        break;
+      }
+
       // Satisfying micro-delay (80ms) so users can witness real-time progress transitions
       await new Promise((resolve) => setTimeout(resolve, 80));
     }
 
     startTransition(() => {
-      setFreedMessage(`Successfully reclaimed ${formatBytes(totalFreed)} of storage space!`);
+      if (wasCancelled) {
+        setFreedMessage(`Deletion cancelled. Reclaimed ${formatBytes(totalFreed)} of storage space.`);
+      } else {
+        setFreedMessage(`Successfully reclaimed ${formatBytes(totalFreed)} of storage space!`);
+      }
       setErrors(newErrors);
     });
 
@@ -218,6 +240,7 @@ export function useCacheCleaner() {
     handleToggleSelect,
     handleToggleSelectAll,
     handleClean,
+    handleCancelClean,
     toggleSort,
     sortedTargets,
     totalScannedSize,
