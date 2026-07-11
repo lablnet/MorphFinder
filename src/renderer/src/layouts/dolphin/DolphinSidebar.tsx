@@ -1,6 +1,7 @@
-import { Download, FileText, HardDrive, Home, Trash2, PieChart, type LucideIcon } from 'lucide-react';
+import React from 'react';
+import { Download, FileText, HardDrive, Home, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
 
 export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
@@ -23,20 +24,16 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
         <SidebarRow label="Root" path="/" icon={HardDrive} isActive={activePath === '/'} onClick={() => onNavigate('/')} />
       </SidebarGroup>
       <SidebarGroup title="Tools">
-        <SidebarRow
-          label="Cache Cleaner"
-          path={CACHE_CLEANER_PATH}
-          icon={Trash2}
-          isActive={activePath === CACHE_CLEANER_PATH}
-          onClick={() => onNavigate(CACHE_CLEANER_PATH)}
-        />
-        <SidebarRow
-          label="Space Analyzer"
-          path={SPACE_ANALYZER_PATH}
-          icon={PieChart}
-          isActive={activePath === SPACE_ANALYZER_PATH}
-          onClick={() => onNavigate(SPACE_ANALYZER_PATH)}
-        />
+        {SIDEBAR_TOOLS.map((item) => (
+          <SidebarRow
+            key={item.path}
+            label={item.label}
+            path={item.path}
+            icon={item.icon}
+            isActive={activePath === item.path}
+            onClick={() => onNavigate(item.path)}
+          />
+        ))}
       </SidebarGroup>
     </aside>
   );
@@ -65,7 +62,7 @@ function SidebarRow({ label, icon: Icon, isActive, onClick }: SidebarRowProps): 
       type="button"
       onClick={onClick}
       className={cn(
-        'flex items-center gap-2 rounded-shell px-2 py-1 text-left',
+        'flex items-center gap-2 rounded-shell px-2 py-1 text-left w-full',
         isActive ? 'bg-shell-accent/20 font-medium text-shell-accent' : 'hover:bg-black/5',
       )}
     >
@@ -74,3 +71,4 @@ function SidebarRow({ label, icon: Icon, isActive, onClick }: SidebarRowProps): 
     </button>
   );
 }
+export default DolphinSidebar;
