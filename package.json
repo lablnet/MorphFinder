@@ -29,7 +29,7 @@
     "url": "https://github.com/lablnet/MorphFinder.git"
   },
   "dependencies": {
-    "@lablnet/ui": "file:../ui",
+    "@lablnet/ui": "^1.0.1",
     "@parcel/watcher": "^2.5.1",
     "electron-updater": "^6.8.9",
     "lucide-react": "^0.475.0",
