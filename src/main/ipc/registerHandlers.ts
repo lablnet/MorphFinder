@@ -7,6 +7,7 @@ import { createCacheHandlers } from './cache.handlers';
 import { createAnalyzerHandlers } from './analyzer.handlers';
 import { createGitHandlers } from './git.handlers';
 import { createTerminalHandlers } from './terminal.handlers';
+import { createDevPanelHandlers } from './devpanel.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -25,6 +26,7 @@ export function registerHandlers(window: BrowserWindow): void {
     ...createAnalyzerHandlers(window),
     ...createGitHandlers(window),
     ...createTerminalHandlers(window),
+    ...createDevPanelHandlers(),
   };
 
 

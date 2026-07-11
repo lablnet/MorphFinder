@@ -22,6 +22,7 @@ import {
   Folder,
   File,
   PieChart,
+  Code2,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -41,6 +42,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Folder,
   File,
   PieChart,
+  Code2,
 };
 
 interface CommandPaletteProps {
@@ -121,10 +123,10 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
     'hidden sm:flex items-center gap-1 text-[10px] font-mono select-none px-1.5 py-0.5 rounded border',
     isActive
       ? {
-          finder: 'border-white/30 text-white/70 bg-white/10',
-          explorer: 'border-shell-border text-current/50 bg-black/5 dark:bg-white/5',
-          dolphin: 'border-shell-border text-current/50 bg-black/5 dark:bg-white/5',
-        }[shell]
+        finder: 'border-white/30 text-white/70 bg-white/10',
+        explorer: 'border-shell-border text-current/50 bg-black/5 dark:bg-white/5',
+        dolphin: 'border-shell-border text-current/50 bg-black/5 dark:bg-white/5',
+      }[shell]
       : 'border-shell-border text-current/40 bg-shell-sidebar/20'
   );
 
@@ -157,8 +159,8 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
               shell === 'finder'
                 ? 'Spotlight Search...'
                 : shell === 'explorer'
-                ? 'Search MorphFinder...'
-                : 'Search commands or files...'
+                  ? 'Search MorphFinder...'
+                  : 'Search commands or files...'
             }
             className={inputClass}
           />

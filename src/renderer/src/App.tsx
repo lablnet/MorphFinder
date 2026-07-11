@@ -8,11 +8,13 @@ import { ipc } from '@renderer/services/ipc';
 import { FileToolbar } from '@renderer/components/navigation/FileToolbar';
 import { NamePromptDialog } from '@renderer/components/ui/NamePromptDialog';
 import { Button } from '@renderer/components/ui/Button';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, DEV_PANEL_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import { CacheCleaner } from '@renderer/components/cachecleaner/CacheCleaner';
 import { SpaceAnalyzer } from '@renderer/components/spaceanalyzer';
+import { DevPanel } from '@renderer/components/devpanel/DevPanel';
 import { CommandPalette } from '@renderer/components/navigation/CommandPalette';
-import { useKeyboardShortcuts, useFileSystemController, useGitRadar } from '@renderer/hooks';
+import { useKeyboardShortcuts, useFileSystemController, useGitRadar, useProjectDetector } from '@renderer/hooks';
+import { DevPanelStatusButton } from '@renderer/components/devpanel/components/DevPanelStatusButton';
 import { GitRadar } from '@renderer/components/gitradar/GitRadar';
 import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
 import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
@@ -56,6 +58,7 @@ export function App(): React.JSX.Element {
   } = useFileSystemController();
 
   const gitRadar = useGitRadar(tabs.activePath);
+  const projectDetector = useProjectDetector(isVirtualLocation ? null : tabs.activePath);
 
   return (
     <>
@@ -111,6 +114,8 @@ export function App(): React.JSX.Element {
                 </div>
               ) : tabs.activePath === CACHE_CLEANER_PATH ? (
                 <CacheCleaner />
+              ) : tabs.activePath === DEV_PANEL_PATH ? (
+                <DevPanel />
               ) : tabs.activePath === SPACE_ANALYZER_PATH ? (
                 <SpaceAnalyzer />
               ) : fs.error !== null ? (
@@ -177,6 +182,12 @@ export function App(): React.JSX.Element {
         <ShellLayout.StatusArea>
           <div className="flex h-full w-full items-center justify-between px-4 text-xs text-current/55">
             <div>{statusText}</div>
+            <DevPanelStatusButton
+              hasProject={projectDetector.hasProject}
+              projectType={projectDetector.projectType}
+              projectName={projectDetector.projectName}
+              onClick={() => fs.navigate(DEV_PANEL_PATH)}
+            />
             <button
               onClick={toggleTerminal}
               className={cn(

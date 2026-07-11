@@ -3,6 +3,7 @@ import type { FileContentResponse } from '../types/fileViewer';
 import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '../types/native';
 import type { CacheCleanRequest, CacheCleanResult, CacheScanResult } from '../types/cache';
 import type { SpaceAnalyzerResult } from '../types/spaceAnalyzer';
+import type { DevPanelInfo } from '../types/devPanel';
 import type { GitStatus, GitCommit } from '../types/git';
 
 
@@ -78,6 +79,14 @@ export interface IpcContract {
   'git:history': {
     request: { path: string };
     response: GitCommit[];
+  };
+  'devpanel:scan': {
+    request: { path: string };
+    response: DevPanelInfo;
+  };
+  'devpanel:runScript': {
+    request: { cwd: string; command: string };
+    response: void;
   };
   'terminal:create': {
     request: { cwd: string };

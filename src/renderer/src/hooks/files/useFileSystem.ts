@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { THIS_PC_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { THIS_PC_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH } from '@shared/constants';
 import { classifyFileSystemError, type FileSystemErrorKind } from '@renderer/lib/fileSystemError';
 
 export interface UseFileSystemResult {
@@ -78,7 +78,17 @@ export function useFileSystem(): UseFileSystemResult {
         setHasPartialResults(false);
         return;
       }
-      if (path === CACHE_CLEANER_PATH || path === SPACE_ANALYZER_PATH) {
+      if (path === CACHE_CLEANER_PATH) {
+        setNodes([]);
+        setHasPartialResults(false);
+        return;
+      }
+      if (path === SPACE_ANALYZER_PATH) {
+        setNodes([]);
+        setHasPartialResults(false);
+        return;
+      }
+      if (path === DEV_PANEL_PATH) {
         setNodes([]);
         setHasPartialResults(false);
         return;
@@ -101,7 +111,7 @@ export function useFileSystem(): UseFileSystemResult {
     if (path === null) return;
 
     void load();
-    if (path === THIS_PC_PATH || path === CACHE_CLEANER_PATH || path === SPACE_ANALYZER_PATH) return;
+    if (path === THIS_PC_PATH || path === CACHE_CLEANER_PATH || path === SPACE_ANALYZER_PATH || path === DEV_PANEL_PATH) return;
     void ipc.invoke('fs:watch', { path });
 
     const unsubscribe = ipc.on('fs:changed', (event) => {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH } from '@shared/constants';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { UIShell, UIThemeMode } from '@shared/types/layout';
@@ -157,6 +157,14 @@ export function useCommandPalette({
       description: SPACE_ANALYZER_PATH,
       icon: 'PieChart',
       action: () => openTab(SPACE_ANALYZER_PATH),
+    });
+    list.push({
+      id: 'nav-dev-panel',
+      category: 'Navigation',
+      label: 'Open Dev Panel',
+      description: DEV_PANEL_PATH,
+      icon: 'Code2',
+      action: () => openTab(DEV_PANEL_PATH),
     });
 
     // --- ACTIONS ---
