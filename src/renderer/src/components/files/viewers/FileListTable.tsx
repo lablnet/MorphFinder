@@ -8,6 +8,7 @@ import { marqueeSelectionForList, type SelectionRect } from '../selection';
 import type { FileViewProps } from '../types';
 import { readDraggedPaths } from '../dragDrop';
 import { useElementSize, useFileItem, useMarquee } from '@renderer/hooks';
+import { Button } from '@renderer/components/ui/Button';
 
 type SortKey = 'name' | 'kind' | 'size' | 'modified';
 type SortDirection = 'asc' | 'desc';
@@ -124,10 +125,18 @@ export function FileListTable({
   };
 
   const header = (key: SortKey, label: string, className = ''): React.JSX.Element => (
-    <button type="button" onClick={() => sortBy(key)} className={cn('truncate px-3 py-2 text-left hover:bg-shell-sidebar', className)}>
+    <Button
+      onClick={() => sortBy(key)}
+      variant="ghost"
+      className={cn(
+        'truncate px-3 py-2 rounded-none hover:bg-shell-sidebar font-medium text-current/60 text-xs',
+        className.includes('text-right') ? 'justify-end' : 'justify-start',
+        className
+      )}
+    >
       {label}
       {sortKey === key ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
-    </button>
+    </Button>
   );
 
   const calculateSelection = useCallback(

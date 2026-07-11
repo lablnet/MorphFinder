@@ -77,7 +77,7 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
               onClick={() => onAction(action)}
               variant="ghost"
               className={cn(
-                'flex h-8 w-full items-center gap-2 px-3 text-left outline-none rounded-none',
+                'flex h-8 w-full items-center justify-start gap-2 px-3 text-left outline-none rounded-none',
                 disabled ? 'cursor-default opacity-35' : 'hover:bg-shell-sidebar focus:bg-shell-sidebar',
               )}
             >

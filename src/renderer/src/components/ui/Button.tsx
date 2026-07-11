@@ -14,9 +14,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         ref={ref}
         className={cn(
-          'flex items-center justify-center font-medium transition-colors outline-none disabled:opacity-30',
+          'flex items-center font-medium transition-colors outline-none disabled:opacity-30',
           shellId === 'explorer' ? 'rounded' : 'rounded-shell',
-          size === 'icon' ? 'h-7 w-7 text-current/70' : 'px-3 py-1.5 text-sm',
+          size === 'icon' ? 'h-7 w-7 text-current/70 justify-center' : 'px-3 py-1.5 text-sm justify-center',
           // Variants
           variant === 'accent' && 'bg-[color:var(--shell-accent)] text-white hover:bg-[color:var(--shell-accent)]/90',
           variant === 'outline' && 'border border-shell-border hover:bg-shell-sidebar',
