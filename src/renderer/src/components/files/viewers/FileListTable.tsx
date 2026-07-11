@@ -83,7 +83,7 @@ function ListFileItem({ node, data, style }: ListFileItemProps): React.JSX.Eleme
       {...mouseProps}
       className={cn(
         'grid cursor-default grid-cols-[minmax(180px,1fr)_120px_120px_180px_80px] items-center text-sm',
-        selected ? 'bg-[color:var(--shell-accent)]/15' : 'hover:bg-shell-sidebar',
+        selected ? 'bg-[color:var(--shell-accent)]/15 ring-1 ring-[color:var(--shell-accent)] ring-inset' : 'hover:bg-shell-sidebar',
       )}
     >
       <span className="flex min-w-0 items-center gap-2 truncate px-3">
@@ -157,6 +157,7 @@ export function FileListTable({
   onExternalDrag,
   gitStatusMap,
 }: FileViewProps): React.JSX.Element {
+  console.log('[FileListTable] render, selectedPaths size:', selectedPaths.size);
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
