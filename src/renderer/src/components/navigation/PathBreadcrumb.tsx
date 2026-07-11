@@ -1,6 +1,6 @@
-import { ChevronRight, HardDrive } from 'lucide-react';
+import { ChevronRight, HardDrive, Trash2 } from 'lucide-react';
 import { cn } from '@lablnet/ui';
-import { THIS_PC_PATH } from '@shared/constants';
+import { THIS_PC_PATH, CACHE_CLEANER_PATH } from '@shared/constants';
 import { Button } from '../ui/Button';
 
 export interface PathBreadcrumbProps {
@@ -35,6 +35,21 @@ export function PathBreadcrumb({ path, onNavigate }: PathBreadcrumbProps): React
         >
           <HardDrive size={14} />
           This PC
+        </Button>
+      </nav>
+    );
+  }
+
+  if (path === CACHE_CLEANER_PATH) {
+    return (
+      <nav className="flex h-8 items-center gap-1 overflow-x-auto px-3 text-sm text-current/80" aria-label="Breadcrumb">
+        <Button
+          onClick={() => onNavigate(CACHE_CLEANER_PATH)}
+          variant="ghost"
+          className="flex shrink-0 items-center gap-2 px-1.5 py-0.5 font-medium text-current"
+        >
+          <Trash2 size={14} />
+          Cache Cleaner
         </Button>
       </nav>
     );

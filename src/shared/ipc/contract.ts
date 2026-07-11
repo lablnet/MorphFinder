@@ -1,6 +1,7 @@
 import type { DirectoryListing, FileOperationRequest, FileSystemNode } from '../types/fileSystem';
 import type { FileContentResponse } from '../types/fileViewer';
 import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '../types/native';
+import type { CacheCleanRequest, CacheCleanResult, CacheScanResult } from '../types/cache';
 
 /**
  * Every request/response channel in one map. Preload, main handlers, and the renderer
@@ -47,6 +48,14 @@ export interface IpcContract {
     response: FileContentResponse;
   };
   'shell:openWith': { request: { path: string; appBundleId?: string }; response: void };
+  'cache:scan': {
+    request: void;
+    response: CacheScanResult;
+  };
+  'cache:clean': {
+    request: CacheCleanRequest;
+    response: CacheCleanResult;
+  };
 }
 
 export type IpcChannel = keyof IpcContract;

@@ -3,6 +3,7 @@ import type { IpcChannel, IpcContract } from '@shared/ipc/contract';
 import { createFsHandlers } from './fs.handlers';
 import { createShellHandlers } from './shell.handlers';
 import { createNativeHandlers } from './native.handlers';
+import { createCacheHandlers } from './cache.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -17,6 +18,7 @@ export function registerHandlers(window: BrowserWindow): void {
     ...createFsHandlers(window),
     ...createShellHandlers(window),
     ...createNativeHandlers(),
+    ...createCacheHandlers(),
   };
 
   for (const channel of Object.keys(handlers) as IpcChannel[]) {

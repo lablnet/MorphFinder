@@ -1,5 +1,6 @@
-import { Download, FileText, Home, LayoutGrid, Monitor, type LucideIcon } from 'lucide-react';
+import { Download, FileText, Home, LayoutGrid, Monitor, Trash2, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
+import { CACHE_CLEANER_PATH } from '@shared/constants';
 import type { SidebarProps } from '../types';
 
 export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
@@ -21,6 +22,15 @@ export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: Sidebar
       </SidebarGroup>
       <SidebarGroup title="Locations">
         <SidebarRow label="Macintosh HD" path="/" icon={LayoutGrid} isActive={activePath === '/'} onClick={() => onNavigate('/')} />
+      </SidebarGroup>
+      <SidebarGroup title="Tools">
+        <SidebarRow
+          label="Cache Cleaner"
+          path={CACHE_CLEANER_PATH}
+          icon={Trash2}
+          isActive={activePath === CACHE_CLEANER_PATH}
+          onClick={() => onNavigate(CACHE_CLEANER_PATH)}
+        />
       </SidebarGroup>
     </aside>
   );

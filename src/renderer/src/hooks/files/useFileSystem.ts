@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
-import { THIS_PC_PATH } from '@shared/constants';
+import { THIS_PC_PATH, CACHE_CLEANER_PATH } from '@shared/constants';
 import { classifyFileSystemError, type FileSystemErrorKind } from '@renderer/lib/fileSystemError';
 
 export interface UseFileSystemResult {
@@ -78,6 +78,11 @@ export function useFileSystem(): UseFileSystemResult {
         setHasPartialResults(false);
         return;
       }
+      if (path === CACHE_CLEANER_PATH) {
+        setNodes([]);
+        setHasPartialResults(false);
+        return;
+      }
       const listing = await ipc.invoke('fs:readDirectory', { path, includeHidden: showHidden });
       setNodes(listing.nodes);
       setHasPartialResults(listing.hasPartialResults);
@@ -96,7 +101,7 @@ export function useFileSystem(): UseFileSystemResult {
     if (path === null) return;
 
     void load();
-    if (path === THIS_PC_PATH) return;
+    if (path === THIS_PC_PATH || path === CACHE_CLEANER_PATH) return;
     void ipc.invoke('fs:watch', { path });
 
     const unsubscribe = ipc.on('fs:changed', (event) => {

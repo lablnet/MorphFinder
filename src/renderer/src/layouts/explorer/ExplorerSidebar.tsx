@@ -1,6 +1,6 @@
-import { Download, FileText, Laptop, Star, type LucideIcon } from 'lucide-react';
+import { Download, FileText, Laptop, Star, Trash2, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
-import { THIS_PC_PATH } from '@shared/constants';
+import { THIS_PC_PATH, CACHE_CLEANER_PATH } from '@shared/constants';
 import type { SidebarProps } from '../types';
 
 export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
@@ -26,6 +26,15 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
           icon={Laptop}
           isActive={activePath === THIS_PC_PATH}
           onClick={() => onNavigate(THIS_PC_PATH)}
+        />
+      </SidebarGroup>
+      <SidebarGroup title="Tools">
+        <SidebarRow
+          label="Cache Cleaner"
+          path={CACHE_CLEANER_PATH}
+          icon={Trash2}
+          isActive={activePath === CACHE_CLEANER_PATH}
+          onClick={() => onNavigate(CACHE_CLEANER_PATH)}
         />
       </SidebarGroup>
     </aside>

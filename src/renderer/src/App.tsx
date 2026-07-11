@@ -9,6 +9,8 @@ import { useKeyboardShortcuts, useFileSystemController } from '@renderer/hooks';
 import { FileToolbar } from '@renderer/components/navigation/FileToolbar';
 import { NamePromptDialog } from '@renderer/components/ui/NamePromptDialog';
 import { Button } from '@renderer/components/ui/Button';
+import { CACHE_CLEANER_PATH } from '@shared/constants';
+import { CacheCleaner } from '@renderer/components/cachecleaner/CacheCleaner';
 
 export function App(): React.JSX.Element {
   useKeyboardShortcuts();
@@ -81,6 +83,8 @@ export function App(): React.JSX.Element {
               Open Home
             </Button>
           </div>
+        ) : tabs.activePath === CACHE_CLEANER_PATH ? (
+          <CacheCleaner />
         ) : fs.error !== null ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-current/65" role="alert">
             {fs.errorKind === 'permission' ? <LockKeyhole size={28} /> : fs.errorKind === 'unavailable' ? <HardDrive size={28} /> : <AlertCircle size={28} />}
