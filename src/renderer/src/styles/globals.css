@@ -14,11 +14,11 @@ body,
 
 body {
   background: var(--shell-surface);
-  color-scheme: light dark;
 }
 
 /* Default token values; each ShellDefinition overrides these on its root region. */
 :root {
+  color-scheme: light;
   --shell-accent: #2563eb;
   --shell-surface: #ffffff;
   --shell-sidebar: #f5f5f7;
@@ -29,6 +29,7 @@ body {
 }
 
 :root.dark {
+  color-scheme: dark;
   --shell-surface: #1e1e1e;
   --shell-sidebar: #252526;
   --shell-border: #3a3a3c;
@@ -214,23 +215,41 @@ body {
   font-style: italic;
 }
 
-/* Custom scrollbar style for modern browser engines */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Global custom scrollbar style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--shell-border);
-  border-radius: 3px;
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--shell-accent);
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+:root.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+:root.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Fallback for firefox/standard engines */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+:root.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
 .scrollbar-none {
@@ -243,24 +262,5 @@ body {
 }
 
 .terminal-container .xterm-viewport {
-  scrollbar-color: color-mix(in srgb, var(--shell-accent) 45%, transparent) transparent;
-  scrollbar-width: thin;
-}
-
-.terminal-container .xterm-viewport::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.terminal-container .xterm-viewport::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.terminal-container .xterm-viewport::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--shell-accent) 35%, transparent);
-  border-radius: 999px;
-}
-
-.terminal-container .xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--shell-accent) 55%, transparent);
+  background-color: transparent !important;
 }
