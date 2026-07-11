@@ -1,6 +1,8 @@
 import { Badge, Button } from "@lablnet/ui";
-import { ArrowRight, Eye, Sparkles } from "lucide-react";
+import { Eye, Mail, Sparkles } from "lucide-react";
 import { ProductMockup } from "./ProductMockup";
+
+const waitlistHref = "mailto:umer@lablnet.com?subject=MorphFinder%20waitlist";
 
 export function HeroSection() {
   function viewProductTour() {
@@ -31,9 +33,11 @@ export function HeroSection() {
           familiar operating-system layouts without switching tools.
         </p>
         <div className="mt-8 flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button size="lg" className="w-full sm:w-auto" rightIcon={<ArrowRight size={18} />}>
-            Notify me when ready
-          </Button>
+          <a className="w-full sm:w-auto" href={waitlistHref}>
+            <Button size="lg" className="w-full sm:w-auto" rightIcon={<Mail size={18} />}>
+              Email waitlist
+            </Button>
+          </a>
           <Button
             size="lg"
             variant="outline"

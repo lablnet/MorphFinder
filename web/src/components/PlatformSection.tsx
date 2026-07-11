@@ -1,5 +1,7 @@
 import { Button } from "@lablnet/ui";
-import { ArrowRight, Apple, Laptop, Monitor, ShieldCheck } from "lucide-react";
+import { Apple, Laptop, Mail, Monitor, ShieldCheck } from "lucide-react";
+
+const waitlistHref = "mailto:umer@lablnet.com?subject=MorphFinder%20waitlist";
 
 const shells = [
   { name: "Finder Shell", text: "Unified toolbar, sidebar, path bar, and Miller columns.", icon: <Apple /> },
@@ -31,9 +33,11 @@ export function PlatformSection() {
             services, and the lablnet UI system.
           </p>
         </div>
-        <Button size="lg" className="w-full bg-white text-slate-950 hover:bg-white/90 sm:w-auto" rightIcon={<ArrowRight size={18} />}>
-          Coming soon
-        </Button>
+        <a className="w-full sm:w-auto" href={waitlistHref}>
+          <Button size="lg" className="w-full bg-white text-slate-950 hover:bg-white/90 sm:w-auto" rightIcon={<Mail size={18} />}>
+            Email waitlist
+          </Button>
+        </a>
       </div>
     </section>
   );
