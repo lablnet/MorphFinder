@@ -8,6 +8,8 @@ release/
 .DS_Store
 native/macos/.build/
 native/macos/*.node
+native/windows-linux/target/
+native/windows-linux/*.node
 /.build/
 test-results/
 playwright-report/

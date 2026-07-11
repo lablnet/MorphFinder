@@ -1,0 +1,7 @@
+{
+  "name": "morph-native-core",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

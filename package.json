@@ -18,9 +18,9 @@
     "test:e2e": "pnpm build && playwright test",
     "preview": "electron-vite preview",
     "build:mac": "pnpm native:build && pnpm build && electron-builder --mac",
-    "build:win": "pnpm build && electron-builder --win",
-    "build:linux": "pnpm build && electron-builder --linux",
-    "native:build": "node native/macos/build.mjs",
+    "build:win": "pnpm native:build && pnpm build && electron-builder --win",
+    "build:linux": "pnpm native:build && pnpm build && electron-builder --linux",
+    "native:build": "node native/build.mjs",
     "release": "pnpm build && electron-builder",
     "build:assets": "tsx scripts/build-assets.ts"
   },

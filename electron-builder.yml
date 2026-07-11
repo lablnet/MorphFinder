@@ -33,6 +33,9 @@ win:
   target:
     - target: nsis
       arch: [x64]
+  extraResources:
+    - from: native/windows-linux/MorphNative.node
+      to: MorphNative.node
   signingHashAlgorithms: [sha256]
   signAndEditExecutable: true
 nsis:
@@ -41,6 +44,9 @@ nsis:
   perMachine: false
 linux:
   category: Utility
+  extraResources:
+    - from: native/windows-linux/MorphNative.node
+      to: MorphNative.node
   target:
     - target: AppImage
       arch: [x64]
