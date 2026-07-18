@@ -27,6 +27,30 @@ enum Locations {
         var addedPaths = Set<String>()
         var addedNames = Set<String>()
 
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser
+
+        // 1. iCloud Drive (Only show if iCloud sync is enabled & active)
+        let isICloudSyncEnabled = FileManager.default.ubiquityIdentityToken != nil
+        let iCloudPath = homeDir.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs").path
+        
+        if isICloudSyncEnabled && FileManager.default.fileExists(atPath: iCloudPath) {
+            addedPaths.insert(iCloudPath)
+            addedNames.insert("iCloud Drive")
+            
+            let iCloudAppPath = "/System/Library/CoreServices/Finder.app/Contents/Applications/iCloud Drive.app"
+            let iconPath = FileManager.default.fileExists(atPath: iCloudAppPath) ? iCloudAppPath : iCloudPath
+
+            results.append(SystemLocation(
+                id: iCloudPath,
+                name: "iCloud Drive",
+                path: iCloudPath,
+                iconDataUrl: getIconDataUrl(forPath: iconPath),
+                isRemovable: false,
+                isInternal: true
+            ))
+        }
+
+        // 2. Mounted volumes (Macintosh HD, External SSDs, MacDroid, etc.)
         let keys: [URLResourceKey] = [
             .volumeNameKey,
             .localizedNameKey,
@@ -36,7 +60,6 @@ enum Locations {
             .volumeIsEjectableKey
         ]
         
-        // 1. Mounted volumes (Macintosh HD, External SSDs, MacDroid, etc.)
         if let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) {
             for url in urls {
                 let path = url.path
@@ -76,37 +99,32 @@ enum Locations {
             ), at: 0)
         }
 
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser
-
-        // 2. Cloud Storage (iCloud Drive, Google Drive in ~/Library/CloudStorage)
+        // 3. Cloud Storage Providers (Google Drive, OneDrive, Dropbox, etc.)
+        // Skip raw internal `iCloudDrive-` container folders
         let cloudStoragePath = homeDir.appendingPathComponent("Library/CloudStorage").path
         if FileManager.default.fileExists(atPath: cloudStoragePath) {
             if let items = try? FileManager.default.contentsOfDirectory(atPath: cloudStoragePath) {
                 for item in items {
-                    if item.hasPrefix(".") { continue }
+                    if item.hasPrefix(".") || item.hasPrefix("iCloudDrive-") { continue }
                     let fullPath = (cloudStoragePath as NSString).appendingPathComponent(item)
                     guard !addedPaths.contains(fullPath) else { continue }
 
-                    // Determine readable localized display name
-                    let url = URL(fileURLWithPath: fullPath)
-                    let values = try? url.resourceValues(forKeys: [.localizedNameKey])
-                    var name = values?.localizedName ?? item
-
-                    if name == item && item.contains("-") {
-                        name = item.components(separatedBy: "-").first?.trimmingCharacters(in: .whitespaces) ?? item
+                    var providerName = item
+                    if item.contains("-") {
+                        let parts = item.components(separatedBy: "-")
+                        providerName = parts.first?.trimmingCharacters(in: .whitespaces) ?? item
                     }
+                    if providerName == "GoogleDrive" { providerName = "Google Drive" }
+                    if providerName == "OneDrive" { providerName = "One Drive" }
 
-                    // Avoid duplicate location names (e.g. redundant iCloudDrive mounts)
-                    if addedNames.contains(name) {
-                        continue
-                    }
+                    if addedNames.contains(providerName) { continue }
 
                     addedPaths.insert(fullPath)
-                    addedNames.insert(name)
+                    addedNames.insert(providerName)
 
                     results.append(SystemLocation(
                         id: fullPath,
-                        name: name,
+                        name: providerName,
                         path: fullPath,
                         iconDataUrl: getIconDataUrl(forPath: fullPath),
                         isRemovable: false,
@@ -116,7 +134,7 @@ enum Locations {
             }
         }
 
-        // 3. User Home Directory
+        // 4. User Home Directory
         let userHomePath = homeDir.path
         if !addedPaths.contains(userHomePath) {
             addedPaths.insert(userHomePath)
@@ -131,7 +149,21 @@ enum Locations {
             ))
         }
 
-        // 4. Trash
+        // 5. AirDrop
+        let airDropPath = "/System/Library/CoreServices/Finder.app/Contents/Applications/AirDrop.app"
+        if FileManager.default.fileExists(atPath: airDropPath) && !addedPaths.contains(airDropPath) {
+            addedPaths.insert(airDropPath)
+            results.append(SystemLocation(
+                id: airDropPath,
+                name: "AirDrop",
+                path: airDropPath,
+                iconDataUrl: getIconDataUrl(forPath: airDropPath),
+                isRemovable: false,
+                isInternal: true
+            ))
+        }
+
+        // 6. Trash
         let trashPath = homeDir.appendingPathComponent(".Trash").path
         if FileManager.default.fileExists(atPath: trashPath) && !addedPaths.contains(trashPath) {
             addedPaths.insert(trashPath)
