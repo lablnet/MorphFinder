@@ -5,10 +5,22 @@ import type { WebContents } from 'electron';
 import type { FileOperationRequest } from '@shared/types/fileSystem';
 import { trashPaths } from './fileSystemService';
 
+interface ActiveFileTask {
+  controller: AbortController;
+}
+
+const activeFileTasks = new Map<string, ActiveFileTask>();
+
+export function cancelFileOperation(operationId: string): void {
+  const task = activeFileTasks.get(operationId);
+  if (task) {
+    task.controller.abort();
+    activeFileTasks.delete(operationId);
+  }
+}
+
 /**
  * Runs a copy/move/trash batch and streams progress over `fs:operationProgress`.
- * Resolves after the batch completes so callers can refresh the directory at the
- * right time instead of racing the filesystem.
  */
 export async function runFileOperation(request: FileOperationRequest, webContents: WebContents): Promise<string> {
   const operationId = randomUUID();
@@ -47,15 +59,27 @@ async function executeOperation(
   request: FileOperationRequest,
   webContents: WebContents,
 ): Promise<void> {
+  const controller = new AbortController();
+  activeFileTasks.set(operationId, { controller });
+
   const total = request.sourcePaths.length;
   const send = (completed: number, currentPath: string, done: boolean, error?: string): void => {
     if (webContents.isDestroyed()) return;
-    webContents.send('fs:operationProgress', { operationId, completed, total, currentPath, done, error });
+    webContents.send('fs:operationProgress', {
+      operationId,
+      completed,
+      total,
+      currentPath,
+      done,
+      error,
+    });
   };
 
   try {
     send(0, request.sourcePaths[0] ?? '', false);
     for (const [index, sourcePath] of request.sourcePaths.entries()) {
+      if (controller.signal.aborted) throw new Error('Operation canceled');
+
       if (request.kind === 'trash') {
         await trashPaths([sourcePath]);
       } else {
@@ -73,6 +97,9 @@ async function executeOperation(
       send(index + 1, sourcePath, index + 1 === total);
     }
   } catch (cause) {
-    send(0, '', true, cause instanceof Error ? cause.message : String(cause));
+    const error = cause instanceof Error ? cause.message : String(cause);
+    send(0, '', true, error);
+  } finally {
+    activeFileTasks.delete(operationId);
   }
 }

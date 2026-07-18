@@ -35,7 +35,10 @@ export interface FileOperationProgress {
   operationId: string;
   completed: number;
   total: number;
+  bytesProcessed?: number | undefined;
+  totalBytes?: number | undefined;
+  percent?: number | undefined;
   currentPath: string;
   done: boolean;
-  error?: string;
+  error?: string | undefined;
 }

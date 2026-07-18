@@ -67,6 +67,10 @@ export interface IpcContract {
     request: FileOperationRequest;
     response: { operationId: string };
   };
+  'fs:cancel': {
+    request: { operationId: string };
+    response: void;
+  };
   'fs:wellKnownDirs': {
     request: void;
     response: { home: string; desktop: string; documents: string; downloads: string };
@@ -192,9 +196,12 @@ export interface IpcEvents {
     operationId: string;
     completed: number;
     total: number;
+    bytesProcessed?: number | undefined;
+    totalBytes?: number | undefined;
+    percent?: number | undefined;
     currentPath: string;
     done: boolean;
-    error?: string;
+    error?: string | undefined;
   };
   'command-palette:toggle': void;
   'analyzer:progress': {
