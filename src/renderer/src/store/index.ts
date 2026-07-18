@@ -13,7 +13,7 @@ export type AppStore = LayoutSlice & TabsSlice & SelectionSlice & FileSystemSlic
  * so they're excluded in `partialize` below.
  */
 const getStorageKey = (): string => {
-  if (typeof window === 'undefined') return 'MorphFinder-store';
+  if (typeof window === 'undefined' || !window.location || !window.location.search) return 'MorphFinder-store';
   const params = new URLSearchParams(window.location.search);
   const windowId = params.get('windowId') || 'main';
   return `MorphFinder-store-${windowId}`;
