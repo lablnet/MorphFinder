@@ -107,7 +107,7 @@ export function setupApplicationMenu(): void {
           label: 'Learn More',
           click: async () => {
             const { shell } = await import('electron');
-            await shell.openExternal('https://electronjs.org');
+            await shell.openExternal('https://morphfinder.lablnet.com/');
           },
         },
       ],
