@@ -255,9 +255,9 @@ export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | 
           style={{ backgroundColor: 'color-mix(in srgb, var(--shell-sidebar) 20%, transparent)' }}
         >
           <div className="flex items-center gap-1">
-            <span>Toggle:</span>
+            <span>Toggle / Go to:</span>
             <kbd className="font-mono bg-shell-sidebar border border-shell-border rounded px-1">
-              {navigator.platform.toLowerCase().includes('mac') ? '⌘ K' : 'Ctrl K'}
+              {navigator.platform.toLowerCase().includes('mac') ? '⌘K / ⌘⇧G' : 'Ctrl+K / Ctrl+Shift+G'}
             </kbd>
           </div>
           <div className="flex items-center gap-3">
