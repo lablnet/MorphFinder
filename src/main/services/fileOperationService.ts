@@ -1,5 +1,5 @@
 import { basename, extname, join } from 'node:path';
-import { access, cp, rename as fsRename } from 'node:fs/promises';
+import { access, cp, mkdir, readdir, rename as fsRename, stat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import type { WebContents } from 'electron';
 import type { FileOperationRequest } from '@shared/types/fileSystem';
@@ -17,6 +17,25 @@ export function cancelFileOperation(operationId: string): void {
     task.controller.abort();
     activeFileTasks.delete(operationId);
   }
+}
+
+async function countItemsRecursively(paths: string[]): Promise<number> {
+  let count = 0;
+  for (const p of paths) {
+    try {
+      const s = await stat(p);
+      if (s.isDirectory()) {
+        count += 1; // Count directory itself
+        const entries = await readdir(p);
+        count += await countItemsRecursively(entries.map((e) => join(p, e)));
+      } else {
+        count += 1;
+      }
+    } catch {
+      count += 1;
+    }
+  }
+  return count;
 }
 
 /**
@@ -54,6 +73,40 @@ async function uniqueCopyDestination(destinationDir: string, sourcePath: string)
   throw new Error(`Could not find an available copy name for ${sourceName}`);
 }
 
+async function copyWithLiveProgress(
+  src: string,
+  dest: string,
+  signal: AbortSignal,
+  onItemDone: (currentPath: string) => void,
+): Promise<void> {
+  if (signal.aborted) throw new Error('Operation canceled');
+  let isDir = false;
+  try {
+    const s = await stat(src);
+    isDir = s.isDirectory();
+  } catch {
+    isDir = false;
+  }
+
+  if (isDir) {
+    await mkdir(dest, { recursive: true });
+    onItemDone(src);
+    let entries: string[] = [];
+    try {
+      entries = await readdir(src);
+    } catch {
+      entries = [];
+    }
+    for (const entry of entries) {
+      if (signal.aborted) throw new Error('Operation canceled');
+      await copyWithLiveProgress(join(src, entry), join(dest, entry), signal, onItemDone);
+    }
+  } else {
+    await cp(src, dest, { recursive: true, errorOnExist: false, force: true });
+    onItemDone(src);
+  }
+}
+
 async function executeOperation(
   operationId: string,
   request: FileOperationRequest,
@@ -62,13 +115,16 @@ async function executeOperation(
   const controller = new AbortController();
   activeFileTasks.set(operationId, { controller });
 
-  const total = request.sourcePaths.length;
+  const isCopy = request.kind === 'copy';
+  const totalItems = isCopy ? await countItemsRecursively(request.sourcePaths) : request.sourcePaths.length;
+  let completedItems = 0;
+
   const send = (completed: number, currentPath: string, done: boolean, error?: string): void => {
     if (webContents.isDestroyed()) return;
     webContents.send('fs:operationProgress', {
       operationId,
       completed,
-      total,
+      total: totalItems,
       currentPath,
       done,
       error,
@@ -82,23 +138,29 @@ async function executeOperation(
 
       if (request.kind === 'trash') {
         await trashPaths([sourcePath]);
+        completedItems += 1;
+        send(completedItems, sourcePath, index + 1 === totalItems);
       } else {
         if (request.destinationDir === undefined) {
           throw new Error(`${request.kind} requires a destinationDir`);
         }
         if (request.kind === 'copy') {
           const destination = await uniqueCopyDestination(request.destinationDir, sourcePath);
-          await cp(sourcePath, destination, { recursive: true, errorOnExist: false, force: true });
+          await copyWithLiveProgress(sourcePath, destination, controller.signal, (currentPath) => {
+            completedItems += 1;
+            send(completedItems, currentPath, completedItems === totalItems);
+          });
         } else {
           const destination = join(request.destinationDir, basename(sourcePath));
           await fsRename(sourcePath, destination);
+          completedItems += 1;
+          send(completedItems, sourcePath, completedItems === totalItems);
         }
       }
-      send(index + 1, sourcePath, index + 1 === total);
     }
   } catch (cause) {
     const error = cause instanceof Error ? cause.message : String(cause);
-    send(0, '', true, error);
+    send(completedItems, '', true, error);
   } finally {
     activeFileTasks.delete(operationId);
   }
