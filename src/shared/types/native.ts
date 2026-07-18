@@ -36,7 +36,8 @@ export interface SystemLocation {
   id: string;
   name: string;
   path: string;
-  iconType: string;
+  iconType?: string;
+  iconDataUrl?: string | null;
   isRemovable: boolean;
   isInternal: boolean;
 }

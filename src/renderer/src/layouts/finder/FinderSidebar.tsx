@@ -96,13 +96,14 @@ export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: Sidebar
       )}
       <SidebarGroup title="Locations">
         {locations.map((loc) => {
-          const Icon = getLocationIcon(loc.iconType);
+          const Icon = getLocationIcon(loc.iconType || 'folder');
           return (
             <SidebarRow
               key={loc.id}
               label={loc.name}
               path={loc.path}
               icon={Icon}
+              iconDataUrl={loc.iconDataUrl}
               isActive={activePath === loc.path}
               onClick={() => onNavigate(loc.path)}
               onContextMenu={(e) => handleContextMenu(loc.path, e)}
@@ -144,13 +145,14 @@ interface SidebarRowProps {
   label: string;
   path: string;
   icon: LucideIcon;
+  iconDataUrl?: string | null | undefined;
   isActive: boolean;
   onClick: () => void;
   onUnpin?: () => void;
   onContextMenu: (event: React.MouseEvent) => void;
 }
 
-function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin, onContextMenu }: SidebarRowProps): React.JSX.Element {
+function SidebarRow({ label, icon: Icon, iconDataUrl, isActive, onClick, onUnpin, onContextMenu }: SidebarRowProps): React.JSX.Element {
   return (
     <div
       onContextMenu={onContextMenu}
@@ -164,7 +166,11 @@ function SidebarRow({ label, icon: Icon, isActive, onClick, onUnpin, onContextMe
           isActive ? 'bg-shell-accent/15 font-semibold text-shell-accent' : 'text-current/80 hover:text-current',
         )}
       >
-        <Icon size={14} className="shrink-0" />
+        {iconDataUrl ? (
+          <img src={iconDataUrl} alt="" className="h-4 w-4 shrink-0 object-contain" />
+        ) : (
+          <Icon size={14} className="shrink-0" />
+        )}
         <span className="truncate">{label}</span>
       </button>
       {onUnpin && (

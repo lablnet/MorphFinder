@@ -5,18 +5,31 @@ struct SystemLocation: Codable {
     let id: String
     let name: String
     let path: String
-    let iconType: String
+    let iconDataUrl: String?
     let isRemovable: Bool
     let isInternal: Bool
 }
 
 enum Locations {
+    private static func getIconDataUrl(forPath path: String) -> String? {
+        let image = NSWorkspace.shared.icon(forFile: path)
+        image.size = NSSize(width: 32, height: 32)
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else {
+            return nil
+        }
+        return "data:image/png;base64," + pngData.base64EncodedString()
+    }
+
     static func list() -> [SystemLocation] {
         var results: [SystemLocation] = []
         var addedPaths = Set<String>()
+        var addedNames = Set<String>()
 
         let keys: [URLResourceKey] = [
             .volumeNameKey,
+            .localizedNameKey,
             .volumeIsRemovableKey,
             .volumeIsInternalKey,
             .volumeIsLocalKey,
@@ -28,28 +41,21 @@ enum Locations {
             for url in urls {
                 let path = url.path
                 guard !addedPaths.contains(path) else { continue }
-                addedPaths.insert(path)
-
+                
                 let values = try? url.resourceValues(forKeys: Set(keys))
-                let name = values?.volumeName ?? url.lastPathComponent
+                let name = values?.localizedName ?? values?.volumeName ?? url.lastPathComponent
                 let isRemovable = values?.volumeIsRemovable ?? false
                 let isInternal = values?.volumeIsInternal ?? false
                 let isEjectable = values?.volumeIsEjectable ?? false
                 
-                let iconType: String
-                if path == "/" {
-                    iconType = "hd"
-                } else if isRemovable || isEjectable || !isInternal {
-                    iconType = "removable"
-                } else {
-                    iconType = "hd"
-                }
+                addedPaths.insert(path)
+                addedNames.insert(name)
 
                 results.append(SystemLocation(
                     id: path,
                     name: name,
                     path: path,
-                    iconType: iconType,
+                    iconDataUrl: getIconDataUrl(forPath: path),
                     isRemovable: isRemovable || isEjectable,
                     isInternal: isInternal
                 ))
@@ -59,11 +65,12 @@ enum Locations {
         // Ensure "/" is present if not caught above
         if !addedPaths.contains("/") {
             addedPaths.insert("/")
+            addedNames.insert("Macintosh HD")
             results.insert(SystemLocation(
                 id: "/",
                 name: "Macintosh HD",
                 path: "/",
-                iconType: "hd",
+                iconDataUrl: getIconDataUrl(forPath: "/"),
                 isRemovable: false,
                 isInternal: true
             ), at: 0)
@@ -76,42 +83,37 @@ enum Locations {
         if FileManager.default.fileExists(atPath: cloudStoragePath) {
             if let items = try? FileManager.default.contentsOfDirectory(atPath: cloudStoragePath) {
                 for item in items {
-                    // Ignore hidden files
                     if item.hasPrefix(".") { continue }
                     let fullPath = (cloudStoragePath as NSString).appendingPathComponent(item)
-                    if !addedPaths.contains(fullPath) {
-                        addedPaths.insert(fullPath)
-                        // E.g. "GoogleDrive-email" -> "Google Drive"
-                        var cleanName = item
-                        if item.contains("-") {
-                            cleanName = item.components(separatedBy: "-").first?.trimmingCharacters(in: .whitespaces) ?? item
-                        }
-                        // Insert cloud items right after root volume
-                        results.append(SystemLocation(
-                            id: fullPath,
-                            name: cleanName,
-                            path: fullPath,
-                            iconType: "cloud",
-                            isRemovable: false,
-                            isInternal: true
-                        ))
+                    guard !addedPaths.contains(fullPath) else { continue }
+
+                    // Determine readable localized display name
+                    let url = URL(fileURLWithPath: fullPath)
+                    let values = try? url.resourceValues(forKeys: [.localizedNameKey])
+                    var name = values?.localizedName ?? item
+
+                    if name == item && item.contains("-") {
+                        name = item.components(separatedBy: "-").first?.trimmingCharacters(in: .whitespaces) ?? item
                     }
+
+                    // Avoid duplicate location names (e.g. redundant iCloudDrive mounts)
+                    if addedNames.contains(name) {
+                        continue
+                    }
+
+                    addedPaths.insert(fullPath)
+                    addedNames.insert(name)
+
+                    results.append(SystemLocation(
+                        id: fullPath,
+                        name: name,
+                        path: fullPath,
+                        iconDataUrl: getIconDataUrl(forPath: fullPath),
+                        isRemovable: false,
+                        isInternal: true
+                    ))
                 }
             }
-        }
-
-        // iCloud Drive standard path fallback if not found in CloudStorage
-        let iCloudPath = homeDir.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs").path
-        if FileManager.default.fileExists(atPath: iCloudPath) && !addedPaths.contains(iCloudPath) {
-            addedPaths.insert(iCloudPath)
-            results.append(SystemLocation(
-                id: iCloudPath,
-                name: "iCloud Drive",
-                path: iCloudPath,
-                iconType: "cloud",
-                isRemovable: false,
-                isInternal: true
-            ))
         }
 
         // 3. User Home Directory
@@ -123,7 +125,7 @@ enum Locations {
                 id: userHomePath,
                 name: userName,
                 path: userHomePath,
-                iconType: "home",
+                iconDataUrl: getIconDataUrl(forPath: userHomePath),
                 isRemovable: false,
                 isInternal: true
             ))
@@ -137,7 +139,7 @@ enum Locations {
                 id: trashPath,
                 name: "Trash",
                 path: trashPath,
-                iconType: "trash",
+                iconDataUrl: getIconDataUrl(forPath: trashPath),
                 isRemovable: false,
                 isInternal: true
             ))
