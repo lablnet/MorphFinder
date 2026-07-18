@@ -1,0 +1,3 @@
+[submodule ".agents/skills/full-stack-quality"]
+	path = .agents/skills/full-stack-quality
+	url = https://github.com/lablnet/full-stack-quality-skill.git
