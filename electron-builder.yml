@@ -1,4 +1,4 @@
-appId: net.lablnet.MorphFinder
+appId: com.lablnet.MorphFinder
 productName: MorphFinder
 directories:
   output: release
@@ -26,6 +26,13 @@ mac:
   notarize: true
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  extraResources:
+    - from: native/macos/MorphNative.node
+      to: MorphNative.node
+mas:
+  category: public.app-category.utilities
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.plist
   extraResources:
     - from: native/macos/MorphNative.node
       to: MorphNative.node
