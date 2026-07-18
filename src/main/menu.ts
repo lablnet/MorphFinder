@@ -116,4 +116,22 @@ export function setupApplicationMenu(): void {
 
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
+
+  if (isMac && app.dock) {
+    const dockMenu = Menu.buildFromTemplate([
+      {
+        label: 'Go to Folder...',
+        click: () => {
+          const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+          if (win) {
+            if (win.isMinimized()) win.restore();
+            win.show();
+            win.focus();
+            win.webContents.send('command-palette:toggle');
+          }
+        },
+      },
+    ]);
+    app.dock.setMenu(dockMenu);
+  }
 }
