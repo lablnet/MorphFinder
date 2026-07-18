@@ -1,6 +1,6 @@
-import { extname, join } from 'node:path';
+import { basename, extname, join } from 'node:path';
 import { constants as fsConstants } from 'node:fs';
-import { access, mkdir, readdir, readFile, rename as fsRename, stat } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, rename as fsRename, rm, stat } from 'node:fs/promises';
 import { app, shell } from 'electron';
 import type { DirectoryListing, FileSystemNode } from '@shared/types/fileSystem';
 import type { FileContentResponse } from '@shared/types/fileViewer';
@@ -88,6 +88,33 @@ export function wellKnownDirectories(): {
 export async function trashPaths(paths: string[]): Promise<void> {
   for (const path of paths) {
     await shell.trashItem(path);
+  }
+}
+
+export async function deletePermanently(paths: string[]): Promise<void> {
+  for (const path of paths) {
+    await rm(path, { recursive: true, force: true });
+  }
+}
+
+export async function emptyTrash(): Promise<void> {
+  const trashPath = join(app.getPath('home'), '.Trash');
+  try {
+    const items = await readdir(trashPath);
+    for (const item of items) {
+      await rm(join(trashPath, item), { recursive: true, force: true });
+    }
+  } catch {
+    // Trash may be empty or unreadable
+  }
+}
+
+export async function restoreFromTrash(paths: string[]): Promise<void> {
+  const desktopPath = app.getPath('desktop');
+  for (const path of paths) {
+    const filename = basename(path);
+    const dest = join(desktopPath, filename);
+    await fsRename(path, dest);
   }
 }
 
