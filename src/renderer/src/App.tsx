@@ -16,8 +16,10 @@ import { DevPanel } from '@renderer/components/devpanel/DevPanel';
 import { DuplicateFinder } from '@renderer/components/duplicates/DuplicateFinder';
 import { FileTimeline } from '@renderer/components/filetimeline/FileTimeline';
 import { CommandPalette } from '@renderer/components/navigation/CommandPalette';
-import { useKeyboardShortcuts, useFileSystemController, useGitRadar, useProjectDetector } from '@renderer/hooks';
+import { useKeyboardShortcuts, useFileSystemController, useGitRadar, useProjectDetector, useOnboarding } from '@renderer/hooks';
+import { OnboardingModal } from '@renderer/components/onboarding/OnboardingModal';
 import { DevPanelStatusButton } from '@renderer/components/devpanel/components/DevPanelStatusButton';
+
 import { GitRadar } from '@renderer/components/gitradar/GitRadar';
 import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
 import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
@@ -31,6 +33,7 @@ import { cn } from '@lablnet/ui';
 
 export function App(): React.JSX.Element {
   useKeyboardShortcuts();
+  const onboarding = useOnboarding();
 
   const terminalOpen = useAppStore((state) => state.terminalOpen);
   const toggleTerminal = useAppStore((state) => state.toggleTerminal);
@@ -261,6 +264,7 @@ export function App(): React.JSX.Element {
         onOpenNode={fs.openNode}
         onCreateFolder={() => void createFolder()}
         onRefresh={fs.refresh}
+        onOpenOnboarding={onboarding.openOnboarding}
       />
       <GitDrawer
         isOpen={gitRadar.isOpen}
@@ -273,6 +277,10 @@ export function App(): React.JSX.Element {
       />
       <WorkspaceSnapshotsModal />
       <OperationProgressContainer />
+      <OnboardingModal
+        isOpen={onboarding.isOpen}
+        onClose={onboarding.closeOnboarding}
+      />
     </>
   );
 }

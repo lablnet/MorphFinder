@@ -20,13 +20,16 @@ interface UseCommandPaletteProps {
   onOpenNode: (node: FileSystemNode) => void;
   onCreateFolder?: () => void;
   onRefresh?: () => void;
+  onOpenOnboarding?: () => void;
 }
+
 
 export function useCommandPalette({
   currentNodes,
   onOpenNode,
   onCreateFolder,
   onRefresh,
+  onOpenOnboarding,
 }: UseCommandPaletteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -271,6 +274,17 @@ export function useCommandPalette({
         description: 'Prompt to create a new subfolder',
         icon: 'FolderPlus',
         action: onCreateFolder,
+      });
+    }
+
+    if (onOpenOnboarding) {
+      list.push({
+        id: 'act-welcome-tour',
+        category: 'Actions',
+        label: 'Show Welcome Onboarding Tour',
+        description: 'Re-open the interactive features overview modal',
+        icon: 'Sparkles',
+        action: onOpenOnboarding,
       });
     }
 
