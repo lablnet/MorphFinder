@@ -31,3 +31,13 @@ export interface NativeCapabilities {
   supportsThumbnails: boolean;
   supportsOpenWith: boolean;
 }
+
+export interface SystemLocation {
+  id: string;
+  name: string;
+  path: string;
+  iconType: string;
+  isRemovable: boolean;
+  isInternal: boolean;
+}
+

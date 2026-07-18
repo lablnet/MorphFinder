@@ -1,6 +1,6 @@
 import type { DirectoryListing, FileOperationRequest, FileSystemNode } from '../types/fileSystem';
 import type { FileContentResponse } from '../types/fileViewer';
-import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '../types/native';
+import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp, SystemLocation } from '../types/native';
 import type { CacheCleanRequest, CacheCleanResult, CacheScanResult } from '../types/cache';
 import type { SpaceAnalyzerResult } from '../types/spaceAnalyzer';
 import type { DevPanelInfo } from '../types/devPanel';
@@ -46,6 +46,7 @@ export interface IpcContract {
   'shell:showInFolder': { request: { path: string }; response: void };
   'shell:startDrag': { request: { paths: string[] }; response: void };
   'native:capabilities': { request: void; response: NativeCapabilities };
+  'native:getLocations': { request: void; response: SystemLocation[] };
   'native:metadata': { request: { path: string }; response: NativeMetadata };
   'native:setTags': { request: { path: string; tags: FinderTag[] }; response: void };
   'native:thumbnail': {
