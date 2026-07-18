@@ -1,5 +1,6 @@
 import { Badge, Card, CardContent, CardHeader, CardTitle } from "@lablnet/ui";
 import {
+  Archive,
   Braces,
   Clock3,
   Camera,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 
 const features = [
+  { icon: <Archive />, title: "Archive & Compress", text: "Compress files or folders to ZIP archives directly from the context menu, or unpack ZIP and TAR archives in place." },
   { icon: <Camera />, title: "Workspace Snapshots", text: "Freeze multi-tab sessions, folder setups, view modes, and shell themes into shareable .morphws files." },
   { icon: <MonitorCog />, title: "Tri-UI shell engine", text: "Switch live between Finder, Explorer, and Dolphin-style navigation while the same file core keeps state intact." },
   { icon: <Columns3 />, title: "Grid, list, and column views", text: "Move from virtualized icon grids to sortable detail tables and macOS-style Miller columns." },

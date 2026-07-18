@@ -21,6 +21,7 @@ MorphFinder achieves this through a `ShellDefinition` strategy that swaps visual
 - 🍏 **Native macOS Swift Module**: Optional native Swift API addon (via `node-swift`) supporting Finder tags, Spotlight metadata, QuickLook thumbnail generation, and "Open With" app enumeration.
 - 🗂️ **Tab Management**: Robust multi-tab support with middle-click closing, drag-and-drop reordering, and browser-style session restoration.
 - 📸 **Workspace Snapshots & Session Freeze**: Save multi-tab setups, open paths, view modes, and active shell theme into named snapshots; export and import `.morphws` files.
+- 📦 **File & Folder Compression / Extraction**: Right-click to compress single or multiple items to `.zip` archives or unpack `.zip`, `.tar`, and `.tgz` archives in place.
 - 🔍 **Multiple View Modes**:
   - **Grid View**: Virtualized icon grid for folders with large file counts.
   - **List View**: Sortable details table using `@lablnet/ui`.
