@@ -120,9 +120,9 @@ export function FileListTable({
         {header('modified', 'Modified')}
         <span className="px-3 py-2 text-center text-current/60 font-semibold select-none">Git</span>
       </div>
-      {size.width > 0 && size.height > rowHeight ? (
+      {size.width > 0 && size.height > headerHeight ? (
         <FixedSizeList
-          height={size.height - rowHeight}
+          height={size.height - headerHeight}
           itemCount={sortedNodes.length}
           itemData={{ nodes: sortedNodes, selectedPaths, density, onOpen, onSelectionChange, onContextMenu, onStartRename, renamingPath, renamingValue, renamingError, onRenameValueChange, onCommitRename, onCancelRename, dropDestinationPath, onMove, onExternalDrag, gitStatusMap }}
           itemSize={rowHeight}

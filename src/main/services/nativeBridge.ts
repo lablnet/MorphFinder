@@ -21,8 +21,8 @@ const thumbnailCache = new ThumbnailLruCache(256);
 function addonCandidates(): string[] {
   const nativeDirectory = process.platform === 'darwin' ? 'macos' : 'windows-linux';
   const developmentPath = join(process.cwd(), 'native', nativeDirectory, 'MorphNative.node');
-  if (!app.isPackaged) return [developmentPath];
-  return [join(process.resourcesPath, 'MorphNative.node'), developmentPath];
+  if (!app?.isPackaged) return [developmentPath];
+  return [join(process.resourcesPath ?? '', 'MorphNative.node'), developmentPath];
 }
 
 function loadAddon(): MorphNativeAddon | null {
