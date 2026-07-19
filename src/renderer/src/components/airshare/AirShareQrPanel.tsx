@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { Copy, Check, QrCode, ShieldCheck, Download, Clock, Zap, Smartphone, Globe } from 'lucide-react';
 import type { WebShareSession } from '@shared/types/webShare';
 
@@ -63,7 +64,7 @@ export const AirShareQrPanel: React.FC<AirShareQrPanelProps> = ({ session, copie
 
       <div
         className="w-48 h-48 bg-white p-2 rounded-xl shadow-sm flex items-center justify-center border border-neutral-200 dark:border-neutral-700"
-        dangerouslySetInnerHTML={{ __html: session.qrSvg }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(session.qrSvg, { USE_PROFILES: { svg: true } }) }}
       />
 
       <div className="w-full flex items-center gap-2 bg-shell-sidebar px-3 py-2 rounded-xl border border-shell-border">
