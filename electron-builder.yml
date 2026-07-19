@@ -18,9 +18,9 @@ mac:
   category: public.app-category.utilities
   target:
     - target: dmg
-      arch: [universal]
+      arch: [arm64]
     - target: zip
-      arch: [universal]
+      arch: [arm64]
   hardenedRuntime: true
   gatekeeperAssess: false
   notarize: true
@@ -43,7 +43,6 @@ win:
   extraResources:
     - from: native/windows-linux/MorphNative.node
       to: MorphNative.node
-  signingHashAlgorithms: [sha256]
   signAndEditExecutable: true
 nsis:
   oneClick: false

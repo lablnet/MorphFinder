@@ -15,4 +15,4 @@ playwright-report/
 .vite/
 *.tsbuildinfo
 coverage
-
+.private
