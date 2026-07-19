@@ -35,6 +35,22 @@ export function applyContentSecurityPolicy(): void {
 
 /** Blocks navigation away from the packaged app and forces external links out to the OS browser. */
 export function guardNavigation(webContents: WebContents): void {
+  webContents.on('before-input-event', (event, input) => {
+    // Disable DevTools keyboard shortcuts: F12, CmdOrCtrl+Shift+I, CmdOrCtrl+Shift+J, CmdOrCtrl+Shift+C, CmdOrCtrl+Option+I
+    const isDevToolsShortcut =
+      input.key === 'F12' ||
+      ((input.control || input.meta) &&
+        input.shift &&
+        ['I', 'i', 'J', 'j', 'C', 'c'].includes(input.key)) ||
+      ((input.control || input.meta) &&
+        input.alt &&
+        ['I', 'i'].includes(input.key));
+
+    if (isDevToolsShortcut) {
+      event.preventDefault();
+    }
+  });
+
   webContents.on('will-navigate', (event, url) => {
     const isAllowed = [...ALLOWED_NAVIGATION_ORIGINS].some((origin) => url.startsWith(origin));
     if (!isAllowed) event.preventDefault();
