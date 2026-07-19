@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useArchiveProgress } from '../../src/renderer/src/hooks/files/useArchiveProgress';
 import { useFileOperationProgress } from '../../src/renderer/src/hooks/files/useFileOperationProgress';
-import { ipc } from '../../src/renderer/src/services/ipc';
 
 let archiveCallback: (data: any) => void;
 let fsOpCallback: (data: any) => void;

@@ -18,7 +18,7 @@ const mockElectron = {
 
 // Override Node Module._load so require('electron') returns mockElectron
 const originalLoad = (Module as any)._load;
-(Module as any)._load = function (request: string, parent: any, isMain: boolean) {
+(Module as any)._load = function (request: string, _parent: any, _isMain: boolean) {
   if (request === 'electron') {
     return mockElectron;
   }

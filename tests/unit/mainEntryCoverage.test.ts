@@ -114,7 +114,7 @@ describe('Main process index.ts coverage', () => {
 
     // Test valid request
     const validReq = { url: `morph-file://host${encodeURIComponent(process.cwd())}/package.json` };
-    const res = await handler!(validReq);
+    void handler!(validReq);
 
     // Test activate event
     const activateHandler = mainState.appHandlers.get('activate');

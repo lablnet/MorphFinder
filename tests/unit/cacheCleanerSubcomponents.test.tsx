@@ -85,7 +85,7 @@ describe('Cache Cleaner Subcomponents Coverage', () => {
     fireEvent.click(screen.getByText('Yes, Proceed'));
     expect(setShowSecondConfirm).toHaveBeenCalledWith(true);
 
-    const { rerender } = render(
+    render(
       <ConfirmDialogs
         activeShell="finder"
         showFirstConfirm={false}
