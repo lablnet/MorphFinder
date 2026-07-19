@@ -18,6 +18,7 @@ export const DEV_PANEL_PATH = 'morph://dev-panel';
 export const SMART_COLLECTIONS_PATH = 'morph://smart-collections';
 export const DUPLICATE_FINDER_PATH = 'morph://duplicate-finder';
 export const FILE_TIMELINE_PATH = 'morph://file-timeline';
+export const AIRSHARE_PATH = 'morph://airshare';
 
 export function smartCollectionPath(id: string): string {
   return `${SMART_COLLECTIONS_PATH}/${id}`;

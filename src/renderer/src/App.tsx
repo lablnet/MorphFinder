@@ -9,12 +9,13 @@ import { ipc } from '@renderer/services/ipc';
 import { FileToolbar } from '@renderer/components/navigation/FileToolbar';
 import { NamePromptDialog } from '@renderer/components/ui/NamePromptDialog';
 import { Button } from '@renderer/components/ui/Button';
-import { CACHE_CLEANER_PATH, DEV_PANEL_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
+import { AIRSHARE_PATH, CACHE_CLEANER_PATH, DEV_PANEL_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH, SPACE_ANALYZER_PATH } from '@shared/constants';
 import { CacheCleaner } from '@renderer/components/cachecleaner/CacheCleaner';
 import { SpaceAnalyzer } from '@renderer/components/spaceanalyzer';
 import { DevPanel } from '@renderer/components/devpanel/DevPanel';
 import { DuplicateFinder } from '@renderer/components/duplicates/DuplicateFinder';
 import { FileTimeline } from '@renderer/components/filetimeline/FileTimeline';
+import { AirShareHub } from '@renderer/components/airshare/AirShareHub';
 import { CommandPalette } from '@renderer/components/navigation/CommandPalette';
 import { useKeyboardShortcuts, useFileSystemController, useGitRadar, useProjectDetector, useOnboarding } from '@renderer/hooks';
 import { OnboardingModal } from '@renderer/components/onboarding/OnboardingModal';
@@ -56,7 +57,7 @@ export function App(): React.JSX.Element {
     renameDraft,
     namePrompt,
     contextMenu,
-    webShareNode,
+    webShareTargets,
     statusText,
     onNamePromptChange,
     closeNamePrompt,
@@ -158,6 +159,8 @@ export function App(): React.JSX.Element {
                     Open Home
                   </Button>
                 </div>
+              ) : tabs.activePath === AIRSHARE_PATH ? (
+                <AirShareHub />
               ) : tabs.activePath === CACHE_CLEANER_PATH ? (
                 <CacheCleaner />
               ) : tabs.activePath === DEV_PANEL_PATH ? (
@@ -285,8 +288,8 @@ export function App(): React.JSX.Element {
         onClose={onboarding.closeOnboarding}
       />
       <WebShareModal
-        isOpen={webShareNode !== null}
-        targetPath={webShareNode?.path}
+        isOpen={Boolean(webShareTargets && webShareTargets.length > 0)}
+        targetPath={webShareTargets}
         onClose={closeWebShare}
       />
     </>

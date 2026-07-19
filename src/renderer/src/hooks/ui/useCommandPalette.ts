@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH } from '@shared/constants';
+import { AIRSHARE_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH } from '@shared/constants';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { UIShell, UIThemeMode } from '@shared/types/layout';
@@ -187,6 +187,14 @@ export function useCommandPalette({
       description: '/',
       icon: 'HardDrive',
       action: () => openTab('/'),
+    });
+    list.push({
+      id: 'nav-airshare',
+      category: 'Navigation',
+      label: 'Open Morph AirShare (File Exchange Hub)',
+      description: AIRSHARE_PATH,
+      icon: 'Wifi',
+      action: () => openTab(AIRSHARE_PATH),
     });
     list.push({
       id: 'nav-cache-cleaner',

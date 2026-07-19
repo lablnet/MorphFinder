@@ -7,18 +7,20 @@ import { webShareService, getPrimaryLanIp } from '../../src/main/services/webSha
 import { generateCompliantQrSvgAsync } from '../../src/main/services/qrGenerator';
 
 describe('webShareService & qrGenerator Unit Tests', () => {
-  let tempFilePath: string;
+  let tempFilePath1: string;
+  let tempFilePath2: string;
 
   beforeEach(async () => {
-    tempFilePath = path.join(os.tmpdir(), `webshare-test-${Date.now()}.txt`);
-    await fs.promises.writeFile(tempFilePath, 'Hello MorphFinder Local WebShare Unit Test!');
+    tempFilePath1 = path.join(os.tmpdir(), `webshare-test1-${Date.now()}.txt`);
+    tempFilePath2 = path.join(os.tmpdir(), `webshare-test2-${Date.now()}.txt`);
+    await fs.promises.writeFile(tempFilePath1, 'Hello File 1!');
+    await fs.promises.writeFile(tempFilePath2, 'Hello File 2!');
   });
 
   afterEach(async () => {
     await webShareService.stopShare();
-    if (fs.existsSync(tempFilePath)) {
-      await fs.promises.unlink(tempFilePath);
-    }
+    if (fs.existsSync(tempFilePath1)) await fs.promises.unlink(tempFilePath1);
+    if (fs.existsSync(tempFilePath2)) await fs.promises.unlink(tempFilePath2);
   });
 
   it('generates spec compliant SVG string for QR Code', async () => {
@@ -35,19 +37,19 @@ describe('webShareService & qrGenerator Unit Tests', () => {
     expect(ip.length).toBeGreaterThan(0);
   });
 
-  it('starts sharing a file and responds to HTTP requests', async () => {
-    const session = await webShareService.startShare(tempFilePath);
+  it('starts sharing a file and responds to HTTP raw file requests', async () => {
+    const session = await webShareService.startShare(tempFilePath1);
     expect(session.id).toBeDefined();
-    expect(session.fileName).toBe(path.basename(tempFilePath));
+    expect(session.fileName).toBe(path.basename(tempFilePath1));
     expect(session.shareUrl).toContain(session.lanIp);
 
     const activeSession = webShareService.getActiveShare();
     expect(activeSession).not.toBeNull();
     expect(activeSession?.id).toBe(session.id);
 
-    // Make an HTTP GET request to the shareUrl
+    const rawUrl = `${session.shareUrl}raw/${encodeURIComponent(session.fileName)}`;
     const resText = await new Promise<string>((resolve, reject) => {
-      http.get(session.shareUrl, (res) => {
+      http.get(rawUrl, (res) => {
         let data = '';
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => resolve(data));
@@ -55,10 +57,28 @@ describe('webShareService & qrGenerator Unit Tests', () => {
       });
     });
 
-    expect(resText).toBe('Hello MorphFinder Local WebShare Unit Test!');
+    expect(resText).toBe('Hello File 1!');
 
-    // Stop share session
     await webShareService.stopShare(session.id);
     expect(webShareService.getActiveShare()).toBeNull();
+  });
+
+  it('starts sharing multiple selected files in one LAN share session', async () => {
+    const session = await webShareService.startShare([tempFilePath1, tempFilePath2]);
+    expect(session.id).toBeDefined();
+    expect(session.fileName).toBe('2 items shared');
+    expect(session.targetPaths).toHaveLength(2);
+
+    const rawUrl1 = `${session.shareUrl}raw/${encodeURIComponent(path.basename(tempFilePath1))}`;
+    const resText1 = await new Promise<string>((resolve, reject) => {
+      http.get(rawUrl1, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => resolve(data));
+        res.on('error', reject);
+      });
+    });
+
+    expect(resText1).toBe('Hello File 1!');
   });
 });

@@ -11,7 +11,7 @@ import type { SmartCollectionRequest, SmartCollectionResult } from '../types/sma
 import type { DuplicateGroup, DuplicateScanRequest, DuplicateScanResult } from '../types/duplicates';
 import type { FileTimelineScanRequest, FileTimelineScanResult } from '../types/fileTimeline';
 import type { WorkspaceSnapshot } from '../types/workspaceSnapshots';
-import type { WebShareSession } from '../types/webShare';
+import type { WebShareSession, ReceivedFile } from '../types/webShare';
 
 
 /**
@@ -185,7 +185,7 @@ export interface IpcContract {
     response: void;
   };
   'webshare:start': {
-    request: { path: string };
+    request: { path?: string; paths?: string[] };
     response: WebShareSession;
   };
   'webshare:stop': {
@@ -199,6 +199,22 @@ export interface IpcContract {
   'webshare:generateQr': {
     request: { text: string };
     response: { qrSvg: string };
+  };
+  'airshare:setFolder': {
+    request: { path?: string; paths?: string[] };
+    response: WebShareSession;
+  };
+  'airshare:toggleInbound': {
+    request: { allowInbound: boolean };
+    response: WebShareSession | null;
+  };
+  'airshare:getReceived': {
+    request: void;
+    response: ReceivedFile[];
+  };
+  'airshare:openReceivedFolder': {
+    request: void;
+    response: void;
   };
 }
 
