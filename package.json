@@ -33,7 +33,7 @@
     "@parcel/watcher": "^2.5.1",
     "electron-updater": "^6.8.9",
     "lucide-react": "^0.475.0",
-    "monaco-editor": "^0.55.1",
+    "monaco-editor": "^0.56.0",
     "node-pty": "^1.1.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -56,9 +56,9 @@
     "@typescript-eslint/parser": "^8.24.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
-    "electron": "^33.4.11",
-    "electron-builder": "^25.1.8",
-    "electron-vite": "^2.3.0",
+    "electron": "^39.8.10",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^5.0.0",
     "eslint": "^9.20.1",
     "eslint-plugin-react-hooks": "^5.1.0",
     "node-swift": "1.5.1",
@@ -69,8 +69,15 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.1",
     "typescript": "^5.7.3",
-    "vite": "^5.4.14",
+    "vite": "^6.4.3",
     "vitest": "^3.0.5"
+  },
+  "overrides": {
+    "tar": "^7.5.19",
+    "vite": "^6.4.3",
+    "esbuild": ">=0.25.0",
+    "dompurify": "^3.4.12",
+    "electron": "^39.8.10"
   }
 }
 
