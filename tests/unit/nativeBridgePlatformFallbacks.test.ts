@@ -25,10 +25,13 @@ vi.mock('node:child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:child_process')>();
   return {
     ...actual,
-    execFileSync: vi.fn().mockImplementation((cmd) => {
+    // Override AFTER spread so our stub wins over the real execFileSync
+    execFileSync: vi.fn().mockImplementation((cmd: string) => {
       if (cmd === 'powershell.exe') return '{"kind":"Document","comment":"Test"}';
       if (cmd === 'xdg-mime') return 'text/plain';
-      return null;
+      if (cmd === 'file') return 'text/plain';
+      if (cmd === 'gio') return '';
+      return '';
     }),
   };
 });
@@ -39,8 +42,8 @@ describe('nativeBridge Platform Fallbacks Unit Tests', () => {
   });
 
   it('tests win32 capabilities and metadata', () => {
-    const originalPlatform = process.platform;
-    Object.defineProperty(process, 'platform', { value: 'win32' });
+    const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
 
     const caps = nativeCapabilities();
     expect(caps.supportsThumbnails).toBe(true);
@@ -51,8 +54,8 @@ describe('nativeBridge Platform Fallbacks Unit Tests', () => {
     const apps = getOpenWithApps(process.cwd());
     expect(Array.isArray(apps)).toBe(true);
 
-    Object.defineProperty(process, 'platform', { value: originalPlatform });
-  });
+    if (originalPlatform) Object.defineProperty(process, 'platform', originalPlatform);
+  }, 15000);
 
   it('tests linux capabilities and metadata', () => {
     const originalPlatform = process.platform;
