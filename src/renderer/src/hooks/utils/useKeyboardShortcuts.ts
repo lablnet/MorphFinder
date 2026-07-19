@@ -67,5 +67,5 @@ export function useKeyboardShortcuts(): void {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tabs, cycleShell, toggleHiddenFiles]);
+  }, [tabs, cycleShell, toggleHiddenFiles, toggleTerminal]);
 }

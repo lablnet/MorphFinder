@@ -3,12 +3,17 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { DirectoryAnnotation, DirectoryAnnotationTag, DirectoryAnnotationUpdate } from '@shared/types/directoryAnnotations';
 
+const CURRENT_VERSION = 1;
+
 interface AnnotationDatabase {
-  version: 1;
+  version: number;
   annotations: Record<string, DirectoryAnnotation>;
 }
 
-const EMPTY_DATABASE: AnnotationDatabase = { version: 1, annotations: {} };
+const EMPTY_DATABASE: AnnotationDatabase = { version: CURRENT_VERSION, annotations: {} };
+
+let cachedDatabase: AnnotationDatabase | null = null;
+let writeQueue: Promise<void> = Promise.resolve();
 
 function databasePath(): string {
   return path.join(app.getPath('userData'), 'directory-annotations.json');
@@ -34,26 +39,54 @@ function cleanTag(tag: DirectoryAnnotationTag): DirectoryAnnotationTag | null {
   };
 }
 
+function migrateDatabase(parsed: unknown): AnnotationDatabase {
+  if (typeof parsed !== 'object' || parsed === null) return { ...EMPTY_DATABASE };
+  const db = parsed as Partial<AnnotationDatabase>;
+  const version = typeof db.version === 'number' ? db.version : 0;
+
+  let annotations: Record<string, DirectoryAnnotation> = {};
+  if (typeof db.annotations === 'object' && db.annotations !== null) {
+    annotations = db.annotations as Record<string, DirectoryAnnotation>;
+  }
+
+  if (version < 1) {
+    // Migration logic for pre-v1 databases if applicable
+  }
+
+  return {
+    version: CURRENT_VERSION,
+    annotations,
+  };
+}
+
 async function readDatabase(): Promise<AnnotationDatabase> {
+  if (cachedDatabase !== null) {
+    return cachedDatabase;
+  }
   try {
     const raw = await readFile(databasePath(), 'utf8');
-    const parsed = JSON.parse(raw) as Partial<AnnotationDatabase>;
-    if (parsed.version !== 1 || typeof parsed.annotations !== 'object' || parsed.annotations === null) {
-      return EMPTY_DATABASE;
-    }
-    return { version: 1, annotations: parsed.annotations as Record<string, DirectoryAnnotation> };
+    const parsed = JSON.parse(raw);
+    cachedDatabase = migrateDatabase(parsed);
+    return cachedDatabase;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return EMPTY_DATABASE;
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      cachedDatabase = { ...EMPTY_DATABASE };
+      return cachedDatabase;
+    }
     throw error;
   }
 }
 
 async function writeDatabase(database: AnnotationDatabase): Promise<void> {
-  const target = databasePath();
-  await mkdir(path.dirname(target), { recursive: true });
-  const temporary = `${target}.tmp`;
-  await writeFile(temporary, `${JSON.stringify(database, null, 2)}\n`, 'utf8');
-  await rename(temporary, target);
+  cachedDatabase = database;
+  writeQueue = writeQueue.then(async () => {
+    const target = databasePath();
+    await mkdir(path.dirname(target), { recursive: true });
+    const temporary = `${target}.tmp`;
+    await writeFile(temporary, `${JSON.stringify(database, null, 2)}\n`, 'utf8');
+    await rename(temporary, target);
+  });
+  await writeQueue;
 }
 
 export async function getDirectoryAnnotation(targetPath: string): Promise<DirectoryAnnotation> {

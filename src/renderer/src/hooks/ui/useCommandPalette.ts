@@ -384,6 +384,7 @@ export function useCommandPalette({
     onOpenNode,
     onCreateFolder,
     onRefresh,
+    onOpenOnboarding,
     globalResults,
     globalSearchMeta,
     searchQuery,

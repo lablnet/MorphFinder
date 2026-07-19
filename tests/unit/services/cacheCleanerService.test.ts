@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { cleanCaches } from '../../../src/main/services/cacheCleanerService';
 
 describe('cacheCleanerService', () => {

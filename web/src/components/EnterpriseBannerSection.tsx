@@ -1,5 +1,5 @@
 import { Badge, Card, CardContent } from "@lablnet/ui";
-import { Crown, Sparkles, ShieldCheck, Zap, Layers, Compass } from "lucide-react";
+import { Crown, Sparkles, ShieldCheck, Zap, Compass } from "lucide-react";
 
 export function EnterpriseBannerSection() {
   return (

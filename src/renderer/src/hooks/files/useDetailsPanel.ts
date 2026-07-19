@@ -31,7 +31,7 @@ export function useDetailsPanel(node: FileSystemNode | null) {
 
   const save = useCallback(() => {
     void annotationState.save({ tags, notes });
-  }, [annotationState.save, tags, notes]);
+  }, [annotationState, tags, notes]);
 
   const updatedText = annotationState.annotation.updatedAt > 0
     ? new Date(annotationState.annotation.updatedAt).toLocaleString()

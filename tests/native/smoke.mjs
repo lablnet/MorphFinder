@@ -6,7 +6,7 @@ const require = createRequire(import.meta.url);
 const addon = require('../../native/macos/MorphNative.node');
 const fixture = resolve('package.json');
 
-assert.deepEqual(Object.keys(addon).sort(), ['getMetadata', 'getOpenWithApps', 'getThumbnail', 'setTags']);
+assert.deepEqual(Object.keys(addon).sort(), ['getLocations', 'getMetadata', 'getOpenWithApps', 'getThumbnail', 'setTags']);
 
 const metadata = JSON.parse(addon.getMetadata(fixture));
 assert.ok(Array.isArray(metadata.tags));

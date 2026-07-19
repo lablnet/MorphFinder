@@ -42,4 +42,20 @@ describe('directoryAnnotationService', () => {
     expect(fetched.notes).toBe('Important folder notes');
     expect(fetched.tags).toEqual([{ id: 'work-red', label: 'work', color: '#ff0000' }]);
   });
+
+  it('handles concurrent annotation writes without data corruption', async () => {
+    const dirA = join(testDir, 'folderA');
+    const dirB = join(testDir, 'folderB');
+
+    await Promise.all([
+      setDirectoryAnnotation({ path: dirA, notes: 'Notes A', tags: [] }),
+      setDirectoryAnnotation({ path: dirB, notes: 'Notes B', tags: [] }),
+    ]);
+
+    const annA = await getDirectoryAnnotation(dirA);
+    const annB = await getDirectoryAnnotation(dirB);
+
+    expect(annA.notes).toBe('Notes A');
+    expect(annB.notes).toBe('Notes B');
+  });
 });
