@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Check, QrCode, ShieldCheck, Download, Clock } from 'lucide-react';
+import { Copy, Check, QrCode, ShieldCheck, Download, Clock, Zap, Smartphone, Globe } from 'lucide-react';
 import type { WebShareSession } from '@shared/types/webShare';
 
 interface AirShareQrPanelProps {
@@ -9,7 +9,48 @@ interface AirShareQrPanelProps {
 }
 
 export const AirShareQrPanel: React.FC<AirShareQrPanelProps> = ({ session, copied, onCopy }) => {
-  if (!session) return null;
+  if (!session) {
+    return (
+      <div className="flex flex-col gap-4 p-5 bg-shell-surface border border-shell-border rounded-2xl shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-semibold text-current/70 uppercase tracking-wider">
+          <Zap className="w-4 h-4 text-amber-500" />
+          <span>How AirShare Works</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3.5 rounded-xl bg-shell-sidebar border border-shell-border flex flex-col items-start gap-2">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+              <QrCode className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-semibold text-current">1. Choose Folder</span>
+            <span className="text-[11px] text-current/60 leading-relaxed">
+              Select any local folder to start a temporary local web server.
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-shell-sidebar border border-shell-border flex flex-col items-start gap-2">
+            <div className="p-2 rounded-lg bg-sky-500/10 text-sky-500 border border-sky-500/20">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-semibold text-current">2. Scan QR Code</span>
+            <span className="text-[11px] text-current/60 leading-relaxed">
+              Scan from iPhone, Android, or open URL on secondary PC on LAN.
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-shell-sidebar border border-shell-border flex flex-col items-start gap-2">
+            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 border border-purple-500/20">
+              <Globe className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-semibold text-current">3. Send & Receive</span>
+            <span className="text-[11px] text-current/60 leading-relaxed">
+              Browse shared files or drop inbound files directly to your desktop.
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const remainingMins = Math.max(0, Math.floor((session.expiresAt - Date.now()) / (1000 * 60)));
 
