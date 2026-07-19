@@ -1,4 +1,4 @@
-appId: com.lablnet.MorphFinder
+appId: com.lablnet.morphfinder
 productName: MorphFinder
 directories:
   output: release
@@ -31,6 +31,7 @@ mac:
       to: MorphNative.node
 mas:
   category: public.app-category.utilities
+  provisioningProfile: build/MorphFinder_Mac_App_Store_Distribution.provisionprofile
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.plist
   extraResources:

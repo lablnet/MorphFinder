@@ -16,3 +16,4 @@ playwright-report/
 *.tsbuildinfo
 coverage
 .private
+/build/MorphFinder_Mac_App_Store_Distribution.provisionprofile
