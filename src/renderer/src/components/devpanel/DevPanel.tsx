@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Code2, FolderOpen } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { useDevPanel } from '../../hooks/files/useDevPanel';
 import { useDevPanelScanPath } from '@renderer/hooks/files/useDevPanelScanPath';
+import { FolderPickerDialog } from '@renderer/components/folderpicker/FolderPickerDialog';
 
 // Sub-components
 import { DevPanelHeader } from './components/DevPanelHeader';
@@ -15,6 +17,7 @@ import { TaskDashboard } from './components/tasks/TaskDashboard';
 
 export function DevPanel(): React.JSX.Element {
   const { scanPath, isPickingFolder, pickFolder } = useDevPanelScanPath();
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
   const {
     info,
     loading,
@@ -48,7 +51,7 @@ export function DevPanel(): React.JSX.Element {
         </div>
         <button
           type="button"
-          onClick={() => void pickFolder()}
+          onClick={() => setIsFolderPickerOpen(true)}
           disabled={isPickingFolder || loading}
           className={cn(
             'flex items-center gap-1.5 rounded-shell px-2.5 py-1.5 text-xs border border-shell-border',
@@ -160,6 +163,17 @@ export function DevPanel(): React.JSX.Element {
           )}
         </>
       )}
+      {isFolderPickerOpen ? (
+        <FolderPickerDialog
+          title="Choose Project Folder"
+          initialPath={scanPath}
+          onClose={() => setIsFolderPickerOpen(false)}
+          onChoose={(path) => {
+            setIsFolderPickerOpen(false);
+            void pickFolder(path);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

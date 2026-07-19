@@ -1,4 +1,5 @@
-import { describe, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { dialog } from 'electron';
 import { createFsHandlers } from '../../src/main/ipc/fs.handlers';
 import { createShellHandlers } from '../../src/main/ipc/shell.handlers';
 import { createNativeHandlers } from '../../src/main/ipc/native.handlers';
@@ -65,6 +66,7 @@ vi.mock('electron', async (importOriginal) => {
       getAppPath: () => '/app',
       getPath: () => '/home',
       name: 'MorphFinder',
+      startAccessingSecurityScopedResource: vi.fn(() => vi.fn()),
     },
     shell: {
       openPath: vi.fn().mockResolvedValue(''),
@@ -72,7 +74,7 @@ vi.mock('electron', async (importOriginal) => {
       trashItem: vi.fn().mockResolvedValue(undefined),
     },
     dialog: {
-      showOpenDialog: vi.fn().mockResolvedValue({ canceled: false, filePaths: ['/tmp/selected'] }),
+      showOpenDialog: vi.fn().mockResolvedValue({ canceled: false, filePaths: ['/tmp/selected'], bookmarks: ['bookmark'] }),
       showSaveDialog: vi.fn().mockResolvedValue({ canceled: false, filePath: '/tmp/saved.txt' }),
     },
     BrowserWindow: {
@@ -102,6 +104,24 @@ describe('All Main IPC Handlers Coverage', () => {
     await handlers['shell:open']({ path: '/tmp/file.txt' });
     await handlers['shell:showInFolder']({ path: '/tmp/file.txt' });
     await handlers['shell:selectFolder']({ defaultPath: '/tmp' });
+    expect(dialog.showOpenDialog).toHaveBeenCalledWith(
+      mockWin,
+      expect.objectContaining({
+        buttonLabel: 'Choose',
+        defaultPath: '/tmp',
+        message: 'Choose this folder for MorphFinder',
+        properties: ['openDirectory', 'dontAddToRecent'],
+      }),
+    );
+  });
+
+  it('omits invalid folder picker defaults', async () => {
+    const handlers = createShellHandlers(mockWin);
+    await handlers['shell:selectFolder']({ defaultPath: 'morph://duplicates' });
+    expect(dialog.showOpenDialog).toHaveBeenCalledWith(
+      mockWin,
+      expect.not.objectContaining({ defaultPath: expect.any(String) }),
+    );
   });
 
   it('exercises native handlers', async () => {

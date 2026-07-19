@@ -60,7 +60,7 @@ app.whenReady().then(() => {
 
 
   // Set macOS Dock Icon and About Panel in dev/runtime
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' && app.dock !== undefined) {
     const iconPath = join(app.getAppPath(), 'build/icon.png');
     if (existsSync(iconPath)) {
       app.dock.setIcon(nativeImage.createFromPath(iconPath));
