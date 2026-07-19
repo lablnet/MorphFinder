@@ -1,22 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { access, cp, rename } from 'node:fs/promises';
 import { runFileOperation } from '@main/services/fileOperationService';
 import { trashPaths } from '@main/services/fileSystemService';
-
-vi.mock('node:fs/promises', () => ({
-  access: vi.fn().mockRejectedValue(new Error('not found')),
-  cp: vi.fn().mockResolvedValue(undefined),
-  rename: vi.fn().mockResolvedValue(undefined),
-}));
 
 vi.mock('@main/services/fileSystemService', () => ({
   trashPaths: vi.fn().mockResolvedValue(undefined),
 }));
 
-const accessMock = vi.mocked(access);
-const cpMock = vi.mocked(cp);
-const renameMock = vi.mocked(rename);
 const trashPathsMock = vi.mocked(trashPaths);
+
+const { accessMock, cpMock, renameMock } = vi.hoisted(() => ({
+  accessMock: vi.fn().mockRejectedValue(new Error('not found')),
+  cpMock: vi.fn().mockResolvedValue(undefined),
+  renameMock: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      access: accessMock,
+      cp: cpMock,
+      rename: renameMock,
+    },
+    access: accessMock,
+    cp: cpMock,
+    rename: renameMock,
+  };
+});
 
 function webContents() {
   return {

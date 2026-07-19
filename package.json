@@ -48,6 +48,8 @@
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@playwright/test": "^1.61.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.13.4",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -62,6 +64,7 @@
     "electron-vite": "^5.0.0",
     "eslint": "^9.20.1",
     "eslint-plugin-react-hooks": "^5.1.0",
+    "jsdom": "^29.1.1",
     "node-swift": "1.5.1",
     "png2icons": "^2.0.1",
     "postcss": "^8.5.2",
