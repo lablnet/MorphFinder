@@ -15,6 +15,7 @@ import {
   RotateCcw,
   FileArchive,
   Archive,
+  Wifi,
 } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { Button } from '../ui/Button';
@@ -42,6 +43,7 @@ export type FileContextAction =
   | 'show-in-folder'
   | 'compress'
   | 'extract'
+  | 'webshare'
   | 'refresh';
 
 export interface FileContextMenuState {
@@ -157,6 +159,7 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
       }
     }
 
+    targetActions.push({ action: 'webshare', label: 'Share via Local Network', Icon: Wifi });
     targetActions.push({ action: 'show-in-folder', label: 'Show in Folder', Icon: ExternalLink });
 
     actions = state.hasTarget ? [...targetActions, ...BACKGROUND_ACTIONS] : BACKGROUND_ACTIONS;

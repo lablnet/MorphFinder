@@ -11,6 +11,7 @@ import type { SmartCollectionRequest, SmartCollectionResult } from '../types/sma
 import type { DuplicateGroup, DuplicateScanRequest, DuplicateScanResult } from '../types/duplicates';
 import type { FileTimelineScanRequest, FileTimelineScanResult } from '../types/fileTimeline';
 import type { WorkspaceSnapshot } from '../types/workspaceSnapshots';
+import type { WebShareSession } from '../types/webShare';
 
 
 /**
@@ -183,6 +184,22 @@ export interface IpcContract {
     request: { id: string };
     response: void;
   };
+  'webshare:start': {
+    request: { path: string };
+    response: WebShareSession;
+  };
+  'webshare:stop': {
+    request: { sessionId?: string };
+    response: void;
+  };
+  'webshare:getActive': {
+    request: void;
+    response: WebShareSession | null;
+  };
+  'webshare:generateQr': {
+    request: { text: string };
+    response: { qrSvg: string };
+  };
 }
 
 export type IpcChannel = keyof IpcContract;
@@ -235,6 +252,7 @@ export interface IpcEvents {
     id: string;
     exitCode: number;
   };
+  'webshare:updated': WebShareSession | null;
 }
 
 export type IpcEventChannel = keyof IpcEvents;

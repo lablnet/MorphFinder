@@ -26,6 +26,7 @@ import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
 import { DetailsPanel } from '@renderer/components/files/DetailsPanel';
 import { WorkspaceSnapshotsModal } from '@renderer/components/snapshots/WorkspaceSnapshotsModal';
 import { OperationProgressContainer } from '@renderer/components/files/OperationProgressContainer';
+import { WebShareModal } from '@renderer/components/webshare/WebShareModal';
 import { useAppStore } from '@renderer/store';
 import { cn } from '@lablnet/ui';
 
@@ -55,6 +56,7 @@ export function App(): React.JSX.Element {
     renameDraft,
     namePrompt,
     contextMenu,
+    webShareNode,
     statusText,
     onNamePromptChange,
     closeNamePrompt,
@@ -69,6 +71,7 @@ export function App(): React.JSX.Element {
     setActiveTabViewMode,
     onRenameValueChange,
     closeContextMenu,
+    closeWebShare,
   } = useFileSystemController();
 
   const filteredNodes = useMemo(() => {
@@ -280,6 +283,11 @@ export function App(): React.JSX.Element {
       <OnboardingModal
         isOpen={onboarding.isOpen}
         onClose={onboarding.closeOnboarding}
+      />
+      <WebShareModal
+        isOpen={webShareNode !== null}
+        targetPath={webShareNode?.path}
+        onClose={closeWebShare}
       />
     </>
   );

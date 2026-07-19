@@ -49,6 +49,7 @@ export function useFileSystemController() {
   const [annotationNode, setAnnotationNode] = useState<FileSystemNode | null>(null);
   const [renameDraft, setRenameDraft] = useState<RenameDraft>(null);
   const [namePrompt, setNamePrompt] = useState<AppNamePromptState | null>(null);
+  const [webShareNode, setWebShareNode] = useState<FileSystemNode | null>(null);
 
   const setAnnotations = useAppStore((state) => state.setAnnotations);
   useEffect(() => {
@@ -249,6 +250,7 @@ export function useFileSystemController() {
       void operations.extract(primaryNode.path).then(fs.refresh);
     }
     if (action === 'annotate' && primaryNode !== null) setAnnotationNode(primaryNode);
+    if (action === 'webshare' && primaryNode !== null) setWebShareNode(primaryNode);
     if (action === 'new-folder') void createFolder();
     if (action === 'show-in-folder' && primaryNode !== null) void ipc.invoke('shell:showInFolder', { path: primaryNode.path });
     if (action === 'refresh') fs.refresh();
@@ -329,6 +331,7 @@ export function useFileSystemController() {
     namePrompt,
     contextMenu,
     annotationNode,
+    webShareNode,
     statusText,
     onNamePromptChange,
     closeNamePrompt,
@@ -344,5 +347,6 @@ export function useFileSystemController() {
     onRenameValueChange,
     closeContextMenu,
     closeAnnotator: () => setAnnotationNode(null),
+    closeWebShare: () => setWebShareNode(null),
   };
 }
