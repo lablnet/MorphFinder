@@ -14,7 +14,11 @@ export interface TabStripProps {
 
 export function TabStrip({ tabs, activeTabId, onActivate, onClose, onNew, onReorder }: TabStripProps): React.JSX.Element {
   return (
-    <div className="flex h-full w-full items-center gap-1 px-2" role="tablist">
+    <div
+      className="flex h-full w-full items-center gap-1 px-2 app-region-no-drag"
+      style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      role="tablist"
+    >
       {tabs.map((tab, index) => (
         <div
           key={tab.id}
