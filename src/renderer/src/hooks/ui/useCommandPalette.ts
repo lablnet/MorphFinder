@@ -79,11 +79,12 @@ export function useCommandPalette({
     setIsOpen(false);
   }, []);
 
-  // Keyboard shortcut listener to toggle: Cmd+K (Mac) or Ctrl+K (Others)
+  // Keyboard shortcut listener to toggle: Cmd+K / Cmd+Shift+G (Mac) or Ctrl+K / Ctrl+Shift+G (Others)
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
       const isMod = event.metaKey || event.ctrlKey;
-      if (isMod && event.key.toLowerCase() === 'k') {
+      const key = event.key.toLowerCase();
+      if ((isMod && key === 'k') || (isMod && event.shiftKey && key === 'g')) {
         event.preventDefault();
         toggleOpen();
       }

@@ -24,10 +24,21 @@ export function setupApplicationMenu(): void {
           },
         ]
       : []),
-    // { role: 'fileMenu' }
     {
       label: 'File',
-      submenu: [isMac ? { role: 'close' as const } : { role: 'quit' as const }],
+      submenu: [
+        {
+          label: 'Go to Folder...',
+          accelerator: 'CmdOrCtrl+Shift+G',
+          click: (_menuItem, browserWindow) => {
+            if (browserWindow && browserWindow instanceof BrowserWindow) {
+              browserWindow.webContents.send('command-palette:toggle');
+            }
+          },
+        },
+        { type: 'separator' as const },
+        isMac ? { role: 'close' as const } : { role: 'quit' as const },
+      ],
     },
     // { role: 'editMenu' }
     {
