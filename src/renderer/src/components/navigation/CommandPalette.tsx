@@ -57,6 +57,7 @@ interface CommandPaletteProps {
   onOpenNode: (node: FileSystemNode) => void;
   onCreateFolder?: () => void;
   onRefresh?: () => void;
+  onOpenOnboarding?: () => void;
 }
 
 export function CommandPalette(props: CommandPaletteProps): React.JSX.Element | null {

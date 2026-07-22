@@ -14,6 +14,8 @@ import {
   PanelRight,
   ScanSearch,
   ShieldCheck,
+  Sparkles,
+  Crown,
   Tags,
   TerminalSquare,
   Trash2,

@@ -16,6 +16,8 @@ MorphFinder achieves this through a `ShellDefinition` strategy that swaps visual
 
 ## Features
 
+- ✨ **Interactive Welcome Onboarding & Tour**: First-time launch wizard offering live shell selection, key accelerator tutorials, and feature highlights (accessible anytime via Command Palette).
+- 👑 **100% Unlocked Enterprise Suite**: Free, subscription-free access to enterprise-grade disk storage analytics, byte-hash duplicate cleaning, time-machine file history, and dev control suites.
 - 🎭 **Tri-UI Shell Engine**: Switch dynamically between Finder, Explorer, and Dolphin skins.
 - ⚡ **Native Performance**: Main-process file system operations using `@parcel/watcher` for cross-platform file monitoring.
 - 🍏 **Native macOS Swift Module**: Optional native Swift API addon (via `node-swift`) supporting Finder tags, Spotlight metadata, QuickLook thumbnail generation, and "Open With" app enumeration.

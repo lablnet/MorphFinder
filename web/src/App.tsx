@@ -1,3 +1,4 @@
+import { EnterpriseBannerSection } from "./components/EnterpriseBannerSection";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { HeroSection } from "./components/HeroSection";
@@ -15,6 +16,7 @@ export function App() {
       <main>
         <HeroSection />
         <ProofSection />
+        <EnterpriseBannerSection />
         <ProductSection />
         <ProductTourSection />
         <WorkflowSection />
