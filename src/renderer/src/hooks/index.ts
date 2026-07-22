@@ -31,3 +31,5 @@ export * from './utils/useKeyboardShortcuts';
 
 export * from './spaceanalyzer/useSpaceAnalyzer';
 export * from './snapshots/useWorkspaceSnapshots';
+export * from './files/useArchiveProgress';
+export * from './files/useFileOperationProgress';

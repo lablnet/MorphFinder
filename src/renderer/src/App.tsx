@@ -23,7 +23,7 @@ import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
 import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
 import { DetailsPanel } from '@renderer/components/files/DetailsPanel';
 import { WorkspaceSnapshotsModal } from '@renderer/components/snapshots/WorkspaceSnapshotsModal';
-import { ArchiveProgressModal } from '@renderer/components/snapshots/ArchiveProgressModal';
+import { OperationProgressContainer } from '@renderer/components/files/OperationProgressContainer';
 import { useAppStore } from '@renderer/store';
 import { cn } from '@lablnet/ui';
 
@@ -272,7 +272,7 @@ export function App(): React.JSX.Element {
         error={gitRadar.error}
       />
       <WorkspaceSnapshotsModal />
-      <ArchiveProgressModal />
+      <OperationProgressContainer />
     </>
   );
 }
