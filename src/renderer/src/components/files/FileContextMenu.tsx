@@ -13,6 +13,8 @@ import {
   Pin,
   PinOff,
   RotateCcw,
+  FileArchive,
+  Archive,
 } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { Button } from '../ui/Button';
@@ -38,6 +40,8 @@ export type FileContextAction =
   | 'annotate'
   | 'new-folder'
   | 'show-in-folder'
+  | 'compress'
+  | 'extract'
   | 'refresh';
 
 export interface FileContextMenuState {
@@ -126,7 +130,21 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
       { action: 'open-with-system', label: 'Open with System App', Icon: ExternalLink },
       { action: 'rename', label: 'Rename', Icon: Pencil },
       { action: 'copy', label: 'Copy', Icon: Copy },
-      { action: 'cut', label: 'Cut', Icon: Scissors },
+      { action: 'cut', label: 'Cut', Icon: Scissors }
+    );
+
+    const isArchiveFile =
+      state.node &&
+      state.node.kind === 'file' &&
+      /\.(zip|tar|gz|tgz|7z)$/i.test(state.node.path);
+
+    if (isArchiveFile) {
+      targetActions.push({ action: 'extract', label: 'Extract Archive Here', Icon: Archive });
+    } else {
+      targetActions.push({ action: 'compress', label: 'Compress to ZIP', Icon: FileArchive });
+    }
+
+    targetActions.push(
       { action: 'trash', label: 'Move to Trash', Icon: Trash2 },
       { action: 'details', label: 'Details', Icon: FileText }
     );

@@ -15,6 +15,7 @@ import { createSmartCollectionsHandlers } from './smartCollections.handlers';
 import { createDuplicateHandlers } from './duplicates.handlers';
 import { createFileTimelineHandlers } from './fileTimeline.handlers';
 import { createSnapshotHandlers } from './snapshots.handlers';
+import { createArchiveHandlers } from './archive.handlers';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -58,6 +59,7 @@ export function registerHandlers(): void {
     ...createDuplicateHandlers(proxyWindow),
     ...createFileTimelineHandlers(),
     ...createSnapshotHandlers(),
+    ...createArchiveHandlers(proxyWindow),
   };
 
   for (const channel of Object.keys(handlers) as IpcChannel[]) {

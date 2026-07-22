@@ -19,6 +19,18 @@ import type { WorkspaceSnapshot } from '../types/workspaceSnapshots';
  * never a runtime surprise.
  */
 export interface IpcContract {
+  'archive:compress': {
+    request: { paths: string[]; destinationZipPath?: string | undefined };
+    response: { archivePath: string };
+  };
+  'archive:extract': {
+    request: { archivePath: string; destinationDir?: string | undefined };
+    response: { extractedDir: string };
+  };
+  'archive:cancel': {
+    request: { operationId: string };
+    response: void;
+  };
   'snapshots:list': {
     request: undefined | void;
     response: WorkspaceSnapshot[];
@@ -197,6 +209,16 @@ export interface IpcEvents {
     groupsFound: number;
     currentPath: string;
     groups: DuplicateGroup[];
+  };
+  'archive:progress': {
+    operationId: string;
+    type: 'compress' | 'extract';
+    currentPath: string;
+    bytesProcessed: number;
+    totalBytes: number;
+    percent: number;
+    done: boolean;
+    error?: string;
   };
   'terminal:data': {
     id: string;

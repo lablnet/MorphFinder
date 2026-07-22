@@ -7,6 +7,8 @@ export interface UseFileOperationsResult {
   trash: (paths: string[]) => Promise<void>;
   copyTo: (sourcePaths: string[], destinationDir: string) => Promise<void>;
   moveTo: (sourcePaths: string[], destinationDir: string) => Promise<void>;
+  compress: (paths: string[], destinationZipPath?: string) => Promise<string>;
+  extract: (archivePath: string, destinationDir?: string) => Promise<string>;
 }
 
 export function useFileOperations(): UseFileOperationsResult {
@@ -30,10 +32,22 @@ export function useFileOperations(): UseFileOperationsResult {
     setProgress({ operationId, completed: sourcePaths.length, total: sourcePaths.length, currentPath: sourcePaths.at(-1) ?? '', done: true });
   }, []);
 
+  const compress = useCallback(async (paths: string[], destinationZipPath?: string) => {
+    const res = await ipc.invoke('archive:compress', { paths, destinationZipPath });
+    return res.archivePath;
+  }, []);
+
+  const extract = useCallback(async (archivePath: string, destinationDir?: string) => {
+    const res = await ipc.invoke('archive:extract', { archivePath, destinationDir });
+    return res.extractedDir;
+  }, []);
+
   return {
     progress,
     trash: (paths) => start('trash', paths),
     copyTo: (sourcePaths, destinationDir) => start('copy', sourcePaths, destinationDir),
     moveTo: (sourcePaths, destinationDir) => start('move', sourcePaths, destinationDir),
+    compress,
+    extract,
   };
 }

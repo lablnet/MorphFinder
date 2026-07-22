@@ -242,6 +242,12 @@ export function useFileSystemController() {
     if (action === 'unpin' && primaryNode !== null) {
       useAppStore.getState().unpinFolder(primaryNode.path);
     }
+    if (action === 'compress' && contextTargets.length > 0) {
+      void operations.compress(contextTargets.map((node) => node.path)).then(fs.refresh);
+    }
+    if (action === 'extract' && primaryNode !== null) {
+      void operations.extract(primaryNode.path).then(fs.refresh);
+    }
     if (action === 'annotate' && primaryNode !== null) setAnnotationNode(primaryNode);
     if (action === 'new-folder') void createFolder();
     if (action === 'show-in-folder' && primaryNode !== null) void ipc.invoke('shell:showInFolder', { path: primaryNode.path });
