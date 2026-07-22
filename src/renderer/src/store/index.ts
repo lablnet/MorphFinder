@@ -4,8 +4,9 @@ import { createLayoutSlice, type LayoutSlice } from './layout.slice';
 import { createTabsSlice, type TabsSlice } from './tabs.slice';
 import { createSelectionSlice, type SelectionSlice } from './selection.slice';
 import { createFileSystemSlice, type FileSystemSlice } from './fileSystem.slice';
+import { createSnapshotsSlice, type SnapshotsSlice } from './snapshots.slice';
 
-export type AppStore = LayoutSlice & TabsSlice & SelectionSlice & FileSystemSlice;
+export type AppStore = LayoutSlice & TabsSlice & SelectionSlice & FileSystemSlice & SnapshotsSlice;
 
 /**
  * One store, four domain slices (see store/*.slice.ts). Only shell/theme/tabs
@@ -26,6 +27,7 @@ export const useAppStore = create<AppStore>()(
       ...createTabsSlice(...args),
       ...createSelectionSlice(...args),
       ...createFileSystemSlice(...args),
+      ...createSnapshotsSlice(...args),
     }),
     {
       name: getStorageKey(),

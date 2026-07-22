@@ -20,6 +20,7 @@ MorphFinder achieves this through a `ShellDefinition` strategy that swaps visual
 - ⚡ **Native Performance**: Main-process file system operations using `@parcel/watcher` for cross-platform file monitoring.
 - 🍏 **Native macOS Swift Module**: Optional native Swift API addon (via `node-swift`) supporting Finder tags, Spotlight metadata, QuickLook thumbnail generation, and "Open With" app enumeration.
 - 🗂️ **Tab Management**: Robust multi-tab support with middle-click closing, drag-and-drop reordering, and browser-style session restoration.
+- 📸 **Workspace Snapshots & Session Freeze**: Save multi-tab setups, open paths, view modes, and active shell theme into named snapshots; export and import `.morphws` files.
 - 🔍 **Multiple View Modes**:
   - **Grid View**: Virtualized icon grid for folders with large file counts.
   - **List View**: Sortable details table using `@lablnet/ui`.

@@ -22,6 +22,7 @@ import { GitRadar } from '@renderer/components/gitradar/GitRadar';
 import { GitDrawer } from '@renderer/components/gitradar/components/GitDrawer';
 import { TerminalPanel } from '@renderer/components/terminal/TerminalPanel';
 import { DetailsPanel } from '@renderer/components/files/DetailsPanel';
+import { WorkspaceSnapshotsModal } from '@renderer/components/snapshots/WorkspaceSnapshotsModal';
 import { useAppStore } from '@renderer/store';
 import { cn } from '@lablnet/ui';
 
@@ -269,6 +270,7 @@ export function App(): React.JSX.Element {
         onRefresh={gitRadar.refresh}
         error={gitRadar.error}
       />
+      <WorkspaceSnapshotsModal />
     </>
   );
 }

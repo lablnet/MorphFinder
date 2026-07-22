@@ -1,5 +1,5 @@
 import React from 'react';
-import { FolderPlus, Trash2, Grid2X2, List, Columns3, RefreshCw, Tag } from 'lucide-react';
+import { FolderPlus, Trash2, Grid2X2, List, Columns3, RefreshCw, Tag, Camera } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { HistoryButtons } from './HistoryButtons';
 import { PathBreadcrumb } from './PathBreadcrumb';
@@ -165,6 +165,16 @@ export function FileToolbar({
           shellId={shellId}
         >
           <RefreshCw size={15} />
+        </Button>
+
+        <Button
+          title="Workspace Snapshots"
+          aria-label="Workspace Snapshots"
+          onClick={() => useAppStore.getState().setSnapshotsModalOpen(true)}
+          size="icon"
+          shellId={shellId}
+        >
+          <Camera size={15} />
         </Button>
 
         {gitRadarNode}

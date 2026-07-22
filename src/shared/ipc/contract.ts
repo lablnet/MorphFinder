@@ -10,6 +10,7 @@ import type { FileSearchRequest, FileSearchResult } from '../types/fileSearch';
 import type { SmartCollectionRequest, SmartCollectionResult } from '../types/smartCollections';
 import type { DuplicateGroup, DuplicateScanRequest, DuplicateScanResult } from '../types/duplicates';
 import type { FileTimelineScanRequest, FileTimelineScanResult } from '../types/fileTimeline';
+import type { WorkspaceSnapshot } from '../types/workspaceSnapshots';
 
 
 /**
@@ -18,6 +19,26 @@ import type { FileTimelineScanRequest, FileTimelineScanResult } from '../types/f
  * never a runtime surprise.
  */
 export interface IpcContract {
+  'snapshots:list': {
+    request: undefined | void;
+    response: WorkspaceSnapshot[];
+  };
+  'snapshots:save': {
+    request: Omit<WorkspaceSnapshot, 'id' | 'createdAt' | 'updatedAt'> & { id?: string | undefined };
+    response: WorkspaceSnapshot;
+  };
+  'snapshots:delete': {
+    request: { id: string };
+    response: void;
+  };
+  'snapshots:export': {
+    request: { snapshotId: string };
+    response: boolean;
+  };
+  'snapshots:import': {
+    request: undefined | void;
+    response: WorkspaceSnapshot | null;
+  };
   'fs:readDirectory': {
     request: { path: string; includeHidden: boolean };
     response: DirectoryListing;
