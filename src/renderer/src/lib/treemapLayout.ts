@@ -43,7 +43,7 @@ export function computeTreemapLayout(
     const proportion = child.size / totalRemainingSize;
     const clampedProportion = Math.min(1, Math.max(0, proportion));
 
-    if (remainingWidth > remainingHeight) {
+    if (remainingWidth >= remainingHeight) {
       const itemWidth = remainingWidth * clampedProportion;
       rects.push({
         id: child.path,

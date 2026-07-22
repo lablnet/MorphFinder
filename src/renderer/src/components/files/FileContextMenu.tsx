@@ -56,6 +56,18 @@ const BACKGROUND_ACTIONS: Array<{ action: FileContextAction; label: string; Icon
   { action: 'refresh', label: 'Refresh', Icon: RefreshCw },
 ];
 
+export function contextActionsForState(state: { hasTarget: boolean; node?: FileSystemNode | null }): FileContextAction[] {
+  if (!state.hasTarget) {
+    return ['paste', 'new-folder', 'refresh'];
+  }
+  const actions: FileContextAction[] = ['open'];
+  if (state.node && state.node.kind === 'directory') {
+    actions.push('open-in-new-tab', 'open-in-new-window');
+  }
+  actions.push('open-with-system', 'rename', 'copy', 'cut', 'trash', 'annotate', 'show-in-folder', 'paste', 'new-folder', 'refresh');
+  return actions;
+}
+
 export function FileContextMenu({ state, onAction, onClose }: FileContextMenuProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const isPinned = state.node && state.node.kind === 'directory' && pinnedFolders.includes(state.node.path);
