@@ -15,4 +15,7 @@ import NodeAPI
     "getOpenWithApps": try NodeFunction { (path: String) in
         try NativeJSON.encode(OpenWith.list(path: path))
     },
+    "getLocations": try NodeFunction { () in
+        try NativeJSON.encode(Locations.list())
+    },
 ])

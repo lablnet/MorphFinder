@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { basename, extname } from 'node:path';
 import { join } from 'node:path';
 import { app, nativeImage } from 'electron';
-import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp } from '@shared/types/native';
+import type { FinderTag, NativeCapabilities, NativeMetadata, NativeThumbnail, OpenWithApp, SystemLocation } from '@shared/types/native';
 import { ThumbnailLruCache } from './thumbnailCache';
 
 interface MorphNativeAddon {
@@ -12,6 +12,7 @@ interface MorphNativeAddon {
   setTags: (path: string, tagsJson: string) => void;
   getThumbnail: (path: string, width: number, height: number, scale: number) => string;
   getOpenWithApps: (path: string) => string;
+  getLocations?: () => string;
 }
 
 const requireFn = createRequire(import.meta.url);
@@ -212,3 +213,17 @@ export function getOpenWithApps(path: string): OpenWithApp[] {
   if (process.platform === 'linux') return getLinuxOpenWithApps(path);
   return [];
 }
+
+export function getSystemLocations(): SystemLocation[] {
+  if (addon !== null && typeof addon.getLocations === 'function') {
+    const json = addon.getLocations();
+    const locations = parseJson<SystemLocation[]>(json, []);
+    if (locations.length > 0) return locations;
+  }
+  const home = app.getPath('home');
+  return [
+    { id: '/', name: 'Macintosh HD', path: '/', iconType: 'hd', isRemovable: false, isInternal: true },
+    { id: home, name: basename(home) || 'Home', path: home, iconType: 'home', isRemovable: false, isInternal: true },
+  ];
+}
+
