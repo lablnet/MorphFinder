@@ -24,8 +24,16 @@ MorphFinder achieves this through a `ShellDefinition` strategy that swaps visual
   - **Grid View**: Virtualized icon grid for folders with large file counts.
   - **List View**: Sortable details table using `@lablnet/ui`.
   - **Column View**: macOS-style Miller columns.
+- 📊 **Storage Analyzer**: Treemap, donut, list, and inspector views to visualize folder space usage before drilling down.
+- 🔍 **Duplicate Finder**: Deep scope scanning with hash-based duplicate grouping to clean up disk space safely.
+- 🕒 **File Timeline**: Chronological file activity stream enriched with Git history and commit context.
+- 🧹 **Cache Cleaner**: Intelligent target detection for npm, Yarn, Gradle, Homebrew, Python, Puppeteer, app, and system caches.
+- 🌿 **Git Radar**: In-app Git integration displaying current branch status, dirty states, staged/unstaged changes, and commit history.
+- 🛠️ **Developer Panel & Integrated Terminal**: Embedded project detection, package script execution, dependency inspect, and project-scoped terminal sessions (`node-pty`).
+- 🏷️ **Directory Annotations & Smart Collections**: Custom tags/notes attached to folders, queryable via high-signal smart collection groups.
+- 👁️ **Built-in File Viewer**: Multi-format quick preview supporting images, video, audio, Markdown, code, PDFs, Office files, and binary metadata.
 - 🛡️ **Hardened Security**: Context isolation, sandboxed processes, strict Content Security Policy (CSP), and navigation guards.
-- ⌨️ **Keyboard Navigation**: Platform-aware hotkeys and keyboard accelerators (e.g., inline renaming with `Enter` on macOS vs. `F2` on Windows/Linux).
+- ⌨️ **Keyboard Navigation & Command Palette**: Keyboard-first launcher, hotkey accelerators, and platform-aware shortcut mappings.
 
 ---
 
