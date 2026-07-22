@@ -1,6 +1,6 @@
 import { app, dialog, type BrowserWindow } from 'electron';
 import type { IpcContract } from '@shared/ipc/contract';
-import { openPath, showItemInFolder, trashPaths } from '../services/fileSystemService';
+import { deletePermanently, emptyTrash, openPath, restoreFromTrash, showItemInFolder, trashPaths } from '../services/fileSystemService';
 
 import { createMainWindow } from '../window/createMainWindow';
 
@@ -10,6 +10,9 @@ type Handler<C extends keyof IpcContract> = (
 
 export function createShellHandlers(window: BrowserWindow): {
   'shell:trash': Handler<'shell:trash'>;
+  'shell:deletePermanently': Handler<'shell:deletePermanently'>;
+  'shell:emptyTrash': Handler<'shell:emptyTrash'>;
+  'shell:restoreFromTrash': Handler<'shell:restoreFromTrash'>;
   'shell:open': Handler<'shell:open'>;
   'shell:newWindow': Handler<'shell:newWindow'>;
   'shell:showInFolder': Handler<'shell:showInFolder'>;
@@ -19,6 +22,9 @@ export function createShellHandlers(window: BrowserWindow): {
 } {
   return {
     'shell:trash': ({ paths }) => trashPaths(paths),
+    'shell:deletePermanently': ({ paths }) => deletePermanently(paths),
+    'shell:emptyTrash': () => emptyTrash(),
+    'shell:restoreFromTrash': ({ paths }) => restoreFromTrash(paths),
     'shell:open': ({ path }) => openPath(path),
     'shell:newWindow': ({ path }) => {
       console.log('[main] shell:newWindow handler invoked for path:', path);

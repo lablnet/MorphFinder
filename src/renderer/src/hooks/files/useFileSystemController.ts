@@ -201,8 +201,9 @@ export function useFileSystemController() {
       hasTarget: node !== null,
       canPaste: clipboard !== null && destinationForPaste(node) !== null,
       node,
+      activePath: tabs.activePath,
     });
-  }, [selectedNodes, selection, clipboard, destinationForPaste]);
+  }, [selectedNodes, selection, clipboard, destinationForPaste, tabs.activePath]);
 
   const runContextAction = useCallback((action: FileContextAction): void => {
     const primaryNode = contextNode ?? contextTargets[0] ?? null;
@@ -222,6 +223,15 @@ export function useFileSystemController() {
     if (action === 'paste') void pasteClipboard(contextNode);
     if (action === 'trash' && contextTargets.length > 0) {
       void operations.trash(contextTargets.map((node) => node.path)).then(fs.refresh);
+    }
+    if (action === 'delete-permanently' && contextTargets.length > 0) {
+      void ipc.invoke('shell:deletePermanently', { paths: contextTargets.map((node) => node.path) }).then(fs.refresh);
+    }
+    if (action === 'restore' && contextTargets.length > 0) {
+      void ipc.invoke('shell:restoreFromTrash', { paths: contextTargets.map((node) => node.path) }).then(fs.refresh);
+    }
+    if (action === 'empty-trash') {
+      void ipc.invoke('shell:emptyTrash', undefined).then(fs.refresh);
     }
     if (action === 'details' && primaryNode !== null) {
       useAppStore.getState().openDetails(primaryNode);

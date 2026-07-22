@@ -41,6 +41,9 @@ export interface IpcContract {
   'fs:watch': { request: { path: string }; response: void };
   'fs:unwatch': { request: { path: string }; response: void };
   'shell:trash': { request: { paths: string[] }; response: void };
+  'shell:deletePermanently': { request: { paths: string[] }; response: void };
+  'shell:emptyTrash': { request: void; response: void };
+  'shell:restoreFromTrash': { request: { paths: string[] }; response: void };
   'shell:open': { request: { path: string }; response: void };
   'shell:newWindow': { request: { path?: string }; response: void };
   'shell:showInFolder': { request: { path: string }; response: void };

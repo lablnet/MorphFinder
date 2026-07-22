@@ -21,4 +21,22 @@ describe('contextActionsForState', () => {
   it('shows background operations when no file is targeted', () => {
     expect(contextActionsForState({ hasTarget: false })).toEqual(['paste', 'new-folder', 'refresh']);
   });
+
+  it('shows trash-specific operations when targeted inside trash', () => {
+    expect(contextActionsForState({ hasTarget: true, activePath: '/Users/test/.Trash' })).toEqual([
+      'open',
+      'open-with-system',
+      'restore',
+      'delete-permanently',
+      'details',
+      'show-in-folder',
+    ]);
+  });
+
+  it('shows empty trash option when right-clicking background inside trash', () => {
+    expect(contextActionsForState({ hasTarget: false, activePath: '/Users/test/.Trash' })).toEqual([
+      'empty-trash',
+      'refresh',
+    ]);
+  });
 });
