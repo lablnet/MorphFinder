@@ -47,6 +47,7 @@ app.whenReady().then(() => {
       app.setAboutPanelOptions({
         applicationName: 'MorphFinder',
         applicationVersion: '1.0.0',
+        version: '1',
         iconPath: iconPath,
         copyright: 'Copyright © lablnet',
       });
