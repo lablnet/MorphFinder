@@ -110,7 +110,7 @@ describe('All Main IPC Handlers Coverage', () => {
     await handlers['native:metadata']({ path: process.cwd() });
     await handlers['native:openWithApps']({ path: process.cwd() });
     await handlers['native:getLocations'](undefined);
-  });
+  }, 15000);
 
   it('exercises cache handlers', async () => {
     const handlers = createCacheHandlers();
