@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  Layers, 
-  HardDrive, 
-  Copy, 
-  History, 
-  Trash2, 
-  GitBranch, 
-  Terminal, 
-  ChevronRight, 
-  ChevronLeft, 
-  Check, 
-  Command, 
+import {
+  Sparkles,
+  Layers,
+  HardDrive,
+  Copy,
+  History,
+  Trash2,
+  GitBranch,
+  Terminal,
+  ChevronRight,
+  ChevronLeft,
+  Check,
+  Command,
   X,
   Compass,
   Zap,
@@ -21,7 +21,7 @@ import {
 import { BaseDialog } from '@renderer/components/ui/BaseDialog';
 import { Button } from '@renderer/components/ui/Button';
 import { useAppStore } from '@renderer/store';
-import { ShellId } from '@shared/types';
+import type { UIShell as ShellId } from '@shared/types/layout';
 import { cn } from '@lablnet/ui';
 
 interface OnboardingModalProps {
