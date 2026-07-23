@@ -5,7 +5,7 @@ import { registerHandlers } from './ipc/registerHandlers';
 import { disposeAllWatchers } from './services/watcherService';
 import { startAutoUpdater } from './services/updateService';
 import { setupApplicationMenu } from './menu';
-import { join } from 'node:path';
+import { join, normalize, isAbsolute } from 'node:path';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
@@ -33,10 +33,18 @@ app.whenReady().then(() => {
   // Register morph-file:// protocol handler for serving local files to the renderer.
   // URL format: morph-file://host/<absolute-path>
   protocol.handle('morph-file', (request) => {
-    const url = new URL(request.url);
-    // pathname is the file path; on Windows it'll start with /C:/...
-    const filePath = decodeURIComponent(url.pathname);
-    return net.fetch(pathToFileURL(filePath).href);
+    try {
+      const url = new URL(request.url);
+      // pathname is the file path; on Windows it'll start with /C:/...
+      const decodedPath = decodeURIComponent(url.pathname);
+      const normalizedPath = normalize(decodedPath);
+      if (!isAbsolute(normalizedPath) || !existsSync(normalizedPath)) {
+        return new Response('Not Found', { status: 404 });
+      }
+      return net.fetch(pathToFileURL(normalizedPath).href);
+    } catch {
+      return new Response('Bad Request', { status: 400 });
+    }
   });
 
   // Set macOS Dock Icon and About Panel in dev/runtime

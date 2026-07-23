@@ -1,11 +1,11 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { ChildProcess, execFile } from 'node:child_process';
+import { type ChildProcess, execFile, type ExecFileOptions } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-import { BrowserWindow } from 'electron';
+import type { BrowserWindow } from 'electron';
 
 class ArchiveService {
   private activeProcesses = new Map<string, ChildProcess>();
@@ -106,7 +106,7 @@ class ArchiveService {
       emitProgress(false);
     }, 200);
 
-    const runChild = (file: string, args: string[], options?: any) => {
+    const runChild = (file: string, args: string[], options?: ExecFileOptions) => {
       return new Promise<void>((resolve, reject) => {
         const child = execFile(file, args, options, (error) => {
           this.activeProcesses.delete(operationId);

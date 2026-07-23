@@ -1,6 +1,7 @@
 import { archiveService } from '@main/services/archiveService';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { BrowserWindow } from 'electron';
 
 describe('ArchiveService', () => {
   const tmpDir = path.join(__dirname, 'tmp_archive_test');
@@ -16,7 +17,7 @@ describe('ArchiveService', () => {
     await fs.writeFile(file1, 'Hello World 1', 'utf-8');
     await fs.writeFile(file2, 'Hello World 2', 'utf-8');
 
-    const mockWin = { webContents: { send: vi.fn() } } as any;
+    const mockWin = { webContents: { send: vi.fn() } } as unknown as BrowserWindow;
     const zipResult = await archiveService.compress(mockWin, [file1, file2]);
     expect(zipResult.archivePath).toBeTruthy();
     expect(zipResult.archivePath.endsWith('.zip')).toBe(true);

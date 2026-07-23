@@ -28,7 +28,7 @@ describe('tabs slice', () => {
 
   it('navigates active tab and pushes back history', () => {
     const store = setupStore();
-    const id = store.getState().openTab('/Users/test/Home');
+    store.getState().openTab('/Users/test/Home');
     store.getState().navigateActiveTab('/Users/test/Documents');
 
     const tab = store.getState().activeTab();

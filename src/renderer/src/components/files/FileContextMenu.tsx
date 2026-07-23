@@ -95,7 +95,7 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
     (state.activePath && state.activePath.includes('.Trash'))
   );
 
-  let actions: Array<{ action: FileContextAction; label: string; Icon: any }>;
+  let actions: Array<{ action: FileContextAction; label: string; Icon: React.ElementType }>;
 
   if (isInTrash) {
     if (state.hasTarget) {
@@ -114,7 +114,7 @@ export function FileContextMenu({ state, onAction, onClose }: FileContextMenuPro
       ];
     }
   } else {
-    const targetActions: Array<{ action: FileContextAction; label: string; Icon: any }> = [];
+    const targetActions: Array<{ action: FileContextAction; label: string; Icon: React.ElementType }> = [];
 
     if (state.node && state.node.kind === 'directory') {
       targetActions.push(

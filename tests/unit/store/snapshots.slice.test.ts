@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createSnapshotsSlice, type SnapshotsSlice } from '@renderer/store/snapshots.slice';
+import { createSnapshotsSlice } from '@renderer/store/snapshots.slice';
 import type { WorkspaceSnapshot } from '@shared/types/workspaceSnapshots';
 
 vi.mock('@renderer/services/ipc', () => ({
@@ -11,11 +11,11 @@ vi.mock('@renderer/services/ipc', () => ({
 import { ipc } from '@renderer/services/ipc';
 
 describe('Snapshots Store Slice', () => {
-  let storeState: any;
+  let storeState: Record<string, unknown>;
 
-  const mockSet = (updater: any) => {
-    const next = typeof updater === 'function' ? updater(storeState) : updater;
-    storeState = { ...storeState, ...next };
+  const mockSet = (updater: unknown) => {
+    const next = typeof updater === 'function' ? (updater as (state: unknown) => Record<string, unknown>)(storeState) : updater;
+    storeState = { ...storeState, ...(next as Record<string, unknown>) };
   };
 
   const mockGet = () => storeState;
@@ -29,9 +29,9 @@ describe('Snapshots Store Slice', () => {
       activeTabId: 'tab-1',
       activeShell: 'finder',
       themeMode: 'dark',
-      activeTab: () => storeState.tabs[0],
+      activeTab: () => (storeState.tabs as unknown[])[0],
       defaultViewModeForActiveShell: () => 'list',
-      ...createSnapshotsSlice(mockSet, mockGet, {} as any),
+      ...createSnapshotsSlice(mockSet, mockGet, {} as never),
     };
   });
 
@@ -54,9 +54,8 @@ describe('Snapshots Store Slice', () => {
       },
     ];
 
-    vi.mocked(ipc.invoke).mockResolvedValueOnce(dummySnapshots as any);
-
-    await storeState.loadSnapshots();
+    vi.mocked(ipc.invoke).mockResolvedValueOnce(dummySnapshots as unknown as never);
+    await (storeState as { loadSnapshots: () => Promise<void> }).loadSnapshots();
 
     expect(ipc.invoke).toHaveBeenCalledWith('snapshots:list', undefined);
     expect(storeState.snapshots).toEqual(dummySnapshots);

@@ -208,7 +208,7 @@ export function useFileSystem(): UseFileSystemResult {
     } finally {
       if (isCurrentRequest()) setIsLoading(false);
     }
-  }, [path, showHidden, wellKnownDirs]);
+  }, [navigateActiveTab, path, showHidden, wellKnownDirs]);
 
   // Load on navigate, keep watching the active directory, and refresh whenever the
   // main process reports a change — this is what keeps the view live without polling.
