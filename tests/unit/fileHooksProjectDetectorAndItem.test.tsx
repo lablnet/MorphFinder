@@ -3,7 +3,6 @@ import { renderHook, act } from '@testing-library/react';
 import { useProjectDetector } from '../../src/renderer/src/hooks/files/useProjectDetector';
 import { useFileTimeline } from '../../src/renderer/src/hooks/files/useFileTimeline';
 import { useSelection } from '../../src/renderer/src/hooks/files/useSelection';
-import { ipc } from '../../src/renderer/src/services/ipc';
 import { useAppStore } from '../../src/renderer/src/store';
 
 vi.mock('../../src/renderer/src/services/ipc', () => ({

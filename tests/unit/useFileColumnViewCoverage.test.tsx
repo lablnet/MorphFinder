@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFileColumnView } from '../../src/renderer/src/hooks/files/useFileColumnView';
 import { useAppStore } from '../../src/renderer/src/store';
-import { ipc } from '../../src/renderer/src/services/ipc';
 
 vi.mock('../../src/renderer/src/services/ipc', () => ({
   ipc: {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useKeyboardShortcuts } from '../../src/renderer/src/hooks/utils/useKeyboardShortcuts';
 import { useAppStore } from '../../src/renderer/src/store';

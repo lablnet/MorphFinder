@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, vi, beforeEach } from 'vitest';
 import { createFsHandlers } from '../../src/main/ipc/fs.handlers';
 import { createShellHandlers } from '../../src/main/ipc/shell.handlers';
 import { createNativeHandlers } from '../../src/main/ipc/native.handlers';

@@ -28,4 +28,16 @@ export default [
       '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
+  // ── Test-file overrides ─────────────────────────────────────────────────────
+  // Test files routinely need `any` to build lightweight mocks of complex types,
+  // `Function` for generic handler stubs, and inline `import()` types inside
+  // vi.mock() factory callbacks (which cannot use top-level import statements).
+  {
+    files: ['tests/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+    },
+  },
 ];

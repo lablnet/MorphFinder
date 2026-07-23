@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BrowserWindow } from 'electron';
 
 const menuState = vi.hoisted(() => ({
   builtMenu: null as any,
