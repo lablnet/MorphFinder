@@ -42,3 +42,58 @@ export function guardNavigation(webContents: WebContents): void {
 
   webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 }
+
+const FORBIDDEN_PATH_PATTERNS = [
+  /\/\.ssh(\/|$)/i,
+  /\/\.aws(\/|$)/i,
+  /\/\.gnupg(\/|$)/i,
+  /\/\.env(\.|$)/i,
+  /^(?:\/etc\/|\/proc\/|\/sys\/|\/dev\/)/i,
+  /^[a-z]:\/windows\/(?:system32|syswow64)/i,
+];
+
+const FORBIDDEN_FILENAMES = new Set([
+  '.env',
+  '.env.local',
+  '.env.production',
+  'id_rsa',
+  'id_ed25519',
+  'shadow',
+  'passwd',
+]);
+
+const FORBIDDEN_EXTENSIONS = new Set([
+  '.exe',
+  '.dll',
+  '.dylib',
+  '.so',
+  '.pem',
+  '.key',
+  '.p12',
+  '.crt',
+  '.cer',
+  '.pfx',
+]);
+
+/** Validates whether a file path is safe to be served via morph-file:// protocol. */
+export function isSafeMorphFilePath(filePath: string): boolean {
+  if (!filePath || typeof filePath !== 'string') return false;
+  const normalized = filePath.replace(/\\/g, '/');
+
+  for (const pattern of FORBIDDEN_PATH_PATTERNS) {
+    if (pattern.test(normalized)) return false;
+  }
+
+  const parts = normalized.split('/');
+  const fileName = parts[parts.length - 1] ?? '';
+  if (FORBIDDEN_FILENAMES.has(fileName.toLowerCase())) return false;
+
+  const extIndex = fileName.lastIndexOf('.');
+  if (extIndex !== -1) {
+    const ext = fileName.slice(extIndex).toLowerCase();
+    if (FORBIDDEN_EXTENSIONS.has(ext)) return false;
+  }
+
+  return true;
+}
+

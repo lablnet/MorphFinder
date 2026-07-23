@@ -901,17 +901,59 @@ export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
   };
 }
 
+/** Validates whether a command is a safe dev script free from shell injection metacharacters. */
+export function isValidDevScript(command: string): boolean {
+  if (!command || typeof command !== 'string') return false;
+  const trimmed = command.trim();
+  if (trimmed.length === 0) return false;
+
+  // Reject shell injection metacharacters & path traversal metacharacters
+  if (/[\;&|\`\$\>\<\r\n\0]/g.test(trimmed)) return false;
+
+  // Match allowed command prefixes or clean identifier
+  const ALLOWED_BINARIES = new Set([
+    'npm', 'pnpm', 'yarn', 'bun', 'cargo', 'go', 'make', 'python', 'python3',
+    'ruby', 'flutter', 'dotnet', 'gradle', 'mvn', 'npx', 'tsx'
+  ]);
+
+  const parts = trimmed.split(/\s+/);
+  const bin = parts[0]?.toLowerCase() ?? '';
+
+  if (ALLOWED_BINARIES.has(bin)) return true;
+
+  // Single script identifier like "dev", "build", "test:unit"
+  if (/^[a-zA-Z0-9_\-:]+$/.test(trimmed)) return true;
+
+  return false;
+}
+
 export async function runScript(cwd: string, command: string): Promise<void> {
-  // Launch in detached shell so it keeps running independently.
+  if (!isValidDevScript(command)) {
+    throw new Error(`Execution rejected: command contains unallowed or unsafe script syntax.`);
+  }
+
   const { spawn } = await import('node:child_process');
-  const isWin = process.platform === 'win32';
-  const shell = isWin ? 'cmd' : '/bin/sh';
-  const flag = isWin ? '/c' : '-c';
-  const child = spawn(shell, [flag, command], {
+  const trimmed = command.trim();
+  const parts = trimmed.split(/\s+/);
+  
+  let bin = parts[0] ?? '';
+  let args = parts.slice(1);
+
+  // If passed a simple script name like "dev", wrap as "pnpm run <script>"
+  if (parts.length === 1 && !['npm', 'pnpm', 'yarn', 'bun', 'make', 'cargo'].includes(bin)) {
+    bin = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+    args = ['run', trimmed];
+  } else if (process.platform === 'win32' && ['npm', 'pnpm', 'yarn', 'npx', 'tsx'].includes(bin)) {
+    bin = `${bin}.cmd`;
+  }
+
+  const child = spawn(bin, args, {
     cwd,
     detached: true,
     stdio: 'ignore',
+    shell: false,
     env: { ...process.env },
   });
   child.unref();
 }
+

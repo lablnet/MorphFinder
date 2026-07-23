@@ -31,8 +31,8 @@ export const proxyWindow = new Proxy({} as BrowserWindow, {
   get(_, prop) {
     const activeWin =
       ipcWindowStore.getStore() ||
-      BrowserWindow.getFocusedWindow() ||
-      BrowserWindow.getAllWindows()[0];
+      BrowserWindow?.getFocusedWindow?.() ||
+      BrowserWindow?.getAllWindows?.()?.[0];
 
     if (!activeWin) return undefined;
     const value = activeWin[prop];

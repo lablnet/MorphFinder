@@ -63,7 +63,9 @@ class SnapshotService {
     }
 
     await this.ensureDirectory();
-    await fs.writeFile(this.StoragePath, JSON.stringify(snapshots, null, 2), 'utf-8');
+    const tempPath = `${this.StoragePath}.tmp.${Date.now()}`;
+    await fs.writeFile(tempPath, JSON.stringify(snapshots, null, 2), 'utf-8');
+    await fs.rename(tempPath, this.StoragePath);
     return snapshot;
   }
 
@@ -71,8 +73,11 @@ class SnapshotService {
     const snapshots = await this.listSnapshots();
     const filtered = snapshots.filter((s) => s.id !== id);
     await this.ensureDirectory();
-    await fs.writeFile(this.StoragePath, JSON.stringify(filtered, null, 2), 'utf-8');
+    const tempPath = `${this.StoragePath}.tmp.${Date.now()}`;
+    await fs.writeFile(tempPath, JSON.stringify(filtered, null, 2), 'utf-8');
+    await fs.rename(tempPath, this.StoragePath);
   }
+
 
   async exportSnapshot(snapshotId: string): Promise<boolean> {
     const snapshots = await this.listSnapshots();
