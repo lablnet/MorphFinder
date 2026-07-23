@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
-    environment: 'node',
+    environment: 'jsdom',
     globals: true,
     setupFiles: ['tests/setup.ts'],
     coverage: {
@@ -16,7 +16,8 @@ export default defineConfig({
         'src/shared/types/**',
         'src/shared/ipc/contract.ts',
         'src/renderer/src/main.tsx',
-        'src/renderer/src/vite-env.d.ts'
+        'src/renderer/src/vite-env.d.ts',
+        'src/renderer/src/components/fileicons/icons/**',
       ]
     }
   },

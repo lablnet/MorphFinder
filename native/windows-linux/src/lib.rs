@@ -429,3 +429,30 @@ pub fn get_thumbnail(path: String, width: f64, height: f64, scale: f64) -> Resul
 pub fn get_open_with_apps(path: String) -> Result<String> {
     json(&platform_open_with_apps(&path))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_json_encoding() {
+        let tag = FinderTag {
+            name: "Important".to_string(),
+            color_index: 1,
+        };
+        let encoded = json(&tag).unwrap();
+        assert!(encoded.contains("Important"));
+        assert!(encoded.contains("colorIndex"));
+    }
+
+    #[test]
+    fn test_metadata_serialization() {
+        let meta = NativeMetadata {
+            tags: vec![],
+            spotlight_kind: Some("PDF Document".to_string()),
+            spotlight_comment: None,
+        };
+        let encoded = json(&meta).unwrap();
+        assert!(encoded.contains("PDF Document"));
+    }
+}
