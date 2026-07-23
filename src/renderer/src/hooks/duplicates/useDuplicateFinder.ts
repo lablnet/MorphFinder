@@ -35,7 +35,7 @@ export function useDuplicateFinder(): {
   setScanScope: (scope: DuplicateScanScope) => void;
   scan: () => Promise<void>;
   stopScan: () => Promise<void>;
-  chooseFolder: () => Promise<void>;
+  chooseFolder: (selectedPath?: string) => Promise<void>;
   keepNewest: () => void;
   togglePath: (path: string) => void;
   trashSelected: () => Promise<void>;
@@ -128,7 +128,14 @@ export function useDuplicateFinder(): {
     void ipc.invoke('duplicates:cancel', undefined);
   };
 
-  const chooseFolder = async (): Promise<void> => {
+  const chooseFolder = async (selectedPath?: string): Promise<void> => {
+    if (selectedPath !== undefined) {
+      setCustomFolder(selectedPath);
+      setScanScope('custom');
+      setMessage(null);
+      return;
+    }
+
     const defaultPath = customFolder ?? wellKnownDirs?.downloads;
     const selected = await ipc.invoke('shell:selectFolder', defaultPath === undefined ? {} : { defaultPath });
     if (selected === null) return;

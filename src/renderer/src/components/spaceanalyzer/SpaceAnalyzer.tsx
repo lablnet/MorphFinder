@@ -9,6 +9,7 @@ import { ListView } from './components/ListView';
 import { DonutView } from './components/DonutView';
 import { InspectorView } from './components/InspectorView';
 import { LoadingState } from './components/LoadingState';
+import { FolderPickerDialog } from '@renderer/components/folderpicker/FolderPickerDialog';
 import { ShieldAlert, RefreshCw, FolderClosed } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -27,6 +28,7 @@ function findNodeInTree(node: SpaceAnalyzerNode, path: string): SpaceAnalyzerNod
 }
 
 export function SpaceAnalyzer(): React.JSX.Element {
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = React.useState(false);
   const { wellKnownDirs } = useAppStore(
     useShallow((state) => ({
       wellKnownDirs: state.wellKnownDirs,
@@ -48,7 +50,6 @@ export function SpaceAnalyzer(): React.JSX.Element {
     triggerScan,
     cancelScan,
     drillDown,
-    browseFolder,
     progress,
     diskTotal,
     diskFree,
@@ -81,7 +82,10 @@ export function SpaceAnalyzer(): React.JSX.Element {
         onCancelScan={cancelScan}
         onChangeViewMode={setViewMode}
         wellKnownDirs={wellKnownDirs}
-        browseFolder={browseFolder}
+        browseFolder={() => {
+          setIsFolderPickerOpen(true);
+          return Promise.resolve();
+        }}
         history={history}
         onNavigateUp={navigateUp}
       />
@@ -168,6 +172,17 @@ export function SpaceAnalyzer(): React.JSX.Element {
         diskTotal={diskTotal}
         diskFree={diskFree}
       />
+      {isFolderPickerOpen ? (
+        <FolderPickerDialog
+          title="Choose Space Analyzer Folder"
+          initialPath={currentPathInput}
+          onClose={() => setIsFolderPickerOpen(false)}
+          onChoose={(path) => {
+            setIsFolderPickerOpen(false);
+            setCurrentPathInput(path);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -13,7 +13,7 @@ export function useFileTimeline(initialRootPath: string | null): {
   error: string | null;
   setDays: (days: number) => void;
   scan: () => Promise<void>;
-  chooseFolder: () => Promise<void>;
+  chooseFolder: (selectedPath?: string) => Promise<void>;
 } {
   const wellKnownDirs = useAppStore((state) => state.wellKnownDirs);
   const showHiddenFiles = useAppStore((state) => state.showHiddenFiles);
@@ -51,7 +51,14 @@ export function useFileTimeline(initialRootPath: string | null): {
     }
   };
 
-  const chooseFolder = async (): Promise<void> => {
+  const chooseFolder = async (selectedPath?: string): Promise<void> => {
+    if (selectedPath !== undefined) {
+      setRootPath(selectedPath);
+      setResult(null);
+      setError(null);
+      return;
+    }
+
     const defaultPath = rootPath ?? wellKnownDirs?.home;
     const selected = await ipc.invoke('shell:selectFolder', defaultPath === undefined ? {} : { defaultPath });
     if (selected === null) return;

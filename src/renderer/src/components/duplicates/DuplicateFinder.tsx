@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DuplicateFinderHeader } from './components/DuplicateFinderHeader';
 import { DuplicateEmptyState } from './components/DuplicateEmptyState';
 import { DuplicateGroups } from './components/DuplicateGroups';
@@ -5,10 +6,12 @@ import { DuplicateLoadingState } from './components/DuplicateLoadingState';
 import { DuplicateProgress } from './components/DuplicateProgress';
 import { DuplicateScopePicker } from './components/DuplicateScopePicker';
 import { DuplicateStats } from './components/DuplicateStats';
+import { FolderPickerDialog } from '@renderer/components/folderpicker/FolderPickerDialog';
 import { useDuplicateFinder } from '@renderer/hooks/duplicates/useDuplicateFinder';
 
 export function DuplicateFinder(): React.JSX.Element {
   const duplicateFinder = useDuplicateFinder();
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
   const hasGroups = duplicateFinder.groups.length > 0;
 
   return (
@@ -31,7 +34,7 @@ export function DuplicateFinder(): React.JSX.Element {
           customFolder={duplicateFinder.customFolder}
           disabled={duplicateFinder.scanning || duplicateFinder.cleaning}
           onScopeChange={duplicateFinder.setScanScope}
-          onChooseFolder={() => void duplicateFinder.chooseFolder()}
+          onChooseFolder={() => setIsFolderPickerOpen(true)}
         />
 
         {duplicateFinder.message !== null ? (
@@ -50,6 +53,17 @@ export function DuplicateFinder(): React.JSX.Element {
           <DuplicateEmptyState />
         )}
       </div>
+      {isFolderPickerOpen ? (
+        <FolderPickerDialog
+          title="Choose Duplicate Scan Folder"
+          initialPath={duplicateFinder.customFolder}
+          onClose={() => setIsFolderPickerOpen(false)}
+          onChoose={(path) => {
+            setIsFolderPickerOpen(false);
+            void duplicateFinder.chooseFolder(path);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { dirname } from 'node:path';
+import { stat } from 'node:fs/promises';
 import { app, dialog, type BrowserWindow } from 'electron';
 import type { IpcContract } from '@shared/ipc/contract';
 import { deletePermanently, emptyTrash, openPath, restoreFromTrash, showItemInFolder, trashPaths } from '../services/fileSystemService';
@@ -7,6 +9,31 @@ import { createMainWindow } from '../window/createMainWindow';
 type Handler<C extends keyof IpcContract> = (
   request: IpcContract[C]['request'],
 ) => IpcContract[C]['response'] | Promise<IpcContract[C]['response']>;
+
+const securityScopedAccess = new Map<string, () => void>();
+
+async function normalizeDialogDefaultPath(defaultPath?: string): Promise<string | undefined> {
+  if (defaultPath === undefined || defaultPath.startsWith('morph://')) return undefined;
+
+  try {
+    const stats = await stat(defaultPath);
+    return stats.isDirectory() ? defaultPath : dirname(defaultPath);
+  } catch {
+    return undefined;
+  }
+}
+
+function retainSecurityScopedAccess(path: string, bookmark?: string): void {
+  if (bookmark === undefined || process.platform !== 'darwin') return;
+
+  try {
+    securityScopedAccess.get(path)?.();
+    const stopAccessing = app.startAccessingSecurityScopedResource(bookmark) as () => void;
+    securityScopedAccess.set(path, stopAccessing);
+  } catch (error) {
+    console.warn('[main] Failed to activate folder security bookmark:', error);
+  }
+}
 
 export function createShellHandlers(window: BrowserWindow): {
   'shell:trash': Handler<'shell:trash'>;
@@ -46,14 +73,19 @@ export function createShellHandlers(window: BrowserWindow): {
     'shell:openWith': ({ path }) => openPath(path),
     'shell:selectFolder': async ({ defaultPath }) => {
       const options: Electron.OpenDialogOptions = {
-        properties: ['openDirectory'],
+        buttonLabel: 'Choose',
+        message: 'Choose this folder for MorphFinder',
+        securityScopedBookmarks: process.platform === 'darwin',
+        properties: ['openDirectory', 'dontAddToRecent'],
       };
-      if (defaultPath !== undefined) {
-        options.defaultPath = defaultPath;
-      }
+      const normalizedDefaultPath = await normalizeDialogDefaultPath(defaultPath);
+      if (normalizedDefaultPath !== undefined) options.defaultPath = normalizedDefaultPath;
+
       const result = await dialog.showOpenDialog(window, options);
       if (result.canceled || result.filePaths.length === 0) return null;
-      return result.filePaths[0] ?? null;
+      const selectedPath = result.filePaths[0] ?? null;
+      if (selectedPath !== null) retainSecurityScopedAccess(selectedPath, result.bookmarks?.[0]);
+      return selectedPath;
     },
   };
 }

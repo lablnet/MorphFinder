@@ -169,9 +169,9 @@ describe('feature containers', () => {
     render(<FileTimeline initialRootPath="/repo" onOpenPath={onOpenPath} />);
 
     fireEvent.click(screen.getByRole('button', { name: /folder/i }));
+    expect(screen.getByText('Choose Timeline Folder')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: /scan/i }));
     fireEvent.click(screen.getByText('file.ts'));
-    expect(state.timeline.chooseFolder).toHaveBeenCalledTimes(1);
     expect(state.timeline.scan).toHaveBeenCalledTimes(1);
     expect(onOpenPath).toHaveBeenCalledWith('/repo/file.ts');
   });

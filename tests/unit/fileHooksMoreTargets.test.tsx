@@ -71,8 +71,20 @@ describe('File Hooks Extended Coverage', () => {
   });
 
   it('useDevPanelScanPath returns scanPath', () => {
+    useAppStore.setState({
+      tabs: [{
+        id: 't1',
+        path: '/current-project',
+        title: 'current-project',
+        history: { back: ['/old-project'], forward: [] },
+        viewMode: 'icons',
+        isPinned: false,
+      }],
+      activeTabId: 't1',
+    });
+
     const { result } = renderHook(() => useDevPanelScanPath());
-    expect(result.current.scanPath).toBeDefined();
+    expect(result.current.scanPath).toBe('/current-project');
     expect(typeof result.current.pickFolder).toBe('function');
   });
 
