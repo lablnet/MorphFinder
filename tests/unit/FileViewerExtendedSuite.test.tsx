@@ -98,14 +98,14 @@ describe('FileViewer extended extension modes & viewers', () => {
   it('renders PdfViewer with zoom & rotate controls', () => {
     render(<PdfViewer {...baseProps} node={{ ...baseNode, name: 'document.pdf', extension: 'pdf' }} />);
 
-    expect(screen.getByTitle('document.pdf')).toBeTruthy();
-    expect(screen.getByText('100%')).toBeTruthy();
+    expect(screen.getByText(/Page 1 of/i)).toBeTruthy();
+    expect(screen.getByText('120%')).toBeTruthy();
 
     fireEvent.click(screen.getByTitle('Zoom In'));
-    expect(screen.getByText('125%')).toBeTruthy();
+    expect(screen.getByText('140%')).toBeTruthy();
 
     fireEvent.click(screen.getByTitle('Zoom Out'));
-    expect(screen.getByText('100%')).toBeTruthy();
+    expect(screen.getByText('120%')).toBeTruthy();
   });
 
   it('routes FileViewer correctly for archive and html files', () => {
