@@ -1,6 +1,6 @@
 # MorphFinder
 
-[![codecov](https://codecov.io/gh/lablnet/MorphFinder/graph/badge.svg?token=CODECOV_TOKEN)](https://codecov.io/gh/lablnet/MorphFinder)
+[![codecov](https://codecov.io/gh/lablnet/MorphFinder/graph/badge.svg?token=0XOV8MZ6JK)](https://codecov.io/gh/lablnet/MorphFinder)
 
 A multi-platform file manager with a runtime-switchable **Tri-UI shell engine** (Finder, Explorer, Dolphin) over a single shared behavior core.
 
@@ -113,4 +113,4 @@ pnpm test:e2e
 pnpm lint
 ```
 
-Coverage runs in GitHub Actions, uploads `coverage/lcov.info` to Codecov with OIDC authentication, and keeps the HTML report as a workflow artifact. After the first successful Codecov upload, replace `CODECOV_TOKEN` in the badge URL above with the badge token Codecov shows for the project.
+Coverage runs in GitHub Actions, uploads `coverage/lcov.info` to Codecov, and keeps the HTML report as a workflow artifact. For this private repository, add the Codecov repository upload token as the GitHub Actions secret `CODECOV_TOKEN`.
