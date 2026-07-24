@@ -16,13 +16,15 @@ export function FileViewerToolbar({
   onClose,
   onOpenWithSystem,
 }: FileViewerToolbarProps): React.JSX.Element {
+  const isMac = typeof navigator !== 'undefined' && (/mac/i.test(navigator.platform) || /mac/i.test(navigator.userAgent));
   return (
     <div
       className={cn(
-        'flex h-12 shrink-0 items-center gap-2 border-b border-shell-border bg-shell-surface/80 px-3',
+        'flex h-12 shrink-0 items-center gap-2 border-b border-shell-border bg-shell-surface/80 pr-3',
         'backdrop-blur-xl',
         // Make the toolbar draggable so users can move the window
         'app-region-drag',
+        isMac ? 'pl-20' : 'pl-3',
       )}
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
