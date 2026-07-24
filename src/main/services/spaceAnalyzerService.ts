@@ -124,11 +124,17 @@ async function scanDirectorySizeRecursive(
     visitedInodes.add(inodeKey);
 
     if (!rootStat.isDirectory()) {
-      reportProgress(dirPath, rootStat.size, 1);
+      // Use physical disk blocks (blocks * 512) instead of logical `size`.
+      // On macOS APFS, `size` is the logical byte count which can exceed
+      // actual disk usage for compressed files, or under-count for sparse
+      // files. `blocks * 512` reflects real allocated space and matches
+      // what Finder and macOS Storage Settings report.
+      const physicalSize = (rootStat.blocks ?? 0) * 512;
+      reportProgress(dirPath, physicalSize, 1);
       return {
         name: nodeName,
         path: dirPath,
-        size: rootStat.size,
+        size: physicalSize,
         isDirectory: false,
         fileCount: 0,
       };
@@ -157,17 +163,24 @@ async function scanDirectorySizeRecursive(
         } else {
           const fileStat = await lstat(fullPath);
           const childInodeKey = `${fileStat.dev}:${fileStat.ino}`;
-          
+
+          // The has() check and add() must stay together synchronously.
+          // Because limitConcurrency runs multiple async workers concurrently,
+          // two workers can both pass has() before either calls add(), causing
+          // a hard-linked inode to be counted multiple times.
           if (visitedInodes.has(childInodeKey)) {
             return null; // Hard link already counted
           }
-          visitedInodes.add(childInodeKey);
+          visitedInodes.add(childInodeKey); // Claim inode before next await
 
-          reportProgress(fullPath, fileStat.size, 1);
+          // Use physical disk blocks instead of logical size (see comment above).
+          const physicalSize = (fileStat.blocks ?? 0) * 512;
+
+          reportProgress(fullPath, physicalSize, 1);
           return {
             name: entry.name,
             path: fullPath,
-            size: fileStat.size,
+            size: physicalSize,
             isDirectory: false,
             fileCount: 0,
           };
