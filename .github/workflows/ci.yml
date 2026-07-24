@@ -1,4 +1,4 @@
-name: CI
+name: Test
 
 on:
   pull_request:
@@ -39,24 +39,25 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Unit tests
+      - name: Unit Tests
         run: pnpm test
 
       - name: Build native macOS module
         if: runner.os == 'macOS'
         run: pnpm native:build
 
-      - name: Test native macOS module
+      - name: Native Module Tests (macOS)
         if: runner.os == 'macOS'
         run: pnpm test:native
 
       - name: Build app
         run: pnpm build
 
-      - name: Playwright smoke tests
+      - name: Playwright Smoke Tests
         if: runner.os != 'Linux'
         run: pnpm playwright test
 
-      - name: Playwright smoke tests (Linux)
+      - name: Playwright Smoke Tests (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum pnpm playwright test
+
