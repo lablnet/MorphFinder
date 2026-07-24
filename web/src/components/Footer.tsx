@@ -6,7 +6,7 @@ export function Footer() {
       <Separator />
       <div className="flex flex-col gap-2 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <span className="font-bold text-slate-700">MorphFinder by lablnet</span>
-        <span>Tri-UI file management for modern desktop workflows.</span>
+        <span>Copyright © 2026 MacroHub LLC</span>
       </div>
     </footer>
   );
