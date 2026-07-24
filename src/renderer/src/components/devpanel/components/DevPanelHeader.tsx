@@ -115,6 +115,11 @@ export const PROJECT_TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
     color: 'bg-blue-700/15 text-blue-800 dark:text-blue-300 border-blue-700/20',
     icon: 'C++',
   },
+  monorepo: {
+    label: 'Monorepo',
+    color: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20',
+    icon: '📦',
+  },
   unknown: {
     label: 'Unknown',
     color: 'bg-shell-sidebar border-shell-border text-current/60',
@@ -128,92 +133,152 @@ export const PROJECT_TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
 
 interface DevPanelHeaderProps {
   info: DevPanelInfo;
+  subProjects?: DevPanelInfo[] | undefined;
+  selectedSubPath?: string | null | undefined;
+  onSelectSubPath?: ((path: string | null) => void) | undefined;
   onRefresh: () => void;
   loading: boolean;
 }
 
-export function DevPanelHeader({ info, onRefresh, loading }: DevPanelHeaderProps): React.JSX.Element {
-  const typeConfig = PROJECT_TYPE_CONFIG[info.projectType];
+export function DevPanelHeader({
+  info,
+  subProjects,
+  selectedSubPath,
+  onSelectSubPath,
+  onRefresh,
+  loading,
+}: DevPanelHeaderProps): React.JSX.Element {
+  const typeConfig = PROJECT_TYPE_CONFIG[info.projectType] ?? PROJECT_TYPE_CONFIG.unknown;
 
   return (
-    <div className="flex shrink-0 items-center justify-between border-b border-shell-border p-4 bg-shell-surface/60 backdrop-blur-md gap-4">
-      <div className="flex items-start gap-3 min-w-0">
-        {/* Project type avatar */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-shell bg-shell-accent/10 text-shell-accent text-base font-bold select-none">
-          {typeConfig.icon}
-        </div>
-
-        {/* Name + badges row */}
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-bold text-current truncate">
-              {info.name ?? 'Unnamed Project'}
-            </h2>
-            {/* Project type badge */}
-            <span
-              className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
-                typeConfig.color
-              )}
-            >
-              {typeConfig.label}
-            </span>
-            {/* Version tag */}
-            {info.version && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-current/50 font-mono">
-                <Tag size={10} />
-                {info.version}
-              </span>
-            )}
-            {/* License */}
-            {info.license && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-current/50">
-                <Box size={10} />
-                {info.license}
-              </span>
-            )}
+    <div className="flex shrink-0 flex-col border-b border-shell-border p-4 bg-shell-surface/60 backdrop-blur-md gap-3">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0">
+          {/* Project type avatar */}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-shell bg-shell-accent/10 text-shell-accent text-base font-bold select-none">
+            {typeConfig.icon}
           </div>
 
-          {/* Description */}
-          {info.description && (
-            <p className="text-xs text-current/50 mt-0.5 truncate">{info.description}</p>
-          )}
-
-          {/* Git branch pill */}
-          {info.gitBranch && (
-            <div className="mt-1.5 flex items-center gap-2">
+          {/* Name + badges row */}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-current truncate">
+                {info.name ?? 'Unnamed Project'}
+              </h2>
+              {/* Project type badge */}
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border',
-                  info.gitIsDirty
-                    ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-700 dark:text-yellow-400'
-                    : 'bg-shell-sidebar border-shell-border text-current/60'
+                  'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
+                  typeConfig.color
                 )}
               >
-                <GitBranch size={10} />
-                {info.gitBranch}
-                {info.gitIsDirty && <AlertCircle size={10} className="ml-0.5" />}
+                {typeConfig.label}
               </span>
-              {info.gitIsDirty && (
-                <span className="text-[10px] text-yellow-600 dark:text-yellow-500">
-                  uncommitted changes
+              {/* Version tag */}
+              {info.version && (
+                <span className="inline-flex items-center gap-1 text-[10px] text-current/50 font-mono">
+                  <Tag size={10} />
+                  {info.version}
+                </span>
+              )}
+              {/* License */}
+              {info.license && (
+                <span className="inline-flex items-center gap-1 text-[10px] text-current/50">
+                  <Box size={10} />
+                  {info.license}
                 </span>
               )}
             </div>
-          )}
+
+            {/* Description */}
+            {info.description && (
+              <p className="text-xs text-current/50 mt-0.5 truncate">{info.description}</p>
+            )}
+
+            {/* Git branch pill */}
+            {info.gitBranch && (
+              <div className="mt-1.5 flex items-center gap-2">
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border',
+                    info.gitIsDirty
+                      ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-700 dark:text-yellow-400'
+                      : 'bg-shell-sidebar border-shell-border text-current/60'
+                  )}
+                >
+                  <GitBranch size={10} />
+                  {info.gitBranch}
+                  {info.gitIsDirty && <AlertCircle size={10} className="ml-0.5" />}
+                </span>
+                {info.gitIsDirty && (
+                  <span className="text-[10px] text-yellow-600 dark:text-yellow-500">
+                    uncommitted changes
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Refresh button */}
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={loading}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-shell text-current/50 hover:text-current hover:bg-shell-sidebar transition-colors disabled:opacity-30"
+          title="Re-scan project"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
 
-      {/* Refresh button */}
-      <button
-        type="button"
-        onClick={onRefresh}
-        disabled={loading}
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-shell text-current/50 hover:text-current hover:bg-shell-sidebar transition-colors disabled:opacity-30"
-        title="Re-scan project"
-      >
-        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-      </button>
+      {/* Sub-projects bar */}
+      {subProjects && subProjects.length > 0 && onSelectSubPath && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-shell-border/60">
+          <span className="text-[11px] font-medium text-current/50 mr-1 select-none">Sub-projects ({subProjects.length}):</span>
+          <button
+            type="button"
+            onClick={() => onSelectSubPath(null)}
+            className={cn(
+              'px-2.5 py-1 rounded-shell text-xs font-medium transition-colors border',
+              selectedSubPath === null
+                ? 'bg-shell-accent text-white border-shell-accent shadow-sm'
+                : 'bg-shell-sidebar/80 border-shell-border text-current/70 hover:text-current hover:bg-shell-sidebar'
+            )}
+          >
+            All / Monorepo Root
+          </button>
+          {subProjects.map((sub) => {
+            const isSelected = selectedSubPath === sub.path;
+            const subName = sub.name || sub.path.split(/[/\\]/).pop() || 'Sub-project';
+            const subBadge = PROJECT_TYPE_CONFIG[sub.projectType]?.label ?? sub.projectType;
+
+            return (
+              <button
+                key={sub.path}
+                type="button"
+                onClick={() => onSelectSubPath(sub.path)}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-shell text-xs font-medium transition-colors border',
+                  isSelected
+                    ? 'bg-shell-accent text-white border-shell-accent shadow-sm'
+                    : 'bg-shell-sidebar/80 border-shell-border text-current/70 hover:text-current hover:bg-shell-sidebar'
+                )}
+              >
+                <span>{subName}</span>
+                <span
+                  className={cn(
+                    'text-[9px] px-1 py-0.2 rounded font-mono',
+                    isSelected ? 'bg-white/20 text-white' : 'bg-black/10 dark:bg-white/10 text-current/50'
+                  )}
+                >
+                  {subBadge}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

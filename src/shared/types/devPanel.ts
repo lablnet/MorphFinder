@@ -21,6 +21,7 @@ export type ProjectType =
   | 'swift'        // Package.swift without node-swift
   | 'dotnet'       // *.csproj / *.sln
   | 'cpp'          // CMakeLists.txt / Makefile
+  | 'monorepo'     // Monorepo / Multi-package workspace root
   | 'unknown';
 
 export interface DevScript {
@@ -91,4 +92,6 @@ export interface DevPanelInfo {
   gitIsDirty: boolean;
   /** True when at least one manifest file was found. */
   hasProject: boolean;
+  /** Sub-projects in monorepos or multi-folder projects (e.g. apps/*, packages/*, frontend, backend). */
+  subProjects?: DevPanelInfo[];
 }

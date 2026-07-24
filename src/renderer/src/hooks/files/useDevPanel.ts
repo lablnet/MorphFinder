@@ -18,6 +18,7 @@ export function useDevPanel(scanPath: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DevPanelTab>('overview');
+  const [selectedSubPath, setSelectedSubPath] = useState<string | null>(null);
   const [revealedEnvKeys, setRevealedEnvKeys] = useState<Set<string>>(new Set());
   const [favoriteScripts, setFavoriteScripts] = useState<Set<string>>(() => readDevPanelFavorites(scanPath));
   const [scriptRunState, setScriptRunState] = useState<Record<string, ScriptRunState>>({});
@@ -33,6 +34,7 @@ export function useDevPanel(scanPath: string) {
     try {
       const result = await ipc.invoke('devpanel:scan', { path });
       setInfo(result);
+      setSelectedSubPath(null);
       // Reset revealed vars on every new scan for privacy
       setRevealedEnvKeys(new Set());
     } catch (cause) {
@@ -53,6 +55,10 @@ export function useDevPanel(scanPath: string) {
     void scan(scanPathRef.current);
   }, [scan]);
 
+  const activeInfo = (info?.subProjects && selectedSubPath
+    ? info.subProjects.find((sub) => sub.path === selectedSubPath)
+    : null) ?? info;
+
   const revealEnvKey = useCallback((key: string): void => {
     setRevealedEnvKeys((prev) => {
       const next = new Set(prev);
@@ -66,16 +72,17 @@ export function useDevPanel(scanPath: string) {
   }, []);
 
   const runScript = useCallback(async (command: string): Promise<void> => {
-    if (!scanPath) return;
+    const cwd = activeInfo?.path || scanPath;
+    if (!cwd) return;
     setScriptRunState((current) => ({ ...current, [command]: { status: 'queued', ranAt: Date.now() } }));
     try {
-      queueTerminalCommand(scanPath, command);
+      queueTerminalCommand(cwd, command);
       setScriptRunState((current) => ({ ...current, [command]: { status: 'sent', ranAt: Date.now() } }));
     } catch (cause) {
       setScriptRunState((current) => ({ ...current, [command]: { status: 'failed', ranAt: Date.now() } }));
       throw cause;
     }
-  }, [queueTerminalCommand, scanPath]);
+  }, [activeInfo?.path, queueTerminalCommand, scanPath]);
 
   const toggleFavoriteScript = useCallback((scriptName: string): void => {
     setFavoriteScripts((current) => {
@@ -89,6 +96,9 @@ export function useDevPanel(scanPath: string) {
 
   return {
     info,
+    activeInfo,
+    selectedSubPath,
+    setSelectedSubPath,
     loading,
     error,
     activeTab,

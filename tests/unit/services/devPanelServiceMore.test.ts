@@ -148,6 +148,28 @@ describe('dev panel service scanners', () => {
     expect(emptyInfo.projectType).toBe('unknown');
   });
 
+  it('detects monorepos and scans subprojects in apps/packages folders', async () => {
+    const mono = await createFixture('monorepo-root');
+    await writeFile(join(mono, 'pnpm-workspace.yaml'), 'packages:\n  - "apps/*"\n');
+
+    const appA = join(mono, 'apps', 'web');
+    await mkdir(appA, { recursive: true });
+    await writeFile(join(appA, 'package.json'), JSON.stringify({ name: 'resomix-web', version: '1.0.0' }));
+
+    const appB = join(mono, 'apps', 'api');
+    await mkdir(appB, { recursive: true });
+    await writeFile(join(appB, 'package.json'), JSON.stringify({ name: 'resomix-api', version: '2.0.0' }));
+
+    const info = await scanProject(mono);
+    expect(info.hasProject).toBe(true);
+    expect(info.projectType).toBe('monorepo');
+    expect(info.subProjects).toBeDefined();
+    expect(info.subProjects?.length).toBe(2);
+
+    const names = info.subProjects?.map((s) => s.name).sort();
+    expect(names).toEqual(['resomix-api', 'resomix-web']);
+  });
+
   it('validates dev scripts conservatively', () => {
     expect(isValidDevScript('pnpm test')).toBe(true);
     expect(isValidDevScript('test:unit')).toBe(true);

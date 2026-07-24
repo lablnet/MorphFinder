@@ -812,9 +812,7 @@ const EMPTY_RESULT: DevPanelInfo = {
   hasProject: false,
 };
 
-export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
-  // Run all scanners concurrently — every scanner does only cheap fs.access checks
-  // until a manifest file is confirmed, so this is fast even for large directories.
+async function scanSingleFolder(dirPath: string): Promise<DevPanelInfo> {
   const [
     nodeResult,
     rustResult,
@@ -898,6 +896,82 @@ export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
     ...result,
     healthChecks: createHealthChecks(result, packageManager, envChecklist),
     dependencyWarnings: createDependencyWarnings(result.dependencies),
+  };
+}
+
+const IGNORE_SUBDIR_REGEX = /^(node_modules|\.git|dist|build|target|vendor|\.next|\.cache|coverage|\.turbo|\.output|\.out|\.idea|\.vscode)$/i;
+
+const MANIFEST_FILES = [
+  'package.json', 'Cargo.toml', 'pyproject.toml', 'requirements.txt', 'go.mod',
+  'pubspec.yaml', 'build.gradle', 'build.gradle.kts', 'pom.xml', 'CMakeLists.txt',
+  'Gemfile', 'composer.json', 'tsconfig.json'
+];
+
+async function hasManifestFile(dir: string): Promise<boolean> {
+  for (const file of MANIFEST_FILES) {
+    if (await fileExists(nodePath.join(dir, file))) return true;
+  }
+  return false;
+}
+
+async function findSubProjectDirectories(dirPath: string): Promise<string[]> {
+  const subDirs: string[] = [];
+
+  async function scanDir(parent: string, depth: number): Promise<void> {
+    if (depth > 2) return;
+    let entries: string[];
+    try {
+      entries = await fs.readdir(parent);
+    } catch {
+      return;
+    }
+
+    for (const name of entries) {
+      if (IGNORE_SUBDIR_REGEX.test(name)) continue;
+      const fullPath = nodePath.join(parent, name);
+      try {
+        const stat = await fs.stat(fullPath);
+        if (!stat.isDirectory()) continue;
+
+        if (fullPath !== dirPath && (await hasManifestFile(fullPath))) {
+          subDirs.push(fullPath);
+        } else if (depth < 2) {
+          await scanDir(fullPath, depth + 1);
+        }
+      } catch {
+        /* skip unreadable file/folder */
+      }
+    }
+  }
+
+  await scanDir(dirPath, 1);
+  return Array.from(new Set(subDirs)).sort();
+}
+
+export async function scanProject(dirPath: string): Promise<DevPanelInfo> {
+  const mainResult = await scanSingleFolder(dirPath);
+  const subDirPaths = await findSubProjectDirectories(dirPath);
+
+  if (subDirPaths.length === 0) {
+    return mainResult;
+  }
+
+  const subScanResults = await Promise.all(subDirPaths.map((subPath) => scanSingleFolder(subPath)));
+  const validSubProjects = subScanResults.filter((sub) => sub.hasProject);
+
+  if (validSubProjects.length === 0) {
+    return mainResult;
+  }
+
+  const isMonorepoRoot = !mainResult.hasProject || mainResult.projectType === 'node' || mainResult.projectType === 'monorepo';
+  const resolvedProjectType = isMonorepoRoot ? 'monorepo' : mainResult.projectType;
+
+  return {
+    ...mainResult,
+    hasProject: true,
+    projectType: resolvedProjectType,
+    name: mainResult.name ?? nodePath.basename(dirPath),
+    subProjects: validSubProjects,
   };
 }
 
