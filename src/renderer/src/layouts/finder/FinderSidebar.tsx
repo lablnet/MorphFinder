@@ -1,51 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Download, FileText, Home, Monitor, Folder, X, HardDrive, Disc, Cloud, Trash2, type LucideIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, FileText, Home, Monitor, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
-import type { SystemLocation } from '@shared/types/native';
 import { useAppStore } from '@renderer/store';
 import { SidebarContextMenu, type SidebarContextMenuState } from '../../components/navigation/SidebarContextMenu';
-
-function getLocationIcon(iconType: string): LucideIcon {
-  switch (iconType) {
-    case 'hd':
-      return HardDrive;
-    case 'removable':
-      return Disc;
-    case 'cloud':
-      return Cloud;
-    case 'trash':
-      return Trash2;
-    case 'home':
-      return Home;
-    default:
-      return Folder;
-  }
-}
+import { useSystemLocations, getLocationIcon } from '../../hooks/files/useSystemLocations';
 
 export function FinderSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const unpinFolder = useAppStore((state) => state.unpinFolder);
   const [contextMenu, setContextMenu] = useState<SidebarContextMenuState | null>(null);
-  const [locations, setLocations] = useState<SystemLocation[]>([
-    { id: '/', name: 'Macintosh HD', path: '/', iconType: 'hd', isRemovable: false, isInternal: true },
-  ]);
-
-  useEffect(() => {
-    let isMounted = true;
-    window.morph.invoke('native:getLocations', undefined).then((result) => {
-      if (isMounted && Array.isArray(result) && result.length > 0) {
-        setLocations(result);
-      }
-    }).catch(() => {
-      // Fallback stays as default Macintosh HD
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const locations = useSystemLocations();
 
   const favorites = wellKnownDirs === null
     ? []

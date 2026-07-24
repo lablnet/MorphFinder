@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Download, FileText, HardDrive, Home, Folder, X, type LucideIcon } from 'lucide-react';
+import { Download, FileText, Home, Folder, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
 import { useAppStore } from '@renderer/store';
 import { SidebarContextMenu, type SidebarContextMenuState } from '../../components/navigation/SidebarContextMenu';
+import { useSystemLocations, getLocationIcon } from '../../hooks/files/useSystemLocations';
 
 export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const unpinFolder = useAppStore((state) => state.unpinFolder);
   const [contextMenu, setContextMenu] = useState<SidebarContextMenuState | null>(null);
+  const locations = useSystemLocations();
 
   const places = wellKnownDirs === null
     ? []
@@ -58,14 +60,20 @@ export function DolphinSidebar({ wellKnownDirs, activePath, onNavigate }: Sideba
         </SidebarGroup>
       )}
       <SidebarGroup title="Devices">
-        <SidebarRow
-          label="Root"
-          path="/"
-          icon={HardDrive}
-          isActive={activePath === '/'}
-          onClick={() => onNavigate('/')}
-          onContextMenu={(e) => handleContextMenu('/', e)}
-        />
+        {locations.map((loc) => {
+          const Icon = getLocationIcon(loc.iconType);
+          return (
+            <SidebarRow
+              key={loc.id}
+              label={loc.name}
+              path={loc.path}
+              icon={Icon}
+              isActive={activePath === loc.path}
+              onClick={() => onNavigate(loc.path)}
+              onContextMenu={(e) => handleContextMenu(loc.path, e)}
+            />
+          );
+        })}
       </SidebarGroup>
       <SidebarGroup title="Tools">
         {SIDEBAR_TOOLS.map((item) => (

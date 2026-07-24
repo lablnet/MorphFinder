@@ -213,7 +213,7 @@ describe('coverage targets from report screenshot', () => {
     unmount();
 
     render(<DolphinSidebar wellKnownDirs={wellKnownDirs} activePath="/" onNavigate={onNavigate} />);
-    fireEvent.click(screen.getByRole('button', { name: /^root$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /macintosh hd/i }));
     expect(onNavigate).toHaveBeenCalledWith('/');
 
     const openTab = vi.fn();

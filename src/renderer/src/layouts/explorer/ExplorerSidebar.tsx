@@ -6,11 +6,13 @@ import { SIDEBAR_TOOLS } from '../sidebarConfig';
 import type { SidebarProps } from '../types';
 import { useAppStore } from '@renderer/store';
 import { SidebarContextMenu, type SidebarContextMenuState } from '../../components/navigation/SidebarContextMenu';
+import { useSystemLocations, getLocationIcon } from '../../hooks/files/useSystemLocations';
 
 export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: SidebarProps): React.JSX.Element {
   const pinnedFolders = useAppStore((state) => state.pinnedFolders);
   const unpinFolder = useAppStore((state) => state.unpinFolder);
   const [contextMenu, setContextMenu] = useState<SidebarContextMenuState | null>(null);
+  const locations = useSystemLocations();
 
   const quickAccess = wellKnownDirs === null
     ? []
@@ -67,6 +69,20 @@ export function ExplorerSidebar({ wellKnownDirs, activePath, onNavigate }: Sideb
           onClick={() => onNavigate(THIS_PC_PATH)}
           onContextMenu={(e) => handleContextMenu(THIS_PC_PATH, e)}
         />
+        {locations.map((loc) => {
+          const Icon = getLocationIcon(loc.iconType);
+          return (
+            <SidebarRow
+              key={loc.id}
+              label={loc.name}
+              path={loc.path}
+              icon={Icon}
+              isActive={activePath === loc.path}
+              onClick={() => onNavigate(loc.path)}
+              onContextMenu={(e) => handleContextMenu(loc.path, e)}
+            />
+          );
+        })}
       </SidebarGroup>
       <SidebarGroup title="Tools">
         {SIDEBAR_TOOLS.map((item) => (
