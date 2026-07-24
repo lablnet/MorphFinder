@@ -1,0 +1,25 @@
+# PR Labeler Rules
+native:
+  - changed-files:
+      - any-glob-to-any-file: 'native/**/*'
+
+layouts:
+  - changed-files:
+      - any-glob-to-any-file: 'src/renderer/src/layouts/**/*'
+
+ipc:
+  - changed-files:
+      - any-glob-to-any-file: 'src/shared/ipc/**/*'
+      - any-glob-to-any-file: 'src/main/ipc/**/*'
+
+main-process:
+  - changed-files:
+      - any-glob-to-any-file: 'src/main/**/*'
+
+renderer-process:
+  - changed-files:
+      - any-glob-to-any-file: 'src/renderer/**/*'
+
+workflows:
+  - changed-files:
+      - any-glob-to-any-file: '.github/workflows/**/*'
