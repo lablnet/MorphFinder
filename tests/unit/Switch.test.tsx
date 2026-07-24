@@ -61,4 +61,14 @@ describe('Switch', () => {
     const defaultBtn = defaultContainer.querySelector('button');
     expect(defaultBtn?.className).toContain('h-6 w-11');
   });
+
+  it('applies correct translation classes when checked and unchecked', () => {
+    const { container: uncheckedContainer } = render(<Switch checked={false} size="sm" />);
+    const uncheckedThumb = uncheckedContainer.querySelector('span');
+    expect(uncheckedThumb?.className).toContain('translate-x-[2px]');
+
+    const { container: checkedContainer } = render(<Switch checked={true} size="sm" />);
+    const checkedThumb = checkedContainer.querySelector('span');
+    expect(checkedThumb?.className).toContain('translate-x-[18px]');
+  });
 });

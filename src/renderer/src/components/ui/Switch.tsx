@@ -62,8 +62,8 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
             isSm ? 'h-4 w-4' : 'h-5 w-5',
             shellId === 'explorer' && 'rounded-xs',
             checked
-              ? isSm ? 'translate-x-4.5' : 'translate-x-5.5'
-              : 'translate-x-0.5'
+              ? isSm ? 'translate-x-[18px]' : 'translate-x-[22px]'
+              : 'translate-x-[2px]'
           )}
         />
       </button>
