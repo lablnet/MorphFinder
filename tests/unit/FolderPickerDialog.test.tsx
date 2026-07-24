@@ -126,6 +126,20 @@ describe('FolderPickerDialog', () => {
     await waitFor(() => expect(screen.getByText('/home')).toBeDefined());
   });
 
+  it('toggles hidden files when switch is toggled', async () => {
+    renderPicker();
+    expect(await screen.findByText('projects')).toBeDefined();
+    expect(ipcState.invoke).toHaveBeenCalledWith('fs:readDirectory', { path: '/home', includeHidden: false });
+
+    const hiddenSwitch = screen.getByRole('switch', { name: /show hidden/i });
+    expect(hiddenSwitch.getAttribute('aria-checked')).toBe('false');
+
+    fireEvent.click(hiddenSwitch);
+    await waitFor(() => {
+      expect(ipcState.invoke).toHaveBeenCalledWith('fs:readDirectory', { path: '/home', includeHidden: true });
+    });
+  });
+
   it('closes on Escape', async () => {
     const onClose = vi.fn();
     renderPicker({ onClose });

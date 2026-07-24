@@ -42,10 +42,12 @@ export function FolderPickerDialog({
           pathInput={picker.pathInput}
           isLoading={picker.isLoading}
           viewMode={picker.viewMode}
+          showHiddenFiles={picker.showHiddenFiles}
           onLoadPath={(path) => void picker.loadPath(path)}
           onPathInputChange={picker.setPathInput}
           onPathInputFocusChange={picker.setPathInputFocused}
           onViewModeChange={picker.setViewMode}
+          onToggleHiddenFiles={picker.toggleHiddenFiles}
         />
 
         <div className="flex min-h-0 flex-1">

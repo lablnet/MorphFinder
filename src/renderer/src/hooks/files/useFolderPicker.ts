@@ -39,6 +39,8 @@ export function useFolderPicker(initialPath?: string | null): {
   isLoading: boolean;
   error: string | null;
   viewMode: FolderPickerViewMode;
+  showHiddenFiles: boolean;
+  toggleHiddenFiles: () => void;
   quickFolders: FolderPickerQuickFolder[];
   loadPath: (path: string) => Promise<void>;
   setPathInput: (path: string) => void;
@@ -47,6 +49,7 @@ export function useFolderPicker(initialPath?: string | null): {
 } {
   const activeShell = useAppStore((state) => state.activeShell);
   const showHiddenFiles = useAppStore((state) => state.showHiddenFiles);
+  const toggleHiddenFiles = useAppStore((state) => state.toggleHiddenFiles);
   const wellKnownDirs = useAppStore((state) => state.wellKnownDirs);
   const startPath = initialPath !== null && initialPath !== undefined && !isVirtualPath(initialPath)
     ? initialPath
@@ -112,6 +115,8 @@ export function useFolderPicker(initialPath?: string | null): {
     isLoading,
     error,
     viewMode,
+    showHiddenFiles,
+    toggleHiddenFiles,
     quickFolders,
     loadPath,
     setPathInput,
