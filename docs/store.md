@@ -69,7 +69,7 @@ https://morphfinder.lablnet.com/
 ### **7. Copyright**
 
 ```text
-2026 MACROHUB LLC. All rights reserved.
+2026 Lablnet. All rights reserved.
 ```
 
 ---

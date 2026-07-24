@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "author": "MacroHub LLC",
+  "author": "Lablnet",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
