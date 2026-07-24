@@ -230,6 +230,7 @@ export function useFileSystem(): UseFileSystemResult {
       path === DEV_PANEL_PATH ||
       path === DUPLICATE_FINDER_PATH ||
       path === FILE_TIMELINE_PATH ||
+      path === AIRSHARE_PATH ||
       isSmartCollectionPath(path)
     ) return;
     void ipc.invoke('fs:watch', { path });
