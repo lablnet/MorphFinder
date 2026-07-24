@@ -22,25 +22,27 @@ export const AirShareHub: React.FC = () => {
   const { receivedFiles, openReceivedFolder } = useInboundFiles();
 
   return (
-    <div className="flex flex-col gap-5 p-6 max-w-4xl mx-auto w-full overflow-y-auto max-h-full">
+    <div className="flex flex-col h-full w-full p-6 gap-6 overflow-hidden bg-shell-surface box-border">
       <AirShareHeader isServerActive={Boolean(activeSession)} onStop={stopShare} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0 w-full">
+        {/* Left Column: Configuration & QR / Standby Info */}
+        <div className="flex flex-col gap-6 overflow-y-auto min-h-0 pr-1">
           <AirShareConfigCard
             session={activeSession}
             allowInbound={allowInbound}
             onSelectFolder={() => setIsFolderPickerOpen(true)}
             onToggleInbound={(allow) => void toggleInbound(allow)}
           />
+          <AirShareQrPanel session={activeSession} copied={copied} onCopy={copyUrl} />
+        </div>
+
+        {/* Right Column: Inbound Received Files */}
+        <div className="flex flex-col h-full min-h-0">
           <AirShareReceivedList
             receivedFiles={receivedFiles}
             onOpenFolder={() => void openReceivedFolder()}
           />
-        </div>
-
-        <div>
-          <AirShareQrPanel session={activeSession} copied={copied} onCopy={copyUrl} />
         </div>
       </div>
 

@@ -23,24 +23,31 @@ export const AirShareConfigCard: React.FC<AirShareConfigCardProps> = ({
           <Folder className="w-4 h-4 text-emerald-500" />
           <span>Shared Local Path</span>
         </div>
-        <Button onClick={onSelectFolder} variant="outline" size="sm" className="gap-1.5 text-xs font-semibold cursor-pointer">
+        <Button onClick={onSelectFolder} variant="outline" size="sm" className="gap-1.5 text-xs font-semibold cursor-pointer transition-all hover:border-emerald-500/40">
           <FolderSearch className="w-3.5 h-3.5" />
           <span>Choose Folder</span>
         </Button>
       </div>
 
-      <div className="p-3 bg-shell-sidebar rounded-xl border border-shell-border">
-        <span className="text-xs font-mono text-current/80 truncate block">
+      <div className="p-3.5 bg-shell-sidebar rounded-xl border border-shell-border flex items-center justify-between gap-2">
+        <span className="text-xs font-mono text-current/90 truncate block flex-1">
           {session?.targetPath || 'No folder selected. Click Choose Folder to start sharing.'}
         </span>
+        {session?.targetPath && (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20 shrink-0">
+            Active
+          </span>
+        )}
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-shell-border">
-        <div className="flex items-center gap-2">
-          <Upload className="w-4 h-4 text-sky-500" />
+      <div className="flex items-center justify-between pt-3 border-t border-shell-border">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-sky-500/10 text-sky-500 border border-sky-500/20">
+            <Upload className="w-4 h-4" />
+          </div>
           <div>
             <div className="text-xs font-semibold text-current">Allow Inbound File Receiving</div>
-            <div className="text-[11px] text-current/60">Phone/PC visitors can send files to desktop</div>
+            <div className="text-[11px] text-current/60">Phone or secondary PC visitors can upload files to desktop</div>
           </div>
         </div>
 
