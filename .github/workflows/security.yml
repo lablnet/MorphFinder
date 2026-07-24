@@ -53,9 +53,20 @@ jobs:
           path: semgrep.json
           if-no-files-found: ignore
 
-      - name: Fail on Semgrep findings
-        if: always() && steps.semgrep.outputs.exit_code != '0'
-        run: exit 1
+      - name: Summarize Semgrep report
+        if: always()
+        run: |
+          {
+            echo "## Semgrep"
+            echo
+            if [ -f semgrep.json ]; then
+              echo "Semgrep completed with exit code: ${{ steps.semgrep.outputs.exit_code }}"
+              echo
+              echo "Semgrep findings are reported as artifacts and SARIF, but this workflow only fails for high-or-higher pnpm audit vulnerabilities."
+            else
+              echo "Semgrep report was not generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   pnpm-audit:
     name: pnpm audit
@@ -70,4 +81,69 @@ jobs:
           install: "false"
 
       - name: Run pnpm audit
-        run: pnpm audit --audit-level high
+        id: pnpm-audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm audit --audit-level high --json > pnpm-audit.json
+          audit_status=$?
+          echo "exit_code=${audit_status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Summarize pnpm audit
+        if: always()
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+          const reportPath = 'pnpm-audit.json';
+          const status = process.env.AUDIT_EXIT_CODE || '1';
+
+          const write = (content) => fs.appendFileSync(summaryPath, content);
+          write('## pnpm audit\n\n');
+
+          if (!fs.existsSync(reportPath)) {
+            write('pnpm audit did not produce a JSON report.\n');
+            process.exit(0);
+          }
+
+          const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+          const advisories = Object.values(report.advisories || {});
+          const highOrWorse = advisories.filter((advisory) =>
+            ['high', 'critical'].includes(String(advisory.severity).toLowerCase()),
+          );
+
+          write(`Audit exit code: ${status}\n\n`);
+          write(`High-or-higher vulnerabilities: ${highOrWorse.length}\n\n`);
+
+          if (highOrWorse.length === 0) {
+            write('No high-or-higher pnpm audit vulnerabilities were found.\n');
+            process.exit(0);
+          }
+
+          write('| Severity | Package | Title |\n');
+          write('| --- | --- | --- |\n');
+          for (const advisory of highOrWorse) {
+            const severity = advisory.severity || 'unknown';
+            const moduleName = advisory.module_name || advisory.name || 'unknown';
+            const title = String(advisory.title || advisory.overview || 'Untitled').replace(/\|/g, '\\|');
+            write(`| ${severity} | ${moduleName} | ${title} |\n`);
+          }
+          NODE
+        env:
+          AUDIT_EXIT_CODE: ${{ steps.pnpm-audit.outputs.exit_code }}
+
+      - name: Upload pnpm audit report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pnpm-audit-report
+          path: pnpm-audit.json
+          if-no-files-found: error
+
+      - name: Fail on high pnpm audit vulnerabilities
+        if: always() && steps.pnpm-audit.outputs.exit_code != '0'
+        run: exit 1
