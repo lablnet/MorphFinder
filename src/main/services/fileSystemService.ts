@@ -5,6 +5,7 @@ import { app, shell } from 'electron';
 import type { DirectoryListing, FileSystemNode } from '@shared/types/fileSystem';
 import type { FileContentResponse } from '@shared/types/fileViewer';
 import { MAX_FILE_READ_BYTES } from '@shared/types/fileViewer';
+import { assertFilesystemPath, assertFilesystemPaths, assertSafePermanentDeleteTargets } from './pathPolicy';
 
 function isHiddenName(name: string): boolean {
   // Windows hidden attribute isn't exposed via node:fs without a native call;
@@ -33,6 +34,7 @@ async function toFileSystemNode(parentDir: string, name: string): Promise<FileSy
 }
 
 export async function readDirectory(path: string, includeHidden: boolean): Promise<DirectoryListing> {
+  assertFilesystemPath(path, 'Read directory');
   const entries = await readdir(path);
   const visibleEntries = includeHidden ? entries : entries.filter((name) => !isHiddenName(name));
 
@@ -43,6 +45,7 @@ export async function readDirectory(path: string, includeHidden: boolean): Promi
 }
 
 export async function renameEntry(path: string, newName: string): Promise<FileSystemNode> {
+  assertFilesystemPath(path, 'Rename');
   const parentDir = join(path, '..');
   const destination = join(parentDir, newName);
   if (destination !== path && await pathExists(destination)) {
@@ -55,6 +58,7 @@ export async function renameEntry(path: string, newName: string): Promise<FileSy
 }
 
 export async function createFolder(parentPath: string, name: string): Promise<FileSystemNode> {
+  assertFilesystemPath(parentPath, 'Create folder');
   const path = join(parentPath, name);
   await mkdir(path);
   const node = await toFileSystemNode(parentPath, name);
@@ -86,12 +90,14 @@ export function wellKnownDirectories(): {
 }
 
 export async function trashPaths(paths: string[]): Promise<void> {
+  assertFilesystemPaths(paths, 'Move to trash');
   for (const path of paths) {
     await shell.trashItem(path);
   }
 }
 
 export async function deletePermanently(paths: string[]): Promise<void> {
+  assertSafePermanentDeleteTargets(paths);
   for (const path of paths) {
     await rm(path, { recursive: true, force: true });
   }
@@ -110,6 +116,7 @@ export async function emptyTrash(): Promise<void> {
 }
 
 export async function restoreFromTrash(paths: string[]): Promise<void> {
+  assertFilesystemPaths(paths, 'Restore from trash');
   const desktopPath = app.getPath('desktop');
   for (const path of paths) {
     const filename = basename(path);
@@ -119,11 +126,13 @@ export async function restoreFromTrash(paths: string[]): Promise<void> {
 }
 
 export async function openPath(path: string): Promise<void> {
+  assertFilesystemPath(path, 'Open path');
   const errorMessage = await shell.openPath(path);
   if (errorMessage !== '') throw new Error(errorMessage);
 }
 
 export function showItemInFolder(path: string): void {
+  assertFilesystemPath(path, 'Show in folder');
   shell.showItemInFolder(path);
 }
 
@@ -153,6 +162,7 @@ export async function readFileContent(
   path: string,
   maxBytes?: number,
 ): Promise<FileContentResponse> {
+  assertFilesystemPath(path, 'Read file');
   const cap = maxBytes ?? MAX_FILE_READ_BYTES;
   const stats = await stat(path);
   const totalBytes = stats.size;

@@ -17,6 +17,7 @@ import { createFileTimelineHandlers } from './fileTimeline.handlers';
 import { createSnapshotHandlers } from './snapshots.handlers';
 import { createArchiveHandlers } from './archive.handlers';
 import { createWebShareHandlers } from './webshare.handlers';
+import { validateIpcRequest } from './validation';
 
 type Handler<C extends IpcChannel> = (
   request: IpcContract[C]['request'],
@@ -67,6 +68,7 @@ export function registerHandlers(): void {
   for (const channel of Object.keys(handlers) as IpcChannel[]) {
     const dispatch = handlers[channel] as (request: unknown) => unknown;
     ipcMain.handle(channel, (event, request: unknown) => {
+      validateIpcRequest(channel, request);
       const window = BrowserWindow.fromWebContents(event.sender);
       if (window) {
         return ipcWindowStore.run(window, () => dispatch(request));

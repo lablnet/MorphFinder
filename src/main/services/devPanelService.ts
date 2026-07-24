@@ -14,191 +14,20 @@ import type {
   DevPanelInfo,
   DevScript,
   DevDependency,
-  EnvVar,
   DevToolchain,
-  DependencyWarning,
-  EnvChecklistItem,
-  ProjectHealthCheck,
 } from '@shared/types/devPanel';
 import { getGitStatus } from './gitService';
+import { fileExists, readJsonFile } from './devpanel/fileUtils';
+import { parseEnvChecklist, parseEnvFile } from './devpanel/env';
+import { detectPackageManager } from './devpanel/packageManager';
+import { createDependencyWarnings, createHealthChecks } from './devpanel/health';
+import { parseSimpleToml } from './devpanel/toml';
 
 const execAsync = promisify(exec);
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-async function readJsonFile(filePath: string): Promise<unknown> {
-  const raw = await fs.readFile(filePath, 'utf8');
-  return JSON.parse(raw) as unknown;
-}
-
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// .env parser
-// ---------------------------------------------------------------------------
-
-async function parseEnvFile(dirPath: string): Promise<EnvVar[]> {
-  const envPath = nodePath.join(dirPath, '.env');
-  if (!(await fileExists(envPath))) return [];
-  try {
-    const raw = await fs.readFile(envPath, 'utf8');
-    const vars: EnvVar[] = [];
-    for (const line of raw.split('\n')) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eqIdx = trimmed.indexOf('=');
-      if (eqIdx === -1) {
-        vars.push({ key: trimmed, value: '' });
-      } else {
-        const key = trimmed.slice(0, eqIdx).trim();
-        const value = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
-        if (key.length > 0) vars.push({ key, value });
-      }
-    }
-    return vars;
-  } catch {
-    return [];
-  }
-}
-
-async function parseEnvChecklist(dirPath: string, envVars: EnvVar[]): Promise<EnvChecklistItem[]> {
-  const candidates = [
-    { fileName: '.env.example', source: '.env.example' as const },
-    { fileName: '.env.sample', source: '.env.sample' as const },
-    { fileName: '.env.template', source: '.env.template' as const },
-  ];
-  const presentKeys = new Set(envVars.map((item) => item.key));
-
-  for (const candidate of candidates) {
-    const templatePath = nodePath.join(dirPath, candidate.fileName);
-    if (!(await fileExists(templatePath))) continue;
-    try {
-      const raw = await fs.readFile(templatePath, 'utf8');
-      return raw
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0 && !line.startsWith('#'))
-        .map((line) => line.split('=')[0]?.trim() ?? '')
-        .filter((key) => key.length > 0)
-        .map((key) => ({ key, present: presentKeys.has(key), source: candidate.source }));
-    } catch {
-      return [];
-    }
-  }
-
-  return [];
-}
-
-async function detectPackageManager(dirPath: string): Promise<string | null> {
-  const lockfiles: Array<[string, string]> = [
-    ['pnpm-lock.yaml', 'pnpm'],
-    ['yarn.lock', 'yarn'],
-    ['package-lock.json', 'npm'],
-    ['bun.lockb', 'bun'],
-    ['bun.lock', 'bun'],
-    ['Cargo.lock', 'cargo'],
-    ['poetry.lock', 'poetry'],
-    ['Pipfile.lock', 'pipenv'],
-    ['go.sum', 'go'],
-    ['composer.lock', 'composer'],
-    ['Gemfile.lock', 'bundler'],
-  ];
-  for (const [fileName, manager] of lockfiles) {
-    if (await fileExists(nodePath.join(dirPath, fileName))) return manager;
-  }
-  if (await fileExists(nodePath.join(dirPath, 'package.json'))) return 'npm';
-  if (await fileExists(nodePath.join(dirPath, 'Cargo.toml'))) return 'cargo';
-  if (await fileExists(nodePath.join(dirPath, 'requirements.txt'))) return 'pip';
-  return null;
-}
-
-function createDependencyWarnings(dependencies: DevDependency[]): DependencyWarning[] {
-  return dependencies.flatMap((dependency) => {
-    const warnings: DependencyWarning[] = [];
-    if (dependency.version === '*' || dependency.version === 'latest') {
-      warnings.push({
-        packageName: dependency.name,
-        severity: 'warn',
-        message: 'Version is not pinned.',
-      });
-    }
-    if (/file:|link:|workspace:/.test(dependency.version)) {
-      warnings.push({
-        packageName: dependency.name,
-        severity: 'info',
-        message: 'Uses a local/workspace reference.',
-      });
-    }
-    return warnings;
-  });
-}
-
-function createHealthChecks(info: DevPanelInfo, packageManager: string | null, envChecklist: EnvChecklistItem[]): ProjectHealthCheck[] {
-  const missingEnvCount = envChecklist.filter((item) => !item.present).length;
-  return [
-    {
-      id: 'scripts',
-      label: 'Runnable scripts',
-      status: info.scripts.length > 0 ? 'pass' : 'warn',
-      detail: info.scripts.length > 0 ? `${info.scripts.length} script${info.scripts.length === 1 ? '' : 's'} detected.` : 'No scripts detected.',
-    },
-    {
-      id: 'package-manager',
-      label: 'Package manager',
-      status: packageManager === null ? 'warn' : 'pass',
-      detail: packageManager === null ? 'No lockfile/package manager detected.' : `${packageManager} detected.`,
-    },
-    {
-      id: 'git',
-      label: 'Git workspace',
-      status: info.gitBranch === null ? 'warn' : info.gitIsDirty ? 'warn' : 'pass',
-      detail: info.gitBranch === null ? 'Not inside a Git repository.' : info.gitIsDirty ? `Branch ${info.gitBranch} has changes.` : `Branch ${info.gitBranch} is clean.`,
-    },
-    {
-      id: 'env',
-      label: '.env completeness',
-      status: envChecklist.length === 0 ? 'warn' : missingEnvCount === 0 ? 'pass' : 'fail',
-      detail: envChecklist.length === 0 ? 'No env template found.' : missingEnvCount === 0 ? 'All template keys are present.' : `${missingEnvCount} env key${missingEnvCount === 1 ? '' : 's'} missing.`,
-    },
-  ];
-}
-
-// ---------------------------------------------------------------------------
-// TOML parser — minimal hand-rolled for Cargo.toml / pyproject.toml
-// (no external deps; only reads [package] / [project] sections)
-// ---------------------------------------------------------------------------
-
-function parseSimpleToml(raw: string): Record<string, Record<string, string>> {
-  const result: Record<string, Record<string, string>> = {};
-  let currentSection = '__root__';
-  result[currentSection] = {};
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const sectionMatch = /^\[([^\]]+)\]$/.exec(trimmed);
-    if (sectionMatch) {
-      currentSection = sectionMatch[1]!.trim();
-      if (!result[currentSection]) result[currentSection] = {};
-      continue;
-    }
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const rawVal = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
-      (result[currentSection] ??= {})[key] = rawVal;
-    }
-  }
-  return result;
-}
 
 // ---------------------------------------------------------------------------
 // Node.js / package.json
@@ -1030,4 +859,3 @@ export async function runScript(cwd: string, command: string): Promise<void> {
   });
   child.unref();
 }
-

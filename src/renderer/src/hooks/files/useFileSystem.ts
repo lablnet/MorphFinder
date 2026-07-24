@@ -5,17 +5,18 @@ import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import {
   THIS_PC_PATH,
-  CACHE_CLEANER_PATH,
-  SPACE_ANALYZER_PATH,
-  DEV_PANEL_PATH,
-  DUPLICATE_FINDER_PATH,
-  FILE_TIMELINE_PATH,
-  AIRSHARE_PATH,
   SMART_COLLECTIONS_PATH,
-  smartCollectionPath,
 } from '@shared/constants';
 import { SMART_COLLECTIONS, type SmartCollectionId } from '@shared/types/smartCollections';
 import { classifyFileSystemError, type FileSystemErrorKind } from '@renderer/lib/fileSystemError';
+import {
+  isSmartCollectionPath,
+  isWatchablePath,
+  normalizeVirtualPath,
+  smartCollectionIdFromPath,
+  smartCollectionLocationPath,
+  VIRTUAL_LOCATIONS,
+} from '@shared/virtualLocations';
 
 export interface UseFileSystemResult {
   nodes: FileSystemNode[];
@@ -59,23 +60,8 @@ function createThisPcNodes(wellKnownDirs: { home: string; desktop: string; docum
 function createSmartCollectionNodes(): FileSystemNode[] {
   return SMART_COLLECTIONS.map((collection) => virtualDirectory(
     collection.label,
-    collection.id === 'duplicates' ? DUPLICATE_FINDER_PATH : smartCollectionPath(collection.id),
+    smartCollectionLocationPath(collection.id),
   ));
-}
-
-function smartCollectionIdFromPath(path: string): SmartCollectionId | null {
-  if (!path.startsWith(`${SMART_COLLECTIONS_PATH}/`)) return null;
-  const id = path.slice(SMART_COLLECTIONS_PATH.length + 1);
-  return SMART_COLLECTIONS.some((collection) => collection.id === id) ? id as SmartCollectionId : null;
-}
-
-function normalizeVirtualPath(path: string): string {
-  if (path.startsWith('/morph:/')) return path.replace('/morph:/', 'morph://');
-  return path;
-}
-
-function isSmartCollectionPath(path: string): boolean {
-  return path === SMART_COLLECTIONS_PATH || smartCollectionIdFromPath(path) !== null;
 }
 
 function smartCollectionRoots(
@@ -142,45 +128,15 @@ export function useFileSystem(): UseFileSystemResult {
         setHasPartialResults(false);
         return;
       }
-      if (path === CACHE_CLEANER_PATH) {
-        if (!isCurrentRequest()) return;
-        setNodes([]);
-        setHasPartialResults(false);
-        return;
-      }
-      if (path === SPACE_ANALYZER_PATH) {
-        if (!isCurrentRequest()) return;
-        setNodes([]);
-        setHasPartialResults(false);
-        return;
-      }
-      if (path === DEV_PANEL_PATH) {
-        if (!isCurrentRequest()) return;
-        setNodes([]);
-        setHasPartialResults(false);
-        return;
-      }
-      if (path === DUPLICATE_FINDER_PATH) {
-        if (!isCurrentRequest()) return;
-        setNodes([]);
-        setHasPartialResults(false);
-        return;
-      }
-      if (path === FILE_TIMELINE_PATH) {
-        if (!isCurrentRequest()) return;
-        setNodes([]);
-        setHasPartialResults(false);
-        return;
-      }
-      if (path === AIRSHARE_PATH) {
-        if (!isCurrentRequest()) return;
-        setNodes([]);
-        setHasPartialResults(false);
-        return;
-      }
       if (path === SMART_COLLECTIONS_PATH) {
         if (!isCurrentRequest()) return;
         setNodes(createSmartCollectionNodes());
+        setHasPartialResults(false);
+        return;
+      }
+      if (VIRTUAL_LOCATIONS.some((location) => location.path === path)) {
+        if (!isCurrentRequest()) return;
+        setNodes([]);
         setHasPartialResults(false);
         return;
       }
@@ -223,16 +179,7 @@ export function useFileSystem(): UseFileSystemResult {
     if (path === null) return;
 
     void load();
-    if (
-      path === THIS_PC_PATH ||
-      path === CACHE_CLEANER_PATH ||
-      path === SPACE_ANALYZER_PATH ||
-      path === DEV_PANEL_PATH ||
-      path === DUPLICATE_FINDER_PATH ||
-      path === FILE_TIMELINE_PATH ||
-      path === AIRSHARE_PATH ||
-      isSmartCollectionPath(path)
-    ) return;
+    if (!isWatchablePath(path)) return;
     void ipc.invoke('fs:watch', { path });
 
     const unsubscribe = ipc.on('fs:changed', (event) => {

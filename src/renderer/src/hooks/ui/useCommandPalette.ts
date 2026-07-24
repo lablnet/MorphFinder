@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@renderer/store';
-import { AIRSHARE_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH } from '@shared/constants';
 import { ipc } from '@renderer/services/ipc';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import type { UIShell, UIThemeMode } from '@shared/types/layout';
+import { VIRTUAL_LOCATIONS } from '@shared/virtualLocations';
 
 export interface CommandItem {
   id: string;
@@ -188,62 +188,16 @@ export function useCommandPalette({
       icon: 'HardDrive',
       action: () => openTab('/'),
     });
-    list.push({
-      id: 'nav-airshare',
-      category: 'Navigation',
-      label: 'Open Morph AirShare (File Exchange Hub)',
-      description: AIRSHARE_PATH,
-      icon: 'Wifi',
-      action: () => openTab(AIRSHARE_PATH),
-    });
-    list.push({
-      id: 'nav-cache-cleaner',
-      category: 'Navigation',
-      label: 'Open Cache Cleaner',
-      description: CACHE_CLEANER_PATH,
-      icon: 'Trash2',
-      action: () => openTab(CACHE_CLEANER_PATH),
-    });
-    list.push({
-      id: 'nav-space-analyzer',
-      category: 'Navigation',
-      label: 'Open Space Analyzer',
-      description: SPACE_ANALYZER_PATH,
-      icon: 'PieChart',
-      action: () => openTab(SPACE_ANALYZER_PATH),
-    });
-    list.push({
-      id: 'nav-dev-panel',
-      category: 'Navigation',
-      label: 'Open Dev Panel',
-      description: DEV_PANEL_PATH,
-      icon: 'Code2',
-      action: () => openTab(DEV_PANEL_PATH),
-    });
-    list.push({
-      id: 'nav-smart-collections',
-      category: 'Navigation',
-      label: 'Open Smart Collections',
-      description: SMART_COLLECTIONS_PATH,
-      icon: 'Sparkles',
-      action: () => openTab(SMART_COLLECTIONS_PATH),
-    });
-    list.push({
-      id: 'nav-duplicate-finder',
-      category: 'Navigation',
-      label: 'Open Duplicate Finder',
-      description: DUPLICATE_FINDER_PATH,
-      icon: 'Copy',
-      action: () => openTab(DUPLICATE_FINDER_PATH),
-    });
-    list.push({
-      id: 'nav-file-timeline',
-      category: 'Navigation',
-      label: 'Open File Timeline',
-      description: FILE_TIMELINE_PATH,
-      icon: 'Clock3',
-      action: () => openTab(FILE_TIMELINE_PATH),
-    });
+    for (const location of VIRTUAL_LOCATIONS.filter((location) => location.id !== 'this-pc')) {
+      list.push({
+        id: `nav-${location.id}`,
+        category: 'Navigation',
+        label: location.commandLabel,
+        description: location.path,
+        icon: location.icon,
+        action: () => openTab(location.path),
+      });
+    }
 
     // --- ACTIONS ---
     list.push({

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import type { FileSystemNode } from '@shared/types/fileSystem';
 import { ipc } from '@renderer/services/ipc';
-import { THIS_PC_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH, AIRSHARE_PATH } from '@shared/constants';
+import { THIS_PC_PATH } from '@shared/constants';
+import { isVirtualPath } from '@shared/virtualLocations';
 import { nextSelectionForKeyboard, type SelectionNavigationKey } from '../../components/files/selection';
 import { useFileSystem } from './useFileSystem';
 import { useFileOperations } from './useFileOperations';
@@ -11,7 +12,8 @@ import { useLayoutShell } from '../ui/useLayoutShell';
 import { useTabs } from '../ui/useTabs';
 import { useTheme } from '../ui/useTheme';
 import { useAppStore } from '@renderer/store';
-import type { FileContextAction, FileContextMenuState } from '../../components/files/FileContextMenu';
+import type { FileContextMenuState } from '../../components/files/FileContextMenu';
+import { useFileActionRunner } from './useFileActionRunner';
 
 type ClipboardState = { kind: 'copy' | 'cut'; paths: string[] } | null;
 type RenameDraft = { node: FileSystemNode; value: string; error: string | null } | null;
@@ -63,7 +65,7 @@ export function useFileSystemController() {
   }, [setAnnotations]);
 
   const viewMode = activeTab?.viewMode ?? 'list';
-  const isVirtualLocation = tabs.activePath === THIS_PC_PATH || tabs.activePath === AIRSHARE_PATH || tabs.activePath === CACHE_CLEANER_PATH || tabs.activePath === SPACE_ANALYZER_PATH || tabs.activePath === DEV_PANEL_PATH || tabs.activePath === DUPLICATE_FINDER_PATH || tabs.activePath === FILE_TIMELINE_PATH || tabs.activePath.startsWith(SMART_COLLECTIONS_PATH);
+  const isVirtualLocation = isVirtualPath(tabs.activePath);
   const selectedNodes = useMemo(
     () => fs.nodes.filter((node) => selection.selectedSet.has(node.path)),
     [fs.nodes, selection.selectedSet],
@@ -206,55 +208,19 @@ export function useFileSystemController() {
     });
   }, [selectedNodes, selection, clipboard, destinationForPaste, tabs.activePath]);
 
-  const runContextAction = useCallback((action: FileContextAction): void => {
-    const primaryNode = contextNode ?? contextTargets[0] ?? null;
-    setContextMenu(null);
-
-    if (action === 'open' && primaryNode !== null) fs.openNode(primaryNode);
-    if (action === 'open-in-new-tab' && primaryNode !== null) {
-      useAppStore.getState().openTab(primaryNode.path, { activate: true });
-    }
-    if (action === 'open-in-new-window' && primaryNode !== null) {
-      void ipc.invoke('shell:newWindow', { path: primaryNode.path });
-    }
-    if (action === 'open-with-system' && primaryNode !== null) void ipc.invoke('shell:openWith', { path: primaryNode.path });
-    if (action === 'rename' && primaryNode !== null) void renameNode(primaryNode);
-    if (action === 'copy' && contextTargets.length > 0) setClipboard({ kind: 'copy', paths: contextTargets.map((node) => node.path) });
-    if (action === 'cut' && contextTargets.length > 0) setClipboard({ kind: 'cut', paths: contextTargets.map((node) => node.path) });
-    if (action === 'paste') void pasteClipboard(contextNode);
-    if (action === 'trash' && contextTargets.length > 0) {
-      void operations.trash(contextTargets.map((node) => node.path)).then(fs.refresh);
-    }
-    if (action === 'delete-permanently' && contextTargets.length > 0) {
-      void ipc.invoke('shell:deletePermanently', { paths: contextTargets.map((node) => node.path) }).then(fs.refresh);
-    }
-    if (action === 'restore' && contextTargets.length > 0) {
-      void ipc.invoke('shell:restoreFromTrash', { paths: contextTargets.map((node) => node.path) }).then(fs.refresh);
-    }
-    if (action === 'empty-trash') {
-      void ipc.invoke('shell:emptyTrash', undefined).then(fs.refresh);
-    }
-    if (action === 'details' && primaryNode !== null) {
-      useAppStore.getState().openDetails(primaryNode);
-    }
-    if (action === 'pin' && primaryNode !== null) {
-      useAppStore.getState().pinFolder(primaryNode.path);
-    }
-    if (action === 'unpin' && primaryNode !== null) {
-      useAppStore.getState().unpinFolder(primaryNode.path);
-    }
-    if (action === 'compress' && contextTargets.length > 0) {
-      void operations.compress(contextTargets.map((node) => node.path)).then(fs.refresh);
-    }
-    if (action === 'extract' && primaryNode !== null) {
-      void operations.extract(primaryNode.path).then(fs.refresh);
-    }
-    if (action === 'annotate' && primaryNode !== null) setAnnotationNode(primaryNode);
-    if (action === 'webshare' && contextTargets.length > 0) setWebShareTargets(contextTargets.map((node) => node.path));
-    if (action === 'new-folder') void createFolder();
-    if (action === 'show-in-folder' && primaryNode !== null) void ipc.invoke('shell:showInFolder', { path: primaryNode.path });
-    if (action === 'refresh') fs.refresh();
-  }, [contextNode, contextTargets, fs, renameNode, pasteClipboard, operations, createFolder]);
+  const runContextAction = useFileActionRunner({
+    contextNode,
+    contextTargets,
+    fs,
+    operations,
+    renameNode,
+    pasteClipboard,
+    createFolder,
+    closeContextMenu,
+    setClipboard,
+    setAnnotationNode,
+    setWebShareTargets,
+  });
 
   useEffect(() => {
     if (layoutShell.shell.id === 'explorer' && tabs.activePath === '/') {

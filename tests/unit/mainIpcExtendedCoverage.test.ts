@@ -58,4 +58,15 @@ describe('Main IPC registerHandlers Coverage', () => {
     const result = await readDirHandler(mockEvent, { path: process.cwd(), includeHidden: false });
     expect(result).toBeDefined();
   });
+
+  it('rejects malformed IPC payloads at central dispatch before service handlers run', async () => {
+    const { registerHandlers } = await import('../../src/main/ipc/registerHandlers');
+
+    registerHandlers();
+
+    const readDirHandler = ipcHandlersMap.get('fs:readDirectory')!;
+    expect(() => {
+      readDirHandler({ sender: {} }, { path: 'morph://cache-cleaner', includeHidden: false });
+    }).toThrow(/filesystem path/);
+  });
 });
