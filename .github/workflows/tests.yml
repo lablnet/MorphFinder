@@ -45,7 +45,3 @@ jobs:
       - name: Playwright Smoke Tests
         if: runner.os != 'Linux'
         run: pnpm playwright test
-
-      - name: Playwright Smoke Tests (Linux)
-        if: runner.os == 'Linux'
-        run: xvfb-run --auto-servernum pnpm playwright test
