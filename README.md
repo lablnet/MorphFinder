@@ -1,6 +1,8 @@
 # MorphFinder
 
 [![codecov](https://codecov.io/gh/lablnet/MorphFinder/graph/badge.svg?token=0XOV8MZ6JK)](https://codecov.io/gh/lablnet/MorphFinder)
+[![Security Scan](https://github.com/lablnet/MorphFinder/actions/workflows/security.yml/badge.svg)](https://github.com/lablnet/MorphFinder/actions/workflows/security.yml)
+[![Test](https://github.com/lablnet/MorphFinder/actions/workflows/tests.yml/badge.svg)](https://github.com/lablnet/MorphFinder/actions/workflows/tests.yml)
 
 A multi-platform file manager with a runtime-switchable **Tri-UI shell engine** (Finder, Explorer, Dolphin) over a single shared behavior core.
 
