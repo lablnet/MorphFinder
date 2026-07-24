@@ -1,5 +1,6 @@
 appId: com.lablnet.morphfinder
 productName: MorphFinder
+copyright: Copyright © 2026 MacroHub LLC
 directories:
   output: release
 files:

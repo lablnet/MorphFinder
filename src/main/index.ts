@@ -69,7 +69,7 @@ app.whenReady().then(() => {
         applicationVersion: '1.0.0',
         version: '1',
         iconPath: iconPath,
-        copyright: 'Copyright © lablnet',
+        copyright: 'Copyright © 2026 MacroHub LLC',
       });
     }
   }

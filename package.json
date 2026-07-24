@@ -5,8 +5,8 @@
   "description": "Multi-platform file manager with a runtime-switchable Finder/Explorer/Dolphin Tri-UI shell.",
   "main": "./out/main/index.js",
   "type": "module",
-  "author": "lablnet",
-  "license": "MIT",
+  "author": "MacroHub LLC",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "pnpm typecheck && electron-vite build",
