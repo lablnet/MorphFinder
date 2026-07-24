@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { Copy, Check, QrCode } from 'lucide-react';
 import type { WebShareSession } from '@shared/types/webShare';
 
@@ -20,7 +21,7 @@ export const WebShareQrCard: React.FC<WebShareQrCardProps> = ({ session, copied,
 
       <div
         className="w-48 h-48 bg-white p-2 rounded-xl shadow-sm flex items-center justify-center border border-neutral-200 dark:border-neutral-700"
-        dangerouslySetInnerHTML={{ __html: session.qrSvg }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(session.qrSvg, { USE_PROFILES: { svg: true } }) }}
       />
 
       <div className="w-full flex flex-col gap-1.5 text-center">
