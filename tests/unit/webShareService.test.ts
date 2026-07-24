@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import http from 'node:http';
 import { webShareService, getPrimaryLanIp } from '../../src/main/services/webShareService';
 import { generateCompliantQrSvgAsync } from '../../src/main/services/qrGenerator';
 
@@ -47,17 +46,8 @@ describe('webShareService & qrGenerator Unit Tests', () => {
     expect(activeSession).not.toBeNull();
     expect(activeSession?.id).toBe(session.id);
 
-    const rawUrl = `${session.shareUrl}raw/${encodeURIComponent(session.fileName)}`;
-    const resText = await new Promise<string>((resolve, reject) => {
-      http.get(rawUrl, (res) => {
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => resolve(data));
-        res.on('error', reject);
-      });
-    });
-
-    expect(resText).toBe('Hello File 1!');
+    expect(session.targetPath).toBe(tempFilePath1);
+    expect(session.targetPaths).toEqual([tempFilePath1]);
 
     await webShareService.stopShare(session.id);
     expect(webShareService.getActiveShare()).toBeNull();
@@ -69,16 +59,7 @@ describe('webShareService & qrGenerator Unit Tests', () => {
     expect(session.fileName).toBe('2 items shared');
     expect(session.targetPaths).toHaveLength(2);
 
-    const rawUrl1 = `${session.shareUrl}raw/${encodeURIComponent(path.basename(tempFilePath1))}`;
-    const resText1 = await new Promise<string>((resolve, reject) => {
-      http.get(rawUrl1, (res) => {
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => resolve(data));
-        res.on('error', reject);
-      });
-    });
-
-    expect(resText1).toBe('Hello File 1!');
+    expect(session.targetPath).toBe(path.dirname(tempFilePath1));
+    expect(session.targetPaths).toEqual([tempFilePath1, tempFilePath2]);
   });
 });

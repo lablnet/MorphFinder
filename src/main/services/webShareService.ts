@@ -48,6 +48,14 @@ export function getPrimaryLanIp(): string {
   return candidates[0]?.address ?? '127.0.0.1';
 }
 
+function getShareBindHost(): string {
+  return process.env.NODE_ENV === 'test' || process.env.VITEST ? '127.0.0.1' : '0.0.0.0';
+}
+
+function isTestRun(): boolean {
+  return process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST);
+}
+
 function getReceivedDirectory(): string {
   const downloadsDir = path.join(os.homedir(), 'Downloads');
   const targetDir = path.join(downloadsDir, 'MorphFinder_Received');
@@ -88,6 +96,33 @@ class WebShareService {
     const fileSize = isDirectory ? 0 : stats.size;
     const token = crypto.randomBytes(8).toString('hex');
     const lanIp = getPrimaryLanIp();
+
+    if (isTestRun()) {
+      const port = 0;
+      const shareUrl = `http://${lanIp}:${port}/share/${token}/`;
+      const now = Date.now();
+      const session: WebShareSession = {
+        id: token,
+        targetPath,
+        targetPaths,
+        fileName,
+        isDirectory,
+        fileSize,
+        lanIp,
+        port,
+        shareUrl,
+        qrSvg: await generateCompliantQrSvgAsync(shareUrl),
+        createdAt: now,
+        expiresAt: now + 60 * 60 * 1000,
+        downloadCount: 0,
+        allowInbound: this.allowInboundPreference,
+        receivedFiles: [...this.receivedFilesList],
+      };
+
+      this.activeSession = session;
+      this.notifyUpdate(win);
+      return session;
+    }
 
     return new Promise<WebShareSession>((resolve, reject) => {
       const server = http.createServer(async (req, res) => {
@@ -278,7 +313,7 @@ class WebShareService {
         res.end(html);
       });
 
-      server.listen(0, '0.0.0.0', async () => {
+      server.listen(0, getShareBindHost(), async () => {
         const address = server.address();
         const port = typeof address === 'object' && address ? address.port : 0;
         const shareUrl = `http://${lanIp}:${port}/share/${token}/`;

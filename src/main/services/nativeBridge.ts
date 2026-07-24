@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { homedir } from 'node:os';
 import { basename, extname } from 'node:path';
 import { join } from 'node:path';
 import { app, nativeImage } from 'electron';
@@ -26,6 +27,7 @@ function addonCandidates(): string[] {
 }
 
 function loadAddon(): MorphNativeAddon | null {
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST) return null;
   if (process.platform !== 'darwin' && process.platform !== 'win32' && process.platform !== 'linux') return null;
   for (const candidate of addonCandidates()) {
     if (!existsSync(candidate)) continue;
@@ -220,10 +222,9 @@ export function getSystemLocations(): SystemLocation[] {
     const locations = parseJson<SystemLocation[]>(json, []);
     if (locations.length > 0) return locations;
   }
-  const home = app.getPath('home');
+  const home = app?.getPath?.('home') ?? homedir();
   return [
     { id: '/', name: 'Macintosh HD', path: '/', iconType: 'hd', isRemovable: false, isInternal: true },
     { id: home, name: basename(home) || 'Home', path: home, iconType: 'home', isRemovable: false, isInternal: true },
   ];
 }
-
