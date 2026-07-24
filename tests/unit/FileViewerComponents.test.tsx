@@ -181,7 +181,7 @@ describe('file viewer components', () => {
 
   it('renders pdf, office, and unknown viewers', () => {
     const onOpenWithSystem = vi.fn();
-    const { rerender, container } = render(<PdfViewer {...props} node={{ ...node, name: 'doc.pdf', extension: 'pdf' }} filePath="/repo/doc.pdf" />);
+    const { rerender } = render(<PdfViewer {...props} node={{ ...node, name: 'doc.pdf', extension: 'pdf' }} filePath="/repo/doc.pdf" />);
     expect(screen.getAllByText('doc.pdf')[0]).toBeTruthy();
 
     rerender(<OfficeViewer {...props} node={{ ...node, name: 'sheet.xlsx', extension: 'xlsx' }} onOpenWithSystem={onOpenWithSystem} />);

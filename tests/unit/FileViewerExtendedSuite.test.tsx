@@ -10,7 +10,7 @@ import { PdfViewer } from '../../src/renderer/src/components/fileviewer/viewers/
 import type { FileSystemNode } from '../../src/shared/types/fileSystem';
 
 const ipcMock = vi.hoisted(() => ({
-  invoke: vi.fn(async (channel: string, payload?: unknown) => {
+  invoke: vi.fn(async (channel: string, _payload?: unknown) => {
     if (channel === 'fs:readFile') {
       return {
         content: 'col1,col2,col3\nval1,val2,val3',
