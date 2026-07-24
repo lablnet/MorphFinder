@@ -92,6 +92,7 @@ jobs:
           exit 0
 
       - name: Summarize pnpm audit
+        id: summarize-pnpm-audit
         if: always()
         shell: bash
         run: |
@@ -99,22 +100,30 @@ jobs:
           const fs = require('fs');
 
           const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+          const outputPath = process.env.GITHUB_OUTPUT;
           const reportPath = 'pnpm-audit.json';
           const status = process.env.AUDIT_EXIT_CODE || '1';
 
           const write = (content) => fs.appendFileSync(summaryPath, content);
+          const setOutput = (name, value) => fs.appendFileSync(outputPath, `${name}=${value}\n`);
           write('## pnpm audit\n\n');
 
           if (!fs.existsSync(reportPath)) {
             write('pnpm audit did not produce a JSON report.\n');
+            setOutput('high_or_worse_count', '0');
             process.exit(0);
           }
 
           const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-          const advisories = Object.values(report.advisories || {});
-          const highOrWorse = advisories.filter((advisory) =>
-            ['high', 'critical'].includes(String(advisory.severity).toLowerCase()),
-          );
+          const advisories = [
+            ...Object.values(report.advisories || {}),
+            ...Object.values(report.vulnerabilities || {}),
+          ];
+          const highOrWorse = advisories.filter((advisory) => {
+            const severity = String(advisory.severity || '').toLowerCase();
+            return severity === 'high' || severity === 'critical';
+          });
+          setOutput('high_or_worse_count', String(highOrWorse.length));
 
           write(`Audit exit code: ${status}\n\n`);
           write(`High-or-higher vulnerabilities: ${highOrWorse.length}\n\n`);
@@ -145,5 +154,5 @@ jobs:
           if-no-files-found: error
 
       - name: Fail on high pnpm audit vulnerabilities
-        if: always() && steps.pnpm-audit.outputs.exit_code != '0'
+        if: always() && steps.summarize-pnpm-audit.outputs.high_or_worse_count != '0'
         run: exit 1
