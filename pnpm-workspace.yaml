@@ -5,7 +5,16 @@ packages:
 
 blockExoticSubdeps: true
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - '@testing-library/jest-dom@7.0.0'
+  - fast-uri@3.1.4
+  - monaco-editor@0.56.0
+  - tar@7.5.21
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@5.7.2
+  - semver@6.3.1
+  - undici-types@6.21.0
 
 allowBuilds:
   '@parcel/watcher': true
