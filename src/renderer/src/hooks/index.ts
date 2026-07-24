@@ -17,6 +17,9 @@ export * from './files/viewers/useAudioPlayer';
 export * from './files/viewers/useCodeViewer';
 export * from './files/viewers/useTextViewer';
 export * from './files/viewers/useMarkdownViewer';
+export * from './files/viewers/useArchiveViewer';
+export * from './files/viewers/useHtmlViewer';
+export * from './files/viewers/useOfficeViewer';
 
 export * from './ui/useLayoutShell';
 export * from './ui/useTabs';

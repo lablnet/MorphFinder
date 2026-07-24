@@ -1,35 +1,11 @@
-import { useState, useEffect } from 'react';
 import { Code, Eye, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '../../ui/Button';
-import { ipc } from '@renderer/services/ipc';
 import { morphFileUrl, type ViewerProps } from '../types';
+import { useHtmlViewer } from '@renderer/hooks/files/viewers/useHtmlViewer';
 
 export function HtmlViewer({ filePath, node, onOpenWithSystem }: ViewerProps): React.JSX.Element {
-  const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
-  const [codeContent, setCodeContent] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-
+  const { content, viewMode, setViewMode, loading } = useHtmlViewer(filePath);
   const fileUrl = morphFileUrl(filePath);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadCode() {
-      setLoading(true);
-      try {
-        const res = await ipc.invoke('fs:readFile', { path: filePath, maxBytes: 2 * 1024 * 1024 });
-        if (isMounted) {
-          setCodeContent(res.content || '');
-        }
-      } catch {
-        if (isMounted) setCodeContent('<!-- Failed to read HTML content -->');
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    void loadCode();
-    return () => { isMounted = false; };
-  }, [filePath]);
 
   return (
     <div className="flex h-full flex-col bg-shell-surface">
@@ -46,9 +22,9 @@ export function HtmlViewer({ filePath, node, onOpenWithSystem }: ViewerProps): R
             <span>Rendered Preview</span>
           </Button>
           <Button
-            variant={viewMode === 'code' ? 'accent' : 'ghost'}
+            variant={viewMode === 'source' ? 'accent' : 'ghost'}
             size="sm"
-            onClick={() => setViewMode('code')}
+            onClick={() => setViewMode('source')}
             className="h-7 gap-1.5 px-3 text-xs"
           >
             <Code size={14} />
@@ -78,7 +54,7 @@ export function HtmlViewer({ filePath, node, onOpenWithSystem }: ViewerProps): R
           </div>
         ) : (
           <div className="h-full overflow-auto p-4 font-mono text-xs leading-relaxed bg-black/90 text-emerald-400">
-            <pre>{codeContent}</pre>
+            <pre>{content}</pre>
           </div>
         )}
       </div>

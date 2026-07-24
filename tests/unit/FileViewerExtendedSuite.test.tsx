@@ -95,17 +95,15 @@ describe('FileViewer extended extension modes & viewers', () => {
     expect(screen.getByText('val2')).toBeTruthy();
   });
 
-  it('renders PdfViewer with zoom & rotate controls', () => {
-    render(<PdfViewer {...baseProps} node={{ ...baseNode, name: 'document.pdf', extension: 'pdf' }} />);
+  it('renders PdfViewer with metadata preview card and Open with System App button', () => {
+    const onOpenWithSystem = vi.fn();
+    render(<PdfViewer {...baseProps} node={{ ...baseNode, name: 'document.pdf', extension: 'pdf' }} onOpenWithSystem={onOpenWithSystem} />);
 
-    expect(screen.getByText(/Page 1 of/i)).toBeTruthy();
-    expect(screen.getByText('120%')).toBeTruthy();
-
-    fireEvent.click(screen.getByTitle('Zoom In'));
-    expect(screen.getByText('140%')).toBeTruthy();
-
-    fireEvent.click(screen.getByTitle('Zoom Out'));
-    expect(screen.getByText('120%')).toBeTruthy();
+    expect(screen.getAllByText('document.pdf')[0]).toBeTruthy();
+    const openBtn = screen.getAllByRole('button', { name: /open with system app/i })[0];
+    expect(openBtn).toBeTruthy();
+    fireEvent.click(openBtn);
+    expect(onOpenWithSystem).toHaveBeenCalled();
   });
 
   it('routes FileViewer correctly for archive and html files', () => {

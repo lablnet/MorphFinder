@@ -1,49 +1,11 @@
-import { useState, useEffect } from 'react';
 import { FileSpreadsheet, FileText, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
-import { ipc } from '@renderer/services/ipc';
+import { useOfficeViewer } from '@renderer/hooks/files/viewers/useOfficeViewer';
 import type { ViewerProps } from '../types';
 
-const SPREADSHEET_EXTS = new Set(['xls', 'xlsx', 'ods', 'numbers', 'csv', 'tsv']);
-
 export function OfficeViewer({ node, filePath, onOpenWithSystem }: ViewerProps): React.JSX.Element {
-  const isSpreadsheet = SPREADSHEET_EXTS.has(node.extension.toLowerCase());
-  const [tableData, setTableData] = useState<string[][]>([]);
-  const [docText, setDocText] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadOfficePreview() {
-      setLoading(true);
-      try {
-        const res = await ipc.invoke('fs:readFile', { path: filePath, maxBytes: 512 * 1024 });
-        if (!isMounted) return;
-
-        if (res.content && res.encoding === 'utf-8') {
-          if (node.extension.toLowerCase() === 'csv' || node.extension.toLowerCase() === 'tsv') {
-            const lines = res.content.split('\n').filter((l) => l.trim().length > 0).slice(0, 100);
-            const rows = lines.map((line) => line.split(/,|\t/));
-            setTableData(rows);
-          } else {
-            // Plain text preview for non-binary doc text
-            const text = res.content.replace(/<[^>]+>/g, ' ').replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
-            if (text.length > 20) {
-              setDocText(text.slice(0, 5000));
-            }
-          }
-        }
-      } catch {
-        // Fallback to metadata view
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    void loadOfficePreview();
-    return () => { isMounted = false; };
-  }, [filePath, isSpreadsheet, node.extension]);
+  const { isSpreadsheet, tableData, docText, loading } = useOfficeViewer(filePath, node.extension);
 
   return (
     <div className="flex h-full flex-col bg-shell-surface">
