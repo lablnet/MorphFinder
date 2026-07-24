@@ -1,67 +1,125 @@
-import { FileSpreadsheet, FileText, Presentation, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileSpreadsheet, FileText, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { formatBytes, formatModifiedDate } from '@renderer/lib/format';
+import { ipc } from '@renderer/services/ipc';
 import type { ViewerProps } from '../types';
 
-const OFFICE_ICONS: Record<string, typeof FileText> = {
-  doc: FileText, docx: FileText, odt: FileText, pages: FileText,
-  xls: FileSpreadsheet, xlsx: FileSpreadsheet, ods: FileSpreadsheet, numbers: FileSpreadsheet, csv: FileSpreadsheet,
-  ppt: Presentation, pptx: Presentation, odp: Presentation, key: Presentation,
-};
+const SPREADSHEET_EXTS = new Set(['xls', 'xlsx', 'ods', 'numbers', 'csv', 'tsv']);
 
-export function OfficeViewer({ node, onOpenWithSystem }: ViewerProps): React.JSX.Element {
-  const Icon = OFFICE_ICONS[node.extension] ?? FileText;
+export function OfficeViewer({ node, filePath, onOpenWithSystem }: ViewerProps): React.JSX.Element {
+  const isSpreadsheet = SPREADSHEET_EXTS.has(node.extension.toLowerCase());
+  const [tableData, setTableData] = useState<string[][]>([]);
+  const [docText, setDocText] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadOfficePreview() {
+      setLoading(true);
+      try {
+        const res = await ipc.invoke('fs:readFile', { path: filePath, maxBytes: 512 * 1024 });
+        if (!isMounted) return;
+
+        if (res.content && res.encoding === 'utf-8') {
+          if (node.extension.toLowerCase() === 'csv' || node.extension.toLowerCase() === 'tsv') {
+            const lines = res.content.split('\n').filter((l) => l.trim().length > 0).slice(0, 100);
+            const rows = lines.map((line) => line.split(/,|\t/));
+            setTableData(rows);
+          } else {
+            // Plain text preview for non-binary doc text
+            const text = res.content.replace(/<[^>]+>/g, ' ').replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+            if (text.length > 20) {
+              setDocText(text.slice(0, 5000));
+            }
+          }
+        }
+      } catch {
+        // Fallback to metadata view
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    void loadOfficePreview();
+    return () => { isMounted = false; };
+  }, [filePath, isSpreadsheet, node.extension]);
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-6 p-8">
-      {/* Large icon */}
-      <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-[color:var(--shell-accent)]/20 to-[color:var(--shell-accent)]/5 shadow-lg">
-        <Icon size={56} className="text-[color:var(--shell-accent)]" />
+    <div className="flex h-full flex-col bg-shell-surface">
+      {/* Top Banner */}
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-shell-border bg-shell-sidebar/60 px-4">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          {isSpreadsheet ? <FileSpreadsheet size={18} className="text-emerald-500" /> : <FileText size={18} className="text-blue-500" />}
+          <span>{node.name}</span>
+          <span className="text-xs text-current/50 font-normal">({node.extension.toUpperCase()})</span>
+        </div>
+
+        <Button variant="accent" size="sm" onClick={onOpenWithSystem} className="gap-1.5 h-8 text-xs">
+          <ExternalLink size={14} />
+          <span>Open with System App</span>
+        </Button>
       </div>
 
-      {/* File info */}
-      <div className="text-center">
-        <h2 className="mb-1 text-lg font-semibold">{node.name}</h2>
-        <p className="text-sm text-current/50">
-          {node.extension.toUpperCase()} Document
-        </p>
+      {/* Preview Container */}
+      <div className="flex-1 overflow-auto p-4">
+        {loading ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-current/50 text-sm">
+            <Loader2 size={24} className="animate-spin text-shell-accent" />
+            <span>Parsing document preview...</span>
+          </div>
+        ) : isSpreadsheet && tableData.length > 0 ? (
+          <div className="h-full overflow-auto rounded-shell border border-shell-border bg-white dark:bg-zinc-900 shadow-inner">
+            <table className="w-full border-collapse text-left font-mono text-xs">
+              <thead>
+                <tr className="border-b border-shell-border bg-shell-sidebar/80">
+                  <th className="w-10 border-r border-shell-border p-2 text-center text-current/40">#</th>
+                  {tableData[0]?.map((_, colIdx) => (
+                    <th key={colIdx} className="border-r border-shell-border p-2 font-semibold text-current/70">
+                      Col {colIdx + 1}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.map((row, rowIdx) => (
+                  <tr key={rowIdx} className="border-b border-shell-border/40 hover:bg-shell-accent/5">
+                    <td className="border-r border-shell-border p-2 text-center text-current/40 bg-shell-sidebar/40 font-semibold select-none">
+                      {rowIdx + 1}
+                    </td>
+                    {row.map((cell, cellIdx) => (
+                      <td key={cellIdx} className="border-r border-shell-border p-2 truncate max-w-xs">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : docText && docText.length > 50 ? (
+          <div className="mx-auto max-w-3xl rounded-shell border border-shell-border bg-white dark:bg-zinc-900 p-8 shadow-sm text-sm leading-relaxed whitespace-pre-wrap">
+            {docText}
+          </div>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-shell-accent/10 text-shell-accent">
+              {isSpreadsheet ? <FileSpreadsheet size={40} /> : <FileText size={40} />}
+            </div>
+            <div>
+              <h3 className="text-base font-semibold">{node.name}</h3>
+              <p className="text-xs text-current/50">{formatBytes(node.sizeInBytes)} • Modified {formatModifiedDate(node.modifiedAt)}</p>
+            </div>
+            <p className="max-w-md text-xs text-current/60">
+              Office documents are best edited in their native applications. Click below to open in your default app.
+            </p>
+            <Button variant="accent" onClick={onOpenWithSystem} className="gap-2">
+              <ExternalLink size={16} />
+              <span>Open with System App</span>
+            </Button>
+          </div>
+        )}
       </div>
-
-      {/* Metadata table */}
-      <div className="w-full max-w-sm rounded-shell border border-shell-border bg-shell-sidebar/50 p-4">
-        <dl className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-current/50">Size</dt>
-            <dd className="font-medium">{formatBytes(node.sizeInBytes)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-current/50">Modified</dt>
-            <dd className="font-medium">{formatModifiedDate(node.modifiedAt)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-current/50">Created</dt>
-            <dd className="font-medium">{formatModifiedDate(node.createdAt)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-current/50">Type</dt>
-            <dd className="font-medium">.{node.extension}</dd>
-          </div>
-        </dl>
-      </div>
-
-      {/* CTA */}
-      <Button
-        variant="accent"
-        onClick={onOpenWithSystem}
-        className="gap-2 px-6 py-2"
-      >
-        <ExternalLink size={16} />
-        Open with System App
-      </Button>
-
-      <p className="max-w-sm text-center text-xs text-current/40">
-        Office documents are best viewed in their native applications. Click above to open this file with your default app.
-      </p>
     </div>
   );
 }

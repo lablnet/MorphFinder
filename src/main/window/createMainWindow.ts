@@ -31,6 +31,7 @@ export function createMainWindow(initialPath?: string): BrowserWindow {
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
+      plugins: true,
     },
   });
 

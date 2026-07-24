@@ -85,6 +85,10 @@ const validators: Partial<Record<IpcChannel, Validator>> = {
     assertRealPath(payload.archivePath, 'archive:extract', 'archivePath');
     assertOptionalString(payload.destinationDir, 'archive:extract', 'destinationDir');
   },
+  'archive:list': (request) => {
+    const payload = assertRecord(request, 'archive:list');
+    assertRealPath(payload.archivePath, 'archive:list', 'archivePath');
+  },
   'archive:cancel': (request) => {
     const payload = assertRecord(request, 'archive:cancel');
     assertString(payload.operationId, 'archive:cancel', 'operationId');

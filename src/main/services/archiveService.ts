@@ -202,6 +202,54 @@ class ArchiveService {
     return { extractedDir: targetDir };
   }
 
+  async listEntries(archivePath: string): Promise<{ entries: Array<{ name: string; isDirectory: boolean }> }> {
+    if (!(await this.fileExists(archivePath))) {
+      throw new Error(`Archive file not found: ${archivePath}`);
+    }
+
+    let output = '';
+    const ext = path.extname(archivePath).toLowerCase();
+
+    try {
+      if (ext === '.tar' || archivePath.endsWith('.tar.gz') || archivePath.endsWith('.tgz') || ext === '.gz') {
+        const { stdout } = await execFileAsync('tar', ['-tf', archivePath]);
+        output = stdout;
+      } else {
+        if (process.platform === 'darwin' || process.platform === 'linux') {
+          try {
+            const { stdout } = await execFileAsync('zipinfo', ['-1', archivePath]);
+            output = stdout;
+          } catch {
+            const { stdout } = await execFileAsync('unzip', ['-Z1', archivePath]);
+            output = stdout;
+          }
+        } else {
+          const psCommand = `Add-Type -Assembly System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::OpenRead('${archivePath.replace(/'/g, "''")}').Entries.FullName`;
+          const { stdout } = await execFileAsync('powershell', ['-NoProfile', '-NonInteractive', '-Command', psCommand]);
+          output = stdout;
+        }
+      }
+    } catch {
+      try {
+        const { stdout } = await execFileAsync('tar', ['-tf', archivePath]);
+        output = stdout;
+      } catch {
+        output = '';
+      }
+    }
+
+    const lines = output.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+    const entries = lines.map((line) => {
+      const isDir = line.endsWith('/');
+      return {
+        name: line.replace(/\/$/, ''),
+        isDirectory: isDir,
+      };
+    });
+
+    return { entries };
+  }
+
   private async fileExists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);

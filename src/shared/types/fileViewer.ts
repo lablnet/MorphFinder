@@ -8,6 +8,8 @@ export type FileViewerMode =
   | 'code'
   | 'markdown'
   | 'office'
+  | 'archive'
+  | 'html'
   | 'unknown';
 
 /** Response shape for the `fs:readFile` IPC channel. */
@@ -41,8 +43,8 @@ const CODE_EXTENSIONS = [
   'c', 'h', 'cpp', 'hpp', 'cc', 'cxx', 'cs',
   'swift', 'dart', 'lua', 'r', 'pl', 'pm', 'php',
   'sh', 'bash', 'zsh', 'fish', 'bat', 'ps1', 'psm1',
-  'html', 'htm', 'css', 'scss', 'sass', 'less', 'styl',
-  'json', 'jsonc', 'json5', 'yaml', 'yml', 'toml', 'ini', 'cfg',
+  'css', 'scss', 'sass', 'less', 'styl',
+  'json', 'jsonc', 'json5', 'webmanifest', 'manifest', 'yaml', 'yml', 'toml', 'ini', 'cfg',
   'xml', 'xsl', 'xslt', 'xsd', 'dtd',
   'sql', 'graphql', 'gql', 'prisma',
   'dockerfile', 'makefile', 'cmake',
@@ -63,6 +65,10 @@ const OFFICE_EXTENSIONS = [
   'odt', 'ods', 'odp', 'pages', 'numbers', 'key',
 ] as const;
 
+const ARCHIVE_EXTENSIONS = [
+  'zip', 'tar', 'gz', 'tgz', '7z', 'rar', 'bz2', 'xz',
+] as const;
+
 function buildExtensionMap(): ReadonlyMap<string, FileViewerMode> {
   const map = new Map<string, FileViewerMode>();
   for (const ext of IMAGE_EXTENSIONS) map.set(ext, 'image');
@@ -71,6 +77,9 @@ function buildExtensionMap(): ReadonlyMap<string, FileViewerMode> {
   for (const ext of CODE_EXTENSIONS) map.set(ext, 'code');
   for (const ext of TEXT_EXTENSIONS) map.set(ext, 'text');
   for (const ext of OFFICE_EXTENSIONS) map.set(ext, 'office');
+  for (const ext of ARCHIVE_EXTENSIONS) map.set(ext, 'archive');
+  map.set('html', 'html');
+  map.set('htm', 'html');
   map.set('pdf', 'pdf');
   map.set('md', 'markdown');
   map.set('mdx', 'markdown');

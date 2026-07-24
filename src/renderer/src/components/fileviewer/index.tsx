@@ -11,6 +11,8 @@ import { CodeViewer } from './viewers/CodeViewer';
 import { TextViewer } from './viewers/TextViewer';
 import { MarkdownViewer } from './viewers/MarkdownViewer';
 import { OfficeViewer } from './viewers/OfficeViewer';
+import { ArchiveViewer } from './viewers/ArchiveViewer';
+import { HtmlViewer } from './viewers/HtmlViewer';
 import { UnknownViewer } from './viewers/UnknownViewer';
 import type { ViewerProps } from './types';
 
@@ -62,6 +64,8 @@ export function FileViewer({ node, onClose }: FileViewerProps): React.JSX.Elemen
         {mode === 'text' ? <TextViewer {...viewerProps} /> : null}
         {mode === 'markdown' ? <MarkdownViewer {...viewerProps} /> : null}
         {mode === 'office' ? <OfficeViewer {...viewerProps} /> : null}
+        {mode === 'archive' ? <ArchiveViewer {...viewerProps} /> : null}
+        {mode === 'html' ? <HtmlViewer {...viewerProps} /> : null}
         {mode === 'unknown' ? <UnknownViewer {...viewerProps} /> : null}
       </div>
     </div>

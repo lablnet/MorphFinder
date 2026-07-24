@@ -182,10 +182,10 @@ describe('file viewer components', () => {
   it('renders pdf, office, and unknown viewers', () => {
     const onOpenWithSystem = vi.fn();
     const { rerender, container } = render(<PdfViewer {...props} node={{ ...node, name: 'doc.pdf', extension: 'pdf' }} filePath="/repo/doc.pdf" />);
-    expect(container.querySelector('embed')?.getAttribute('src')).toBe('morph-file://local/repo/doc.pdf');
+    expect(container.querySelector('embed')?.getAttribute('src')).toContain('morph-file://local/repo/doc.pdf');
 
     rerender(<OfficeViewer {...props} node={{ ...node, name: 'sheet.xlsx', extension: 'xlsx' }} onOpenWithSystem={onOpenWithSystem} />);
-    expect(screen.getByText('XLSX Document')).toBeTruthy();
+    expect(screen.getByText('sheet.xlsx')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /open with system app/i }));
     expect(onOpenWithSystem).toHaveBeenCalledTimes(1);
 

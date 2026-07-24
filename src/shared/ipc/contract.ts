@@ -28,6 +28,10 @@ export interface IpcContract {
     request: { archivePath: string; destinationDir?: string | undefined };
     response: { extractedDir: string };
   };
+  'archive:list': {
+    request: { archivePath: string };
+    response: { entries: Array<{ name: string; isDirectory: boolean }> };
+  };
   'archive:cancel': {
     request: { operationId: string };
     response: void;
