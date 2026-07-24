@@ -16,6 +16,7 @@ MorphFinder achieves this through a `ShellDefinition` strategy that swaps visual
 
 ## Features
 
+- 🌐 **Morph AirShare & Local WebShare (`morph://airshare`)**: Zero-cloud peer file server & inbound file drop zone over local Wi-Fi / Ethernet. Right-click any file/folder or open AirShare Hub under Tools to share instantly via vector QR code. Visiting mobile devices get a mobile web portal with multi-select batch downloads, streaming ZIP folder archives, and inbound file uploads straight to `~/Downloads/MorphFinder_Received`.
 - ✨ **Interactive Welcome Onboarding & Tour**: First-time launch wizard offering live shell selection, key accelerator tutorials, and feature highlights (accessible anytime via Command Palette).
 - 👑 **100% Unlocked Enterprise Suite**: Free, subscription-free access to enterprise-grade disk storage analytics, byte-hash duplicate cleaning, time-machine file history, and dev control suites.
 - 🎭 **Tri-UI Shell Engine**: Switch dynamically between Finder, Explorer, and Dolphin skins.

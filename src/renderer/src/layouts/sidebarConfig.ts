@@ -1,7 +1,12 @@
-import { Trash2, PieChart, Code2, Sparkles, Copy, Clock3 } from 'lucide-react';
-import { CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH } from '@shared/constants';
+import { Trash2, PieChart, Code2, Sparkles, Copy, Clock3, Wifi } from 'lucide-react';
+import { AIRSHARE_PATH, CACHE_CLEANER_PATH, SPACE_ANALYZER_PATH, DEV_PANEL_PATH, SMART_COLLECTIONS_PATH, DUPLICATE_FINDER_PATH, FILE_TIMELINE_PATH } from '@shared/constants';
 
 export const SIDEBAR_TOOLS = [
+  {
+    label: 'AirShare Hub',
+    path: AIRSHARE_PATH,
+    icon: Wifi,
+  },
   {
     label: 'Cache Cleaner',
     path: CACHE_CLEANER_PATH,

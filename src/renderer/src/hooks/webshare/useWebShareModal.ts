@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useWebShare } from './useWebShare';
 
-export function useWebShareModal(targetPath?: string | null, onClose?: () => void) {
+export function useWebShareModal(targetPath?: string | string[] | null, onClose?: () => void) {
   const { activeSession, isStarting, error, startShare, stopShare } = useWebShare();
   const [copied, setCopied] = useState(false);
   const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
@@ -60,7 +60,6 @@ export function useWebShareModal(targetPath?: string | null, onClose?: () => voi
     copied,
     remainingFormatted: formatRemainingTime(),
     copyUrl,
-    startShare,
     handleStop,
   };
 }

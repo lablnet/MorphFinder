@@ -26,6 +26,7 @@ import {
   Sparkles,
   Copy,
   Clock3,
+  Wifi,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -50,6 +51,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Sparkles,
   Copy,
   Clock3,
+  Wifi,
 };
 
 interface CommandPaletteProps {

@@ -10,6 +10,7 @@ import {
   DEV_PANEL_PATH,
   DUPLICATE_FINDER_PATH,
   FILE_TIMELINE_PATH,
+  AIRSHARE_PATH,
   SMART_COLLECTIONS_PATH,
   smartCollectionPath,
 } from '@shared/constants';
@@ -166,6 +167,12 @@ export function useFileSystem(): UseFileSystemResult {
         return;
       }
       if (path === FILE_TIMELINE_PATH) {
+        if (!isCurrentRequest()) return;
+        setNodes([]);
+        setHasPartialResults(false);
+        return;
+      }
+      if (path === AIRSHARE_PATH) {
         if (!isCurrentRequest()) return;
         setNodes([]);
         setHasPartialResults(false);

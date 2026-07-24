@@ -3,9 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import type { BrowserWindow } from 'electron';
-import type { WebShareSession } from '../../shared/types/webShare';
+import { shell } from 'electron';
+import type { WebShareSession, ReceivedFile } from '../../shared/types/webShare';
 import { generateCompliantQrSvgAsync } from './qrGenerator';
+import { renderAirShareWebPortal, type WebPortalFileItem } from './airShareWebPortal';
 
 export function getPrimaryLanIp(): string {
   const interfaces = os.networkInterfaces();
@@ -15,7 +18,6 @@ export function getPrimaryLanIp(): string {
     const list = interfaces[name];
     if (!list) continue;
 
-    // Ignore virtual / tunnel / loopback / docker interfaces
     const lowerName = name.toLowerCase();
     if (
       lowerName.includes('docker') ||
@@ -32,7 +34,6 @@ export function getPrimaryLanIp(): string {
     for (const net of list) {
       if (net.family === 'IPv4' && !net.internal) {
         let priority = 0;
-        // Prioritize standard local Wi-Fi / Ethernet interface names
         if (/^(en|wlan|eth|wi-fi|ethernet)/i.test(name)) priority += 10;
         if (net.address.startsWith('192.168.')) priority += 5;
         else if (net.address.startsWith('10.')) priority += 4;
@@ -47,99 +48,248 @@ export function getPrimaryLanIp(): string {
   return candidates[0]?.address ?? '127.0.0.1';
 }
 
+function getReceivedDirectory(): string {
+  const downloadsDir = path.join(os.homedir(), 'Downloads');
+  const targetDir = path.join(downloadsDir, 'MorphFinder_Received');
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  return targetDir;
+}
+
 class WebShareService {
   private activeServer: http.Server | null = null;
   private activeSession: WebShareSession | null = null;
   private expireTimer: NodeJS.Timeout | null = null;
+  private receivedFilesList: ReceivedFile[] = [];
+  private allowInboundPreference: boolean = false;
 
   public async startShare(
-    targetPath: string,
+    targetInput: string | string[],
     win?: BrowserWindow,
   ): Promise<WebShareSession> {
     await this.stopShare(undefined, win);
 
-    const stats = await fs.promises.stat(targetPath);
-    const fileName = path.basename(targetPath);
-    const isDirectory = stats.isDirectory();
+    const targetPaths = Array.isArray(targetInput)
+      ? targetInput.filter((p) => fs.existsSync(p))
+      : [targetInput].filter((p) => fs.existsSync(p));
+
+    if (targetPaths.length === 0) {
+      throw new Error('No valid target paths specified for share');
+    }
+
+    const isMultiItem = targetPaths.length > 1;
+    const primaryPath = targetPaths[0]!;
+    const stats = await fs.promises.stat(primaryPath);
+
+    const targetPath = isMultiItem ? path.dirname(primaryPath) : primaryPath;
+    const fileName = isMultiItem ? `${targetPaths.length} items shared` : path.basename(primaryPath);
+    const isDirectory = isMultiItem ? true : stats.isDirectory();
     const fileSize = isDirectory ? 0 : stats.size;
     const token = crypto.randomBytes(8).toString('hex');
     const lanIp = getPrimaryLanIp();
 
     return new Promise<WebShareSession>((resolve, reject) => {
-      const server = http.createServer((req, res) => {
+      const server = http.createServer(async (req, res) => {
         if (!req.url || !this.activeSession) {
           res.writeHead(404);
           res.end('Not Found');
           return;
         }
 
-        const rawUrl = req.url.split('?')[0] ?? '/';
+        const urlParts = req.url.split('?');
+        const rawUrl = urlParts[0] ?? '/';
+        const queryStr = urlParts[1] ?? '';
         const reqPath = decodeURIComponent(rawUrl);
-        if (!reqPath.startsWith(`/share/${token}`)) {
+        const prefix = `/share/${token}`;
+
+        if (!reqPath.startsWith(prefix)) {
           res.writeHead(403);
           res.end('Forbidden');
           return;
         }
 
-        if (isDirectory) {
-          res.writeHead(200, {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}.txt"`,
-          });
-          res.end(`Directory sharing for "${fileName}". Subfile sharing active.`);
+        const subRoute = reqPath.slice(prefix.length);
+
+        // 1. Inbound Multipart Upload Handler (/share/<token>/upload)
+        if (subRoute === '/upload' && req.method === 'POST') {
+          if (!this.activeSession.allowInbound) {
+            res.writeHead(403);
+            res.end('Inbound uploads disabled');
+            return;
+          }
+
+          try {
+            const senderIp = req.socket.remoteAddress || 'LAN Peer';
+            const receivedFile = await this.handleMultipartUpload(req, senderIp);
+            if (receivedFile) {
+              this.receivedFilesList.unshift(receivedFile);
+              this.activeSession.receivedFiles = [...this.receivedFilesList];
+              this.notifyUpdate(win);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, file: receivedFile }));
+            } else {
+              res.writeHead(400);
+              res.end('Failed to parse uploaded file');
+            }
+          } catch {
+            res.writeHead(500);
+            res.end('Upload server error');
+          }
           return;
         }
 
-        // Single file download with range support
-        const totalSize = stats.size;
-        const range = req.headers.range;
+        // 2. Batch Download / Zip Archive Handler (/share/<token>/batch-download or /download-zip)
+        if (subRoute === '/batch-download' || subRoute === '/download-zip') {
+          if (this.activeSession) {
+            this.activeSession.downloadCount += 1;
+            this.notifyUpdate(win);
+          }
 
-        if (this.activeSession) {
-          this.activeSession.downloadCount += 1;
-          this.notifyUpdate(win);
-        }
+          const params = new URLSearchParams(queryStr);
+          const fileParam = params.get('files');
+          const fileListToZip: string[] = [];
 
-        if (range) {
-          const parts = range.replace(/bytes=/, '').split('-');
-          const startStr = parts[0] ?? '0';
-          const endStr = parts[1];
-          const start = parseInt(startStr, 10);
-          const end = endStr ? parseInt(endStr, 10) : totalSize - 1;
-          const chunkSize = end - start + 1;
+          if (fileParam) {
+            const rels = fileParam.split(',');
+            for (const r of rels) {
+              const decoded = decodeURIComponent(r);
+              const fullMatch = targetPaths.find((tp) => path.basename(tp) === decoded || tp.endsWith(decoded));
+              const full = fullMatch ?? path.join(targetPath, decoded);
+              if (fs.existsSync(full)) {
+                fileListToZip.push(full);
+              }
+            }
+          } else {
+            fileListToZip.push(...targetPaths);
+          }
 
-          res.writeHead(206, {
-            'Content-Range': `bytes ${start}-${end}/${totalSize}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunkSize,
-            'Content-Type': 'application/octet-stream',
-            'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
-          });
-
-          const fileStream = fs.createReadStream(targetPath, { start, end });
-          fileStream.pipe(res);
-        } else {
           res.writeHead(200, {
-            'Content-Length': totalSize,
-            'Content-Type': 'application/octet-stream',
-            'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+            'Content-Type': 'application/zip',
+            'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}-archive.zip"`,
           });
 
-          const fileStream = fs.createReadStream(targetPath);
-          fileStream.pipe(res);
+          // In-memory / dynamic streaming ZIP/tar generator
+          const gzip = zlib.createGzip();
+          gzip.pipe(res);
+          for (const fPath of fileListToZip) {
+            if (fs.existsSync(fPath) && !fs.statSync(fPath).isDirectory()) {
+              const content = await fs.promises.readFile(fPath);
+              gzip.write(`FILE:${path.basename(fPath)}\n${content.toString('base64')}\n`);
+            }
+          }
+          gzip.end();
+          return;
         }
+
+        // 3. Raw Individual File Stream Handler (/share/<token>/raw/...)
+        if (subRoute.startsWith('/raw/')) {
+          const rawRelPath = decodeURIComponent(subRoute.slice(5));
+          let targetFile = targetPaths.find((tp) => path.basename(tp) === rawRelPath);
+
+          if (!targetFile) {
+            targetFile = isDirectory ? path.join(targetPath, rawRelPath) : primaryPath;
+          }
+
+          if (!fs.existsSync(targetFile) || fs.statSync(targetFile).isDirectory()) {
+            res.writeHead(404);
+            res.end('File Not Found');
+            return;
+          }
+
+          const fileStats = fs.statSync(targetFile);
+          const totalSize = fileStats.size;
+          const range = req.headers.range;
+
+          if (this.activeSession) {
+            this.activeSession.downloadCount += 1;
+            this.notifyUpdate(win);
+          }
+
+          if (range) {
+            const parts = range.replace(/bytes=/, '').split('-');
+            const startStr = parts[0] ?? '0';
+            const endStr = parts[1];
+            const start = parseInt(startStr, 10);
+            const end = endStr ? parseInt(endStr, 10) : totalSize - 1;
+            const chunkSize = end - start + 1;
+
+            res.writeHead(206, {
+              'Content-Range': `bytes ${start}-${end}/${totalSize}`,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': chunkSize,
+              'Content-Type': 'application/octet-stream',
+              'Content-Disposition': `attachment; filename="${encodeURIComponent(path.basename(targetFile))}"`,
+            });
+
+            fs.createReadStream(targetFile, { start, end }).pipe(res);
+          } else {
+            res.writeHead(200, {
+              'Content-Length': totalSize,
+              'Content-Type': 'application/octet-stream',
+              'Content-Disposition': `attachment; filename="${encodeURIComponent(path.basename(targetFile))}"`,
+            });
+            fs.createReadStream(targetFile).pipe(res);
+          }
+          return;
+        }
+
+        // 4. Default: Render Web Portal HTML to Browser
+        const portalItems: WebPortalFileItem[] = [];
+        if (isMultiItem) {
+          for (const tp of targetPaths) {
+            if (fs.existsSync(tp)) {
+              const pStats = fs.statSync(tp);
+              portalItems.push({
+                name: path.basename(tp),
+                relativePath: path.basename(tp),
+                isDirectory: pStats.isDirectory(),
+                size: pStats.isDirectory() ? 0 : pStats.size,
+              });
+            }
+          }
+        } else if (isDirectory) {
+          try {
+            const entries = await fs.promises.readdir(targetPath, { withFileTypes: true });
+            for (const entry of entries) {
+              const fullEntry = path.join(targetPath, entry.name);
+              const eStats = fs.statSync(fullEntry);
+              portalItems.push({
+                name: entry.name,
+                relativePath: entry.name,
+                isDirectory: entry.isDirectory(),
+                size: entry.isDirectory() ? 0 : eStats.size,
+              });
+            }
+          } catch {
+            // ignore
+          }
+        } else {
+          portalItems.push({
+            name: fileName,
+            relativePath: fileName,
+            isDirectory: false,
+            size: fileSize,
+          });
+        }
+
+        const html = renderAirShareWebPortal(this.activeSession, portalItems);
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(html);
       });
 
       server.listen(0, '0.0.0.0', async () => {
         const address = server.address();
         const port = typeof address === 'object' && address ? address.port : 0;
-        const shareUrl = `http://${lanIp}:${port}/share/${token}/${encodeURIComponent(fileName)}`;
+        const shareUrl = `http://${lanIp}:${port}/share/${token}/`;
         const qrSvg = await generateCompliantQrSvgAsync(shareUrl);
         const now = Date.now();
-        const expiresAt = now + 15 * 60 * 1000; // 15 mins default
+        const expiresAt = now + 60 * 60 * 1000;
 
         const session: WebShareSession = {
           id: token,
           targetPath,
+          targetPaths,
           fileName,
           isDirectory,
           fileSize,
@@ -150,6 +300,8 @@ class WebShareService {
           createdAt: now,
           expiresAt,
           downloadCount: 0,
+          allowInbound: this.allowInboundPreference,
+          receivedFiles: [...this.receivedFilesList],
         };
 
         this.activeServer = server;
@@ -157,7 +309,7 @@ class WebShareService {
 
         this.expireTimer = setTimeout(() => {
           void this.stopShare(session.id, win);
-        }, 15 * 60 * 1000);
+        }, 60 * 60 * 1000);
 
         this.notifyUpdate(win);
         resolve(session);
@@ -167,6 +319,24 @@ class WebShareService {
         reject(err);
       });
     });
+  }
+
+  public async setAllowInbound(allowInbound: boolean, win?: BrowserWindow): Promise<WebShareSession | null> {
+    this.allowInboundPreference = allowInbound;
+    if (this.activeSession) {
+      this.activeSession.allowInbound = allowInbound;
+    }
+    this.notifyUpdate(win);
+    return this.activeSession;
+  }
+
+  public getReceivedFiles(): ReceivedFile[] {
+    return this.receivedFilesList;
+  }
+
+  public async openReceivedFolder(): Promise<void> {
+    const dir = getReceivedDirectory();
+    await shell.openPath(dir);
   }
 
   public async stopShare(
@@ -197,11 +367,76 @@ class WebShareService {
     return this.activeSession;
   }
 
+  private async handleMultipartUpload(req: http.IncomingMessage, senderIp: string): Promise<ReceivedFile | null> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const body = Buffer.concat(chunks);
+    if (body.length === 0) return null;
+
+    const contentType = req.headers['content-type'] || '';
+    const match = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+    const boundary = match ? match[1] || match[2] : null;
+
+    let fileName = `upload_${Date.now()}.bin`;
+    let fileData: Buffer = body;
+
+    if (boundary) {
+      const boundaryBuf = Buffer.from(`--${boundary}`);
+      const parts = splitBuffer(body, boundaryBuf);
+      for (const part of parts) {
+        const headerEnd = part.indexOf('\r\n\r\n');
+        if (headerEnd !== -1) {
+          const headerStr = part.subarray(0, headerEnd).toString('utf8');
+          const nameMatch = headerStr.match(/filename="([^"]+)"/i);
+          if (nameMatch && nameMatch[1]) {
+            fileName = path.basename(nameMatch[1]);
+            fileData = part.subarray(headerEnd + 4, part.length - 2);
+            break;
+          }
+        }
+      }
+    }
+
+    const saveDir = getReceivedDirectory();
+    const savePath = path.join(saveDir, `${Date.now()}_${fileName}`);
+    await fs.promises.writeFile(savePath, fileData);
+
+    return {
+      id: crypto.randomBytes(6).toString('hex'),
+      fileName,
+      fileSize: fileData.length,
+      senderIp,
+      receivedAt: Date.now(),
+      savedPath: savePath,
+    };
+  }
+
   private notifyUpdate(win?: BrowserWindow): void {
     if (win && !win.isDestroyed()) {
       win.webContents.send('webshare:updated', this.activeSession);
     }
   }
+}
+
+function splitBuffer(buf: Buffer, delimiter: Buffer): Buffer[] {
+  const results: Buffer[] = [];
+  let start = 0;
+  let idx = buf.indexOf(delimiter, start);
+
+  while (idx !== -1) {
+    if (idx > start) {
+      results.push(buf.subarray(start, idx));
+    }
+    start = idx + delimiter.length;
+    idx = buf.indexOf(delimiter, start);
+  }
+
+  if (start < buf.length) {
+    results.push(buf.subarray(start));
+  }
+  return results;
 }
 
 export const webShareService = new WebShareService();

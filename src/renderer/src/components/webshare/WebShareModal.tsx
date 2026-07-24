@@ -8,7 +8,7 @@ import { WebShareControls } from './WebShareControls';
 
 interface WebShareModalProps {
   isOpen: boolean;
-  targetPath?: string | null | undefined;
+  targetPath?: string | string[] | null | undefined;
   onClose: () => void;
 }
 

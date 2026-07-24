@@ -1,6 +1,16 @@
+export interface ReceivedFile {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  senderIp: string;
+  receivedAt: number;
+  savedPath: string;
+}
+
 export interface WebShareSession {
   id: string;
   targetPath: string;
+  targetPaths: string[];
   fileName: string;
   isDirectory: boolean;
   fileSize: number;
@@ -11,10 +21,13 @@ export interface WebShareSession {
   createdAt: number;
   expiresAt: number;
   downloadCount: number;
+  allowInbound: boolean;
+  receivedFiles: ReceivedFile[];
 }
 
 export interface StartWebShareRequest {
-  path: string;
+  path?: string;
+  paths?: string[];
 }
 
 export interface StopWebShareRequest {

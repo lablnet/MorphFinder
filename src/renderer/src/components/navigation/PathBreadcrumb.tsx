@@ -1,4 +1,4 @@
-import { ChevronRight, Clock3, Code2, Copy, HardDrive, PieChart, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronRight, Clock3, Code2, Copy, HardDrive, PieChart, Sparkles, Trash2, Wifi } from 'lucide-react';
 import { cn } from '@lablnet/ui';
 import {
   THIS_PC_PATH,
@@ -7,6 +7,7 @@ import {
   DEV_PANEL_PATH,
   DUPLICATE_FINDER_PATH,
   FILE_TIMELINE_PATH,
+  AIRSHARE_PATH,
   SMART_COLLECTIONS_PATH,
   smartCollectionPath,
 } from '@shared/constants';
@@ -52,6 +53,9 @@ function virtualBreadcrumb(path: string): { icon: typeof HardDrive; segments: Se
   }
   if (path === FILE_TIMELINE_PATH) {
     return { icon: Clock3, segments: [{ name: 'File Timeline', path: FILE_TIMELINE_PATH }] };
+  }
+  if (path === AIRSHARE_PATH) {
+    return { icon: Wifi, segments: [{ name: 'AirShare Hub', path: AIRSHARE_PATH }] };
   }
   if (path === SMART_COLLECTIONS_PATH || path.startsWith(`${SMART_COLLECTIONS_PATH}/`)) {
     const collectionId = path.slice(SMART_COLLECTIONS_PATH.length + 1);

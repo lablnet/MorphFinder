@@ -183,6 +183,8 @@ function makeController(overrides: Partial<typeof state.controller> = {}) {
     setActiveTabViewMode: vi.fn(),
     onRenameValueChange: vi.fn(),
     closeContextMenu: vi.fn(),
+    webShareTargets: null,
+    closeWebShare: vi.fn(),
     ...overrides,
   };
   state.controller = controller;

@@ -30,12 +30,13 @@ export function useWebShare() {
     return cleanup;
   }, []);
 
-  const startShare = useCallback(async (path: string): Promise<WebShareSession | null> => {
+  const startShare = useCallback(async (targetInput: string | string[]): Promise<WebShareSession | null> => {
     setIsStarting(true);
     setError(null);
     try {
       const api = getMorphApi();
-      const session = (await api.invoke('webshare:start', { path })) as WebShareSession;
+      const payload = Array.isArray(targetInput) ? { paths: targetInput } : { path: targetInput };
+      const session = (await api.invoke('webshare:start', payload)) as WebShareSession;
       setActiveSession(session);
       return session;
     } catch (err) {
