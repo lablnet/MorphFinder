@@ -1,5 +1,7 @@
 # MorphFinder
 
+[![codecov](https://codecov.io/gh/lablnet/MorphFinder/graph/badge.svg?token=CODECOV_TOKEN)](https://codecov.io/gh/lablnet/MorphFinder)
+
 A multi-platform file manager with a runtime-switchable **Tri-UI shell engine** (Finder, Explorer, Dolphin) over a single shared behavior core.
 
 ## Overview
@@ -101,9 +103,14 @@ Run automated tests and linting check:
 # Run unit tests (Vitest)
 pnpm test
 
+# Run unit tests with coverage
+pnpm test:coverage
+
 # Run End-to-End tests (Playwright)
 pnpm test:e2e
 
 # Run linter
 pnpm lint
 ```
+
+Coverage runs in GitHub Actions, uploads `coverage/lcov.info` to Codecov with OIDC authentication, and keeps the HTML report as a workflow artifact. After the first successful Codecov upload, replace `CODECOV_TOKEN` in the badge URL above with the badge token Codecov shows for the project.

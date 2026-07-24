@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   verify:
     name: ${{ matrix.os }}
@@ -28,8 +32,23 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Unit Tests
-        run: pnpm test
+      - name: Unit Tests with Coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: unit
+          fail_ci_if_error: true
+          use_oidc: true
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-${{ runner.os }}
+          path: coverage
+          if-no-files-found: error
 
       - name: Build native macOS module
         if: runner.os == 'macOS'
