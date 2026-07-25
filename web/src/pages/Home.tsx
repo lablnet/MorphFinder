@@ -4,6 +4,7 @@ import { PlatformSection } from "../components/PlatformSection";
 import { ProductSection } from "../components/ProductSection";
 import { ProductTourSection } from "../components/ProductTourSection";
 import { ProofSection } from "../components/ProofSection";
+import { RoadmapSection } from "../components/RoadmapSection";
 import { WorkflowSection } from "../components/WorkflowSection";
 
 export function Home() {
@@ -15,6 +16,7 @@ export function Home() {
       <ProductSection />
       <ProductTourSection />
       <WorkflowSection />
+      <RoadmapSection />
       <PlatformSection />
     </main>
   );

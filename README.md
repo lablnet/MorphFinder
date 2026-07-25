@@ -1,10 +1,12 @@
 # MorphFinder
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![codecov](https://codecov.io/gh/lablnet/MorphFinder/graph/badge.svg?token=0XOV8MZ6JK)](https://codecov.io/gh/lablnet/MorphFinder)
 [![Security Scan](https://github.com/lablnet/MorphFinder/actions/workflows/security.yml/badge.svg)](https://github.com/lablnet/MorphFinder/actions/workflows/security.yml)
 [![Test](https://github.com/lablnet/MorphFinder/actions/workflows/tests.yml/badge.svg)](https://github.com/lablnet/MorphFinder/actions/workflows/tests.yml)
 
-A multi-platform file manager with a runtime-switchable **Tri-UI shell engine** (Finder, Explorer, Dolphin) over a single shared behavior core.
+A multi-platform open-source file manager with a runtime-switchable **Tri-UI shell engine** (Finder, Explorer, Dolphin) over a single shared behavior core.
 
 ## Overview
 
@@ -41,10 +43,25 @@ MorphFinder achieves this through a `ShellDefinition` strategy that swaps visual
 - 🛠️ **Developer Panel & Integrated Terminal**: Embedded project detection, package script execution, dependency inspect, and project-scoped terminal sessions (`node-pty`).
 - 🏷️ **Directory Annotations & Smart Collections**: Custom tags/notes attached to folders, queryable via high-signal smart collection groups.
 - 👁️ **Built-in File Viewer**: Multi-format quick preview supporting images, video, audio, Markdown, code, PDFs, Office files, and binary metadata.
-- 🛡️ **Hardened Security**: Context isolation, sandboxed processes, strict Content Security Policy (CSP), and navigation guards.
-- ⌨️ **Keyboard Navigation & Command Palette**: Keyboard-first launcher, hotkey accelerators, and platform-aware shortcut mappings.
 
 ---
+
+## 🗺️ Feature Roadmap
+
+We are actively developing and expanding MorphFinder! We welcome community contributions for:
+
+- 📡 **Built-in FTP / SFTP Client**: Remote file system browsing, background file transfers, and SSH session support.
+- ☁️ **Cloud Storage Integration**: Direct mounting and sync for Google Drive, Amazon S3 buckets, and WebDAV servers.
+- 🛍️ **Microsoft Store & Linux Packages**: Package distribution for Microsoft Store (MSIX), Snap, Flatpak, and Arch Linux AUR.
+
+---
+
+## 🤝 Contributing
+
+MorphFinder is 100% open source under the **Apache-2.0 License**. We welcome pull requests, feature requests, and bug reports!
+
+Please read our [Contributing Guide](CONTRIBUTING.md) to get started with development, running tests, and submitting PRs.
+
 
 ## How to Run
 

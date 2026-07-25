@@ -78,10 +78,13 @@ export function PrivacyPolicy() {
 
           <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-              4. Security & Compliance
+              4. Security, Compliance & Open Source Auditability
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-600">
               We employ standard macOS Hardened Runtime, Code Signing, and App Sandbox security features to protect your application binary from tampering. MorphFinder complies fully with Apple Developer Program security standards and international privacy regulations including GDPR and CCPA.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">
+              Because MorphFinder is <strong>100% Open Source under the Apache-2.0 License</strong>, any developer, security researcher, or user can independently inspect, audit, build, and verify our source code on <a href="https://github.com/lablnet/MorphFinder" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 underline">GitHub</a>.
             </p>
           </section>
         </div>
