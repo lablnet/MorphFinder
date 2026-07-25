@@ -9,5 +9,5 @@ export function startAutoUpdater(): void {
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.logger = console;
   autoUpdater.on('error', (error) => console.error('Auto-update failed', error));
-  void autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+  void Promise.resolve(autoUpdater.checkForUpdatesAndNotify()).catch(() => {});
 }

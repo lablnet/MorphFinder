@@ -47,9 +47,9 @@ export function createMainWindow(initialPath?: string): BrowserWindow {
     }
   };
 
-  window.once('ready-to-show', showWindow);
-  window.webContents.once('did-finish-load', showWindow);
-  window.webContents.once('did-fail-load', (_event, errorCode, errorDescription) => {
+  window.on('ready-to-show', showWindow);
+  window.webContents.on('did-finish-load', showWindow);
+  window.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('Renderer failed to load:', errorCode, errorDescription);
     showWindow();
   });
