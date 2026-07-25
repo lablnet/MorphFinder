@@ -31,4 +31,6 @@ runs:
     - name: Install dependencies
       if: inputs.install == 'true'
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: |
+        pnpm install --frozen-lockfile
+        node node_modules/electron/install.js
