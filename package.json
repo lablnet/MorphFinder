@@ -19,6 +19,7 @@
     "test:e2e": "pnpm build && playwright test",
     "preview": "electron-vite preview",
     "build:mac": "pnpm native:build && pnpm build && electron-builder --mac",
+    "build:mas": "pnpm native:build && pnpm build && electron-builder --mac mas",
     "build:win": "pnpm native:build && pnpm build && electron-builder --win",
     "build:linux": "pnpm native:build && pnpm build && electron-builder --linux",
     "native:build": "node native/build.mjs",
