@@ -116,10 +116,10 @@ export function PrivacyPolicy() {
               If you have any questions about this Privacy Policy or MorphFinder's architecture, contact the developer:
             </p>
             <a
-              href="mailto:lablnet@icloud.com?subject=MorphFinder%20Privacy"
+              href="mailto:umer+morphfinder@lablnet.com?subject=MorphFinder%20Privacy"
               className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
             >
-              <Mail size={16} /> lablnet@icloud.com
+              <Mail size={16} /> umer+morphfinder@lablnet.com
             </a>
           </div>
         </div>
