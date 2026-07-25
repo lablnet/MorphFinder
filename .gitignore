@@ -17,3 +17,6 @@ playwright-report/
 coverage
 .private
 /build/MorphFinder_Mac_App_Store_Distribution.provisionprofile
+electron.vite.config.js
+electron.vite.config.d.ts
+
