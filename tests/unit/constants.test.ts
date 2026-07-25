@@ -16,6 +16,7 @@ import {
 
 describe('shared constants', () => {
   it('normalizes basenames across Unix and Windows-like paths', () => {
+    expect(basenameOf('/')).toBe('Macintosh HD');
     expect(basenameOf('/Users/alex/Documents/')).toBe('Documents');
     expect(basenameOf('C:\\Users\\alex\\Desktop\\file.txt')).toBe('file.txt');
     expect(basenameOf('relative')).toBe('relative');

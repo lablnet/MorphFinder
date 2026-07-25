@@ -1,9 +1,15 @@
 /** Windows uses backslashes; keeping one basename helper avoids path-lib drift
  *  between main (node:path) and renderer (no node:path access). */
 export function basenameOf(fullPath: string): string {
+  if (!fullPath || fullPath === '/' || fullPath === '\\') {
+    return 'Macintosh HD';
+  }
   const normalized = fullPath.replace(/[/\\]+$/, '');
+  if (!normalized) {
+    return 'Macintosh HD';
+  }
   const segments = normalized.split(/[/\\]/);
-  return segments.at(-1) ?? normalized;
+  return segments.at(-1) || fullPath || 'Macintosh HD';
 }
 
 export const APP_NAME = 'MorphFinder';
