@@ -24,7 +24,8 @@
     "build:linux": "pnpm native:build && pnpm build && electron-builder --linux",
     "native:build": "node native/build.mjs",
     "release": "pnpm build && electron-builder",
-    "build:assets": "tsx scripts/build-assets.ts"
+    "build:assets": "tsx scripts/build-assets.ts",
+    "fix:screenshots": "tsx scripts/fix-screenshot-dimensions.ts"
   },
   "repository": {
     "type": "git",
