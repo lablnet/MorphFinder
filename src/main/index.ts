@@ -59,24 +59,33 @@ app.whenReady().then(() => {
   });
 
 
-  // Set macOS Dock Icon and About Panel in dev/runtime
-  if (process.platform === 'darwin' && app.dock !== undefined) {
-    const iconPath = join(app.getAppPath(), 'build/icon.png');
-    if (existsSync(iconPath)) {
-      app.dock.setIcon(nativeImage.createFromPath(iconPath));
-      app.setAboutPanelOptions({
-        applicationName: 'MorphFinder',
-        applicationVersion: '1.0.1',
-        version: '1',
-        iconPath: iconPath,
-        copyright: 'Copyright © 2026 Lablnet',
-      });
+  try {
+    // Set macOS Dock Icon and About Panel in dev/runtime
+    if (process.platform === 'darwin' && app.dock !== undefined) {
+      const iconPath = join(app.getAppPath(), 'build/icon.png');
+      if (existsSync(iconPath)) {
+        app.dock.setIcon(nativeImage.createFromPath(iconPath));
+        app.setAboutPanelOptions({
+          applicationName: 'MorphFinder',
+          applicationVersion: '1.0.1',
+          version: '1',
+          iconPath: iconPath,
+          copyright: 'Copyright © 2026 Lablnet',
+        });
+      }
     }
+  } catch (error) {
+    console.error('Non-fatal dock setup error:', error);
   }
 
   createMainWindow();
-  registerHandlers();
-  startAutoUpdater();
+
+  try {
+    registerHandlers();
+    startAutoUpdater();
+  } catch (error) {
+    console.error('Non-fatal handler setup error:', error);
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

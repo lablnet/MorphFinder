@@ -40,7 +40,22 @@ export function createMainWindow(initialPath?: string): BrowserWindow {
     activeWindows.delete(window);
   });
 
-  window.on('ready-to-show', () => window.show());
+  const showWindow = (): void => {
+    if (!window.isDestroyed() && !window.isVisible()) {
+      window.show();
+      window.focus();
+    }
+  };
+
+  window.once('ready-to-show', showWindow);
+  window.webContents.once('did-finish-load', showWindow);
+  window.webContents.once('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.error('Renderer failed to load:', errorCode, errorDescription);
+    showWindow();
+  });
+
+  // Guarantee window is shown within 1 second even if ready-to-show is delayed by sandbox
+  setTimeout(showWindow, 1000);
 
   guardNavigation(window.webContents);
   window.webContents.setWindowOpenHandler(({ url }) => {
