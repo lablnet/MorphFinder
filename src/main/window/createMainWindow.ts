@@ -41,15 +41,15 @@ export function createMainWindow(initialPath?: string): BrowserWindow {
   });
 
   const showWindow = (): void => {
-    if (!window.isDestroyed() && !window.isVisible()) {
-      window.show();
-      window.focus();
+    if (!window.isDestroyed?.() && !window.isVisible?.()) {
+      window.show?.();
+      window.focus?.();
     }
   };
 
   window.on('ready-to-show', showWindow);
-  window.webContents.on('did-finish-load', showWindow);
-  window.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+  window.webContents?.on?.('did-finish-load', showWindow);
+  window.webContents?.on?.('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('Renderer failed to load:', errorCode, errorDescription);
     showWindow();
   });
