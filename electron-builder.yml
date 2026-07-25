@@ -17,6 +17,8 @@ publish:
   releaseType: release
 mac:
   category: public.app-category.utilities
+  extendInfo:
+    ITSAppUsesNonExemptEncryption: false
   target:
     - target: dmg
       arch: [arm64]
@@ -32,6 +34,8 @@ mac:
       to: MorphNative.node
 mas:
   category: public.app-category.utilities
+  extendInfo:
+    ITSAppUsesNonExemptEncryption: false
   provisioningProfile: build/MorphFinder_Mac_App_Store_Distribution.provisionprofile
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.plist
