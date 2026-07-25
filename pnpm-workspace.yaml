@@ -10,15 +10,22 @@ minimumReleaseAgeExclude:
   - fast-uri@3.1.4
   - monaco-editor@0.56.0
   - tar@7.5.21
-trustPolicy: no-downgrade
+
 trustPolicyExclude:
-  - semver@5.7.2
-  - semver@6.3.1
-  - undici-types@6.21.0
+  - 'semver@6.3.1'
+
+trustPolicy: off
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - electron
+  - electron-winstaller
+  - esbuild
+  - node-pty
 
 allowBuilds:
-  '@parcel/watcher': true
-  electron: true
-  electron-winstaller: true
-  esbuild: true
-  node-pty: true
+  '@parcel/watcher': set this to true or false
+  electron: set this to true or false
+  electron-winstaller: set this to true or false
+  esbuild: set this to true or false
+  node-pty: set this to true or false
