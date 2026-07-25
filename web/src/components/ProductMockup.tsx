@@ -58,13 +58,19 @@ export function ProductMockup() {
       </div>
 
       {/* Screenshot Preview with Smooth Transition */}
-      <div className="relative overflow-hidden rounded-xl bg-slate-900 border border-slate-800">
+      <div className="relative overflow-hidden rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center min-h-[300px]">
         <img
-          alt="MorphFinder app interface preview"
+          alt={`MorphFinder ${activeShell} layout preview`}
           className="h-auto max-h-[58vh] w-full rounded-xl object-contain transition-all duration-300 sm:max-h-[64vh]"
-          src="/screenshort.png"
+          src={
+            activeShell === "finder"
+              ? "/screenshots/finder.png"
+              : activeShell === "explorer"
+              ? "/screenshots/exporer.png"
+              : "/screenshots/dolphin.png"
+          }
         />
-        <div className="absolute bottom-3 left-3 rounded-lg bg-slate-950/80 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md border border-slate-700/60 shadow-lg">
+        <div className="absolute bottom-3 left-3 rounded-lg bg-slate-950/85 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md border border-slate-700/60 shadow-lg">
           {activeShell === "finder" && "🍏 Finder Layout: Miller Columns & Unified Toolbar"}
           {activeShell === "explorer" && "🪟 Explorer Layout: Windows Command Bar & Details Pane"}
           {activeShell === "dolphin" && "🐧 Dolphin Layout: KDE Places & Integrated Terminal"}
