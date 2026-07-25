@@ -4,12 +4,19 @@ packages:
   - native/*
 
 blockExoticSubdeps: true
+
+overrides:
+  dompurify: '^3.4.12'
+  brace-expansion: '>=5.0.8'
+
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
   - '@testing-library/jest-dom@7.0.0'
   - fast-uri@3.1.4
   - monaco-editor@0.56.0
   - tar@7.5.21
+  - brace-expansion@5.0.8
+  - dompurify@3.4.12
 
 trustPolicyExclude:
   - 'semver@6.3.1'
