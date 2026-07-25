@@ -6,7 +6,12 @@ export function Footer() {
       <Separator />
       <div className="flex flex-col gap-2 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <span className="font-bold text-slate-700">MorphFinder by lablnet</span>
-        <span>Copyright © 2026 Lablnet</span>
+        <div className="flex items-center gap-4">
+          <a href="/privacy" className="hover:text-slate-900 transition">
+            Privacy Policy
+          </a>
+          <span>Copyright © 2026 Lablnet</span>
+        </div>
       </div>
     </footer>
   );
