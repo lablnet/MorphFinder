@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest] # [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -53,10 +53,10 @@ jobs:
         include:
           - os: macos-latest
             command: pnpm build:mac
-          - os: windows-latest
-            command: pnpm build:win
-          - os: ubuntu-latest
-            command: pnpm build:linux
+          # - os: windows-latest
+          #   command: pnpm build:win
+          # - os: ubuntu-latest
+          #   command: pnpm build:linux
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
