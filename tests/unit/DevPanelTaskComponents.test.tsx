@@ -15,7 +15,7 @@ const info: DevPanelInfo = {
   path: '/repo',
   projectType: 'node',
   name: 'app',
-  version: '1.0.0',
+  version: '1.0.1',
   description: 'demo',
   license: 'MIT',
   toolchain: null,

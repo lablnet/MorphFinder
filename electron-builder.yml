@@ -38,7 +38,7 @@ mas:
     ITSAppUsesNonExemptEncryption: false
   provisioningProfile: build/MorphFinder_Mac_App_Store_Distribution.provisionprofile
   entitlements: build/entitlements.mas.plist
-  entitlementsInherit: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
   extraResources:
     - from: native/macos/MorphNative.node
       to: MorphNative.node

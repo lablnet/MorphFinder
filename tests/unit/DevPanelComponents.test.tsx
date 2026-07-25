@@ -13,7 +13,7 @@ describe('DevPanel Sub-Components', () => {
     const mockInfo = {
       projectType: 'node' as const,
       name: 'my-app',
-      version: '1.0.0',
+      version: '1.0.1',
       description: 'Test app',
       hasScripts: true,
       hasDeps: true,
@@ -27,7 +27,7 @@ describe('DevPanel Sub-Components', () => {
     };
     render(<DevPanelHeader info={mockInfo} onRefresh={vi.fn()} loading={false} />);
     expect(screen.getByText('my-app')).toBeDefined();
-    expect(screen.getByText('1.0.0')).toBeDefined();
+    expect(screen.getByText('1.0.1')).toBeDefined();
   });
 
   it('renders TabBar and allows tab switching', () => {
@@ -48,7 +48,7 @@ describe('DevPanel Sub-Components', () => {
     const mockInfo = {
       projectType: 'node' as const,
       name: 'my-app',
-      version: '1.0.0',
+      version: '1.0.1',
       description: 'Test app',
       hasScripts: true,
       hasDeps: true,

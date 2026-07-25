@@ -63,7 +63,7 @@ const projectInfo = {
   path: '/repo',
   projectType: 'node',
   name: 'morphfinder',
-  version: '1.0.0',
+  version: '1.0.1',
   description: 'File manager',
   license: 'MIT',
   toolchain: { runtime: 'node', requiredVersion: '>=20' },

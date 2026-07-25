@@ -66,7 +66,7 @@ app.whenReady().then(() => {
       app.dock.setIcon(nativeImage.createFromPath(iconPath));
       app.setAboutPanelOptions({
         applicationName: 'MorphFinder',
-        applicationVersion: '1.0.0',
+        applicationVersion: '1.0.1',
         version: '1',
         iconPath: iconPath,
         copyright: 'Copyright © 2026 Lablnet',

@@ -88,7 +88,7 @@ describe('dev panel service scanners', () => {
     expect(await scanProject(go)).toMatchObject({ projectType: 'go', name: 'example.com/app', packageManager: 'go' });
 
     const dart = await createFixture('dart-app');
-    await writeFile(join(dart, 'pubspec.yaml'), 'name: dart_app\nversion: 1.0.0\ndescription: dart\n\ndependencies:\n  path: ^1.9.0\n');
+    await writeFile(join(dart, 'pubspec.yaml'), 'name: dart_app\nversion: 1.0.1\ndescription: dart\n\ndependencies:\n  path: ^1.9.0\n');
     expect(await scanProject(dart)).toMatchObject({ projectType: 'dart', name: 'dart_app' });
 
     const ts = await createFixture('ts-only');
@@ -118,12 +118,12 @@ describe('dev panel service scanners', () => {
 
     const ruby = await createFixture('ruby-app');
     await writeFile(join(ruby, 'Gemfile'), 'gem "rails", "~> 7"\n');
-    await writeFile(join(ruby, 'ruby-app.gemspec'), 's.name = "gem-name"\ns.version = "1.0.0"\n');
-    expect(await scanProject(ruby)).toMatchObject({ projectType: 'ruby', name: 'gem-name', version: '1.0.0' });
+    await writeFile(join(ruby, 'ruby-app.gemspec'), 's.name = "gem-name"\ns.version = "1.0.1"\n');
+    expect(await scanProject(ruby)).toMatchObject({ projectType: 'ruby', name: 'gem-name', version: '1.0.1' });
 
     const php = await createFixture('php-app');
     await writeFile(join(php, 'composer.lock'), '{}');
-    await writeFile(join(php, 'composer.json'), JSON.stringify({ name: 'vendor/pkg', version: '1.0.0', require: { php: '^8.2', monolog: '^3' }, 'require-dev': { pestphp: '^2' } }));
+    await writeFile(join(php, 'composer.json'), JSON.stringify({ name: 'vendor/pkg', version: '1.0.1', require: { php: '^8.2', monolog: '^3' }, 'require-dev': { pestphp: '^2' } }));
     expect(await scanProject(php)).toMatchObject({ projectType: 'php', name: 'vendor/pkg', packageManager: 'composer' });
 
     const kotlin = await createFixture('kotlin-app');
@@ -154,7 +154,7 @@ describe('dev panel service scanners', () => {
 
     const appA = join(mono, 'apps', 'web');
     await mkdir(appA, { recursive: true });
-    await writeFile(join(appA, 'package.json'), JSON.stringify({ name: 'resomix-web', version: '1.0.0' }));
+    await writeFile(join(appA, 'package.json'), JSON.stringify({ name: 'resomix-web', version: '1.0.1' }));
 
     const appB = join(mono, 'apps', 'api');
     await mkdir(appB, { recursive: true });
