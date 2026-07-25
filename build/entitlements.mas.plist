@@ -14,7 +14,7 @@
   <true/>
   <key>com.apple.security.files.downloads.read-write</key>
   <true/>
-  <key>com.apple.security.files.pictures.read-write</key>
+  <key>com.apple.security.assets.pictures.read-write</key>
   <true/>
   <key>com.apple.security.network.server</key>
   <true/>
