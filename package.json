@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@lablnet/ui": "^1.0.1",
-    "@parcel/watcher": "^2.5.1",
+    "@parcel/watcher": "^2.6.0",
     "dompurify": "^3.4.12",
     "electron-updater": "^6.8.9",
     "lucide-react": "^0.475.0",
