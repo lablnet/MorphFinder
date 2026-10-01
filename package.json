@@ -70,7 +70,7 @@
     "electron-vite": "^5.0.0",
     "eslint": "^9.20.1",
     "eslint-plugin-react-hooks": "^5.1.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.1.1",
     "node-swift": "1.5.1",
     "png2icons": "^2.0.1",
     "postcss": "^8.5.2",
